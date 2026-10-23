@@ -1,0 +1,590 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pure Nature</title>
+
+<!-- Kartenbibliothek: MapLibre GL JS (BSD-3-Clause, Open Source) mit Globus-Projektion -->
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.css">
+<script src="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.js"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&family=JetBrains+Mono:wght@400;500&display=swap">
+
+<style>
+/* Layout: Globus füllt den Bildschirm, rechts ein Feldbuch-Panel (mobil: Bottom-Sheet).
+   Bewusst nur ein dunkles Thema – der Globus im Nachthimmel ist das Motiv. */
+:root{
+  --night:#0a0f0e;      /* Weltraum hinter dem Globus */
+  --panel:#101816;      /* Feldbuch-Papier, nachts */
+  --panel-2:#16211e;
+  --line:#24332e;
+  --ink:#e6ede4;
+  --muted:#8b9d94;
+  --pollen:#e7ad4f;     /* Akzent */
+  --plantae:#86b86f;
+  --animalia:#d98a5f;
+  --fungi:#c79ad0;
+  --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body:"Figtree", "Segoe UI", system-ui, sans-serif;
+  --f-sci:"Newsreader", Georgia, "Times New Roman", serif;
+  --f-data:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  --panel-w:420px;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--night);color:var(--ink);font:15px/1.5 var(--f-body);overflow:hidden}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--pollen);outline-offset:2px}
+[hidden]{display:none!important}
+
+#map{position:fixed;inset:0;right:var(--panel-w)}
+.maplibregl-ctrl-attrib{background:rgba(10,15,14,.75)!important;color:var(--muted)!important;font-size:11px}
+.maplibregl-ctrl-attrib a{color:var(--ink)!important}
+.maplibregl-ctrl-group{background:var(--panel)!important;border:1px solid var(--line)}
+.maplibregl-ctrl-group button+button{border-top:1px solid var(--line)!important}
+.maplibregl-ctrl-group button .maplibregl-ctrl-icon{filter:invert(.9)}
+
+/* Kopfleiste über der Karte */
+.topbar{position:fixed;top:0;left:0;right:var(--panel-w);z-index:5;display:flex;gap:12px;align-items:center;flex-wrap:wrap;
+  padding:max(14px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 14px max(16px,env(safe-area-inset-left,0px));
+  background:linear-gradient(var(--night),rgba(10,15,14,0));pointer-events:none}
+.topbar>*{pointer-events:auto}
+.brand{display:flex;align-items:baseline;gap:10px;margin-right:auto}
+.brand h1{font:700 26px/1 var(--f-display);letter-spacing:-.02em;margin:0}
+.brand h1 span{color:var(--pollen)}
+.brand small{color:var(--muted);font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+.search{position:relative}
+.search input{width:min(280px,70vw);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:8px 14px}
+.search input::placeholder{color:var(--muted)}
+.search ul{position:absolute;top:110%;left:0;right:0;margin:0;padding:4px;list-style:none;background:var(--panel);border:1px solid var(--line);border-radius:12px;max-height:260px;overflow:auto}
+.search li button{width:100%;text-align:left;background:none;border:0;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:13px}
+.search li button:hover{background:var(--panel-2)}
+.toggles{display:flex;gap:6px;flex-wrap:wrap}
+.pill{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:7px 12px;font-size:13px;cursor:pointer;color:var(--muted)}
+.pill[aria-pressed="true"]{color:var(--night);background:var(--pollen);border-color:var(--pollen)}
+
+/* Koordinaten-Anzeige */
+.readout{position:fixed;left:max(16px,env(safe-area-inset-left,0px));bottom:calc(34px + env(safe-area-inset-bottom,0px));z-index:5;
+  font:12px/1.4 var(--f-data);color:var(--muted);background:rgba(10,15,14,.7);padding:6px 10px;border-radius:8px;font-variant-numeric:tabular-nums}
+.readout b{color:var(--ink);font-weight:500}
+
+/* Panel */
+.panel{position:fixed;top:0;right:0;bottom:0;width:var(--panel-w);z-index:6;background:var(--panel);border-left:1px solid var(--line);
+  display:flex;flex-direction:column;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);padding-right:env(safe-area-inset-right,0px)}
+.panel-head{padding:18px 20px 12px;border-bottom:1px solid var(--line);display:grid;gap:12px}
+.eyebrow{font:500 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.place{font:700 22px/1.15 var(--f-display);letter-spacing:-.01em;margin:4px 0 0;text-wrap:balance}
+.where{font:12px var(--f-data);color:var(--muted);font-variant-numeric:tabular-nums}
+.groups{display:flex;gap:6px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel-2);border-radius:999px;padding:5px 11px;font-size:13px;cursor:pointer;color:var(--ink)}
+.chip i{width:8px;height:8px;border-radius:50%;background:var(--c,var(--muted))}
+.chip[aria-pressed="true"]{border-color:var(--c,var(--pollen));box-shadow:inset 0 0 0 1px var(--c,var(--pollen))}
+.opts{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);gap:10px;flex-wrap:wrap}
+.opts label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.opts input{accent-color:var(--pollen)}
+.total{font:500 12px var(--f-data);color:var(--ink)}
+
+.list{flex:1;overflow:auto;padding:14px 20px 24px;min-height:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.card{display:flex;flex-direction:column;text-align:left;background:var(--panel-2);border:1px solid transparent;border-radius:10px;overflow:hidden;cursor:pointer;padding:0;min-width:0}
+.card:hover{border-color:var(--line)}
+.card img,.card .noimg{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:var(--line)}
+.card .meta{padding:8px 10px 10px;display:grid;gap:2px;min-width:0;border-top:3px solid var(--c,var(--line))}
+.card .cn{font-weight:600;font-size:14px;line-height:1.25;overflow-wrap:anywhere}
+.card .sn{font:italic 13px/1.25 var(--f-sci);color:var(--muted);overflow-wrap:anywhere}
+.card .ct{font:11px var(--f-data);color:var(--muted);margin-top:4px}
+.state{color:var(--muted);font-size:14px;padding:24px 4px;text-align:center}
+.more{margin:16px auto 0;display:block}
+.sources{padding:10px 20px;border-top:1px solid var(--line);font-size:11px;color:var(--muted)}
+.sources summary{cursor:pointer}
+.sources ul{margin:8px 0 0;padding-left:16px;display:grid;gap:4px}
+.sources a{color:var(--ink)}
+
+/* Detailansicht */
+.detail{position:absolute;inset:0;background:var(--panel);display:flex;flex-direction:column;z-index:2}
+.detail-bar{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line);padding-top:max(12px,env(safe-area-inset-top,0px))}
+.back{background:none;border:1px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer;font-size:13px}
+.detail-body{flex:1;overflow:auto;min-height:0}
+.hero{position:relative}
+.hero img{width:100%;aspect-ratio:3/2;object-fit:cover;display:block;background:var(--line)}
+.credit{font-size:11px;color:var(--muted);padding:6px 20px 0}
+.thumbs{display:flex;gap:6px;padding:8px 20px 0;overflow-x:auto}
+.thumbs button{padding:0;border:2px solid transparent;border-radius:6px;cursor:pointer;flex:0 0 auto;background:none}
+.thumbs button[aria-pressed="true"]{border-color:var(--pollen)}
+.thumbs img{width:56px;height:56px;object-fit:cover;border-radius:4px;display:block}
+.d-sec{padding:16px 20px;border-bottom:1px solid var(--line);display:grid;gap:10px}
+.d-name{font:700 26px/1.1 var(--f-display);letter-spacing:-.01em;margin:0;text-wrap:balance}
+.d-sci{font:italic 19px/1.2 var(--f-sci);color:var(--muted);margin:0}
+.badges{display:flex;gap:6px;flex-wrap:wrap}
+.badge{font:500 11px/1 var(--f-body);letter-spacing:.06em;text-transform:uppercase;padding:5px 8px;border-radius:4px;background:var(--panel-2);border:1px solid var(--line)}
+.badge.iucn{border-color:var(--sc);color:var(--sc)}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.fact{background:var(--panel-2);border-radius:8px;padding:10px}
+.fact b{display:block;font:500 17px var(--f-data);font-variant-numeric:tabular-nums}
+.fact span{font-size:11px;color:var(--muted)}
+.tax{list-style:none;margin:0;padding:0;display:grid;gap:3px;font-size:13px}
+.tax li{display:grid;grid-template-columns:76px 1fr;gap:8px}
+.tax .r{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;padding-top:2px}
+.tax .n i{font-family:var(--f-sci)}
+.prose{font-size:14px;line-height:1.6;max-width:65ch;margin:0}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:13px;cursor:pointer;text-decoration:none;color:var(--ink)}
+.btn.primary{background:var(--pollen);color:var(--night);border-color:var(--pollen);font-weight:600}
+.placeholder{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.placeholder div{border:1px dashed var(--line);border-radius:8px;padding:10px;font-size:12px;color:var(--muted)}
+h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0}
+
+.skel{background:linear-gradient(90deg,var(--panel-2),var(--line),var(--panel-2));background-size:200% 100%;animation:sh 1.2s infinite linear}
+@keyframes sh{to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.skel{animation:none}}
+
+/* Mobil: Panel als Bottom-Sheet */
+@media (max-width:820px){
+  :root{--panel-w:0px}
+  #map{right:0;bottom:46vh}
+  .topbar{right:0}
+  .brand small{display:none}
+  .panel{top:auto;left:0;height:46vh;width:auto;border-left:0;border-top:1px solid var(--line);border-radius:16px 16px 0 0;padding-left:env(safe-area-inset-left,0px)}
+  .panel.expanded{height:88vh}
+  .readout{bottom:calc(46vh + 30px)}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}
+  .handle{display:block!important}
+}
+.handle{display:none;width:44px;height:5px;border-radius:3px;background:var(--line);margin:8px auto 0;border:0;cursor:pointer;padding:0}
+</style>
+</head>
+<body>
+
+<div id="map" aria-label="Globus"></div>
+
+<header class="topbar">
+  <div class="brand"><h1>Pure <span>Nature</span></h1><small>Arten der Welt, live</small></div>
+  <form class="search" id="searchForm" role="search" autocomplete="off">
+    <input id="searchInput" type="search" placeholder="Ort suchen, z. B. Borneo" aria-label="Ort suchen">
+    <ul id="searchResults" hidden></ul>
+  </form>
+  <div class="toggles">
+    <button class="pill" id="tgSat" aria-pressed="false" title="Satellitenbild (Sentinel-2 cloudless)">Satellit</button>
+    <button class="pill" id="tgDensity" aria-pressed="true" title="Alle Fundmeldungen aus GBIF als Dichtekarte">Fund­dichte</button>
+  </div>
+</header>
+
+<div class="readout" id="readout">–</div>
+
+<aside class="panel" id="panel" aria-label="Arten im Kartenausschnitt">
+  <button class="handle" id="handle" aria-label="Panel vergrößern"></button>
+  <div class="panel-head">
+    <div>
+      <div class="eyebrow" id="scope">Kartenausschnitt</div>
+      <p class="place" id="place">Die ganze Welt</p>
+      <div class="where" id="where"></div>
+    </div>
+    <div class="groups" id="groups" role="group" aria-label="Artengruppe"></div>
+    <div class="opts">
+      <label><input type="checkbox" id="research" checked> nur bestätigte Bestimmungen</label>
+      <span class="total" id="total"></span>
+    </div>
+  </div>
+  <div class="list" id="list"><div class="grid" id="grid"></div><button class="btn more" id="more" hidden>Weitere Arten laden</button></div>
+  <details class="sources">
+    <summary>Datenquellen &amp; Lizenzen</summary>
+    <ul>
+      <li><a href="https://www.inaturalist.org" target="_blank" rel="noopener">iNaturalist</a> – Arten &amp; Beobachtungen; Fotos mit eigener CC-Lizenz je Bild, API frei für nicht-kommerzielle Nutzung</li>
+      <li><a href="https://www.gbif.org" target="_blank" rel="noopener">GBIF</a> – weltweite Fundmeldungen (CC0 / CC BY / CC BY-NC)</li>
+      <li><a href="https://de.wikipedia.org" target="_blank" rel="noopener">Wikipedia</a> – Artbeschreibungen (CC BY-SA 4.0)</li>
+      <li><a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> / <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> – Karte (ODbL)</li>
+      <li><a href="https://s2maps.eu" target="_blank" rel="noopener">Sentinel-2 cloudless</a> by EOX – Satellitenbild (CC BY-NC-SA 4.0, enthält modifizierte Copernicus-Daten)</li>
+      <li><a href="https://nominatim.org" target="_blank" rel="noopener">Nominatim</a> – Ortssuche (OSM, ODbL)</li>
+      <li><a href="https://maplibre.org" target="_blank" rel="noopener">MapLibre GL JS</a> – Globus (BSD-3-Clause)</li>
+    </ul>
+  </details>
+
+  <section class="detail" id="detail" hidden aria-live="polite">
+    <div class="detail-bar">
+      <button class="back" id="back">← Zurück zur Liste</button>
+    </div>
+    <div class="detail-body" id="detailBody"></div>
+  </section>
+</aside>
+
+<script>
+/* ============================================================
+   Pure Nature – speichert nichts, holt alles live aus freien APIs
+   ============================================================ */
+const API = {
+  inat: "https://api.inaturalist.org/v1",
+  gbif: "https://api.gbif.org/v1",
+  wikiDe: "https://de.wikipedia.org/api/rest_v1/page/summary/",
+  nominatim: "https://nominatim.openstreetmap.org"
+};
+
+/* Artengruppen (iNaturalist „iconic taxa“). Nur sichtbare Organismen – keine Bakterien/Protozoen. */
+const GROUPS = [
+  { id:"all",   label:"Alle",        taxa:"Plantae,Fungi,Mammalia,Aves,Reptilia,Amphibia,Actinopterygii,Insecta,Arachnida,Mollusca,Animalia", c:"var(--pollen)" },
+  { id:"plants",label:"Pflanzen",    taxa:"Plantae",        c:"var(--plantae)" },
+  { id:"fungi", label:"Pilze",       taxa:"Fungi",          c:"var(--fungi)" },
+  { id:"mamm",  label:"Säugetiere",  taxa:"Mammalia",       c:"var(--animalia)" },
+  { id:"birds", label:"Vögel",       taxa:"Aves",           c:"var(--animalia)" },
+  { id:"rept",  label:"Reptilien",   taxa:"Reptilia",       c:"var(--animalia)" },
+  { id:"amph",  label:"Amphibien",   taxa:"Amphibia",       c:"var(--animalia)" },
+  { id:"fish",  label:"Fische",      taxa:"Actinopterygii", c:"var(--animalia)" },
+  { id:"ins",   label:"Insekten",    taxa:"Insecta",        c:"var(--animalia)" },
+  { id:"arach", label:"Spinnentiere",taxa:"Arachnida",      c:"var(--animalia)" },
+  { id:"moll",  label:"Weichtiere",  taxa:"Mollusca",       c:"var(--animalia)" }
+];
+const KINGDOM_COLOR = { Plantae:"var(--plantae)", Fungi:"var(--fungi)" }; // sonst Tiere
+const RANK_DE = { kingdom:"Reich", phylum:"Stamm", subphylum:"Unterstamm", class:"Klasse", subclass:"Unterklasse", order:"Ordnung", suborder:"Unterordnung", superfamily:"Überfamilie", family:"Familie", subfamily:"Unterfamilie", tribe:"Tribus", genus:"Gattung", species:"Art", subspecies:"Unterart", variety:"Varietät" };
+const IUCN = { 10:["LC","Nicht gefährdet","#86b86f"], 20:["NT","Potenziell gefährdet","#c5c45a"], 30:["VU","Gefährdet","#e7ad4f"], 40:["EN","Stark gefährdet","#e0794a"], 50:["CR","Vom Aussterben bedroht","#e04a4a"], 60:["EW","In der Natur ausgestorben","#b07cc0"], 70:["EX","Ausgestorben","#9a9a9a"] };
+
+const state = { group:"all", research:true, page:1, perPage:48, total:0, lastQuery:null, abort:null, selectedTaxon:null };
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, m => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
+const fmt = n => new Intl.NumberFormat("de-DE").format(n ?? 0);
+const photo = (url, size) => url ? url.replace(/\/square\.|\/small\.|\/medium\./, `/${size}.`) : null;
+const groupColor = t => KINGDOM_COLOR[t?.iconic_taxon_name] || (t?.iconic_taxon_name ? "var(--animalia)" : "var(--line)");
+
+async function getJSON(url, signal){
+  const r = await fetch(url, { signal, headers:{ Accept:"application/json" } });
+  if (!r.ok) throw new Error(`${r.status} bei ${new URL(url).host}`);
+  return r.json();
+}
+
+/* ---------------- Karte / Globus ---------------- */
+const SAT_TILES = "https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2020_3857/default/g/{z}/{y}/{x}.jpg";
+const GBIF_DENSITY = "https://api.gbif.org/v2/map/occurrence/density/{z}/{x}/{y}@1x.png?style=green.poly&bin=hex&hexPerTile=40";
+
+const map = new maplibregl.Map({
+  container: "map",
+  style: "https://tiles.openfreemap.org/styles/liberty",
+  center: [11.46, 53.9],
+  zoom: 1.6,
+  attributionControl: { compact: true }
+});
+map.addControl(new maplibregl.NavigationControl({ visualizePitch:true }), "bottom-right");
+
+map.on("style.load", () => {
+  map.setProjection({ type: "globe" });
+  if (map.setSky) map.setSky({ "atmosphere-blend": ["interpolate",["linear"],["zoom"],0,1,5,1,7,0], "sky-color":"#0a0f0e", "horizon-color":"#1b2b26", "fog-color":"#0a0f0e" });
+
+  // Satellit (unter den Beschriftungen)
+  const firstSymbol = map.getStyle().layers.find(l => l.type === "symbol")?.id;
+  map.addSource("sat", { type:"raster", tiles:[SAT_TILES], tileSize:256, maxzoom:15,
+    attribution:'<a href="https://s2maps.eu" target="_blank">Sentinel-2 cloudless</a> by EOX (CC BY-NC-SA 4.0)' });
+  map.addLayer({ id:"sat", type:"raster", source:"sat", layout:{ visibility:"none" } }, firstSymbol);
+
+  // GBIF Fund-Dichte (alle Arten)
+  map.addSource("density", { type:"raster", tiles:[GBIF_DENSITY], tileSize:512,
+    attribution:'<a href="https://www.gbif.org" target="_blank">GBIF</a>' });
+  map.addLayer({ id:"density", type:"raster", source:"density", paint:{ "raster-opacity":0.55 } }, firstSymbol);
+
+  // Suchkreis
+  map.addSource("area", { type:"geojson", data:{ type:"FeatureCollection", features:[] } });
+  map.addLayer({ id:"area-fill", type:"fill", source:"area", paint:{ "fill-color":"#e7ad4f", "fill-opacity":0.06 } });
+  map.addLayer({ id:"area-line", type:"line", source:"area", paint:{ "line-color":"#e7ad4f", "line-width":1.5, "line-dasharray":[2,2] } });
+
+  scheduleLoad(0);
+});
+
+map.on("move", updateReadout);
+map.on("moveend", () => scheduleLoad(700));
+map.on("click", e => { map.easeTo({ center:e.lngLat, zoom:Math.max(map.getZoom(), 6), duration:900 }); });
+
+$("#tgSat").onclick = e => toggleLayer(e.currentTarget, "sat");
+$("#tgDensity").onclick = e => toggleLayer(e.currentTarget, "density");
+function toggleLayer(btn, id){
+  const on = btn.getAttribute("aria-pressed") !== "true";
+  btn.setAttribute("aria-pressed", on);
+  if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", on ? "visible" : "none");
+}
+
+/* Suchradius aus Zoomstufe: grob die halbe sichtbare Breite */
+function radiusKm(){
+  const z = map.getZoom();
+  return Math.round(Math.min(2500, 9000 / Math.pow(2, z - 1)));
+}
+const isGlobal = () => map.getZoom() < 3;
+
+function updateReadout(){
+  const c = map.getCenter();
+  $("#readout").innerHTML = `<b>${c.lat.toFixed(3)}°</b> ${c.lat>=0?"N":"S"} · <b>${c.lng.toFixed(3)}°</b> ${c.lng>=0?"O":"W"} · Zoom ${map.getZoom().toFixed(1)}`;
+}
+
+function circle(lng, lat, km, steps = 72){
+  const coords = [], R = 6371, d = km / R, la = lat*Math.PI/180, lo = lng*Math.PI/180;
+  for (let i = 0; i <= steps; i++){
+    const b = 2*Math.PI*i/steps;
+    const la2 = Math.asin(Math.sin(la)*Math.cos(d) + Math.cos(la)*Math.sin(d)*Math.cos(b));
+    const lo2 = lo + Math.atan2(Math.sin(b)*Math.sin(d)*Math.cos(la), Math.cos(d) - Math.sin(la)*Math.sin(la2));
+    coords.push([((lo2*180/Math.PI + 540) % 360) - 180, la2*180/Math.PI]);
+  }
+  return { type:"Feature", geometry:{ type:"Polygon", coordinates:[coords] } };
+}
+
+/* ---------------- Gruppen-Chips ---------------- */
+$("#groups").innerHTML = GROUPS.map(g =>
+  `<button class="chip" style="--c:${g.c}" data-id="${g.id}" aria-pressed="${g.id===state.group}"><i></i>${g.label}</button>`).join("");
+$("#groups").onclick = e => {
+  const b = e.target.closest(".chip"); if (!b) return;
+  state.group = b.dataset.id;
+  document.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", x === b));
+  loadSpecies(true);
+};
+$("#research").onchange = e => { state.research = e.target.checked; loadSpecies(true); };
+$("#more").onclick = () => { state.page++; loadSpecies(false); };
+
+/* ---------------- Artenliste (iNaturalist species_counts) ---------------- */
+let loadTimer;
+function scheduleLoad(ms){ clearTimeout(loadTimer); loadTimer = setTimeout(() => { loadSpecies(true); loadPlaceName(); }, ms); }
+
+async function loadSpecies(reset){
+  if (reset) state.page = 1;
+  const c = map.getCenter(), r = radiusKm(), g = GROUPS.find(x => x.id === state.group);
+  const p = new URLSearchParams({ iconic_taxa:g.taxa, per_page:state.perPage, page:state.page, locale:"de", preferred_place_id:"7207" /* Deutschland für dt. Namen */ });
+  if (state.research) p.set("quality_grade","research");
+  if (!isGlobal()){ p.set("lat", c.lat.toFixed(4)); p.set("lng", c.lng.toFixed(4)); p.set("radius", r); }
+
+  // Suchkreis zeigen
+  map.getSource("area")?.setData(isGlobal() ? { type:"FeatureCollection", features:[] } : circle(c.lng, c.lat, r));
+  $("#where").textContent = isGlobal() ? "weltweit" : `Umkreis ${fmt(r)} km um ${c.lat.toFixed(2)}°, ${c.lng.toFixed(2)}°`;
+
+  state.abort?.abort(); state.abort = new AbortController();
+  const grid = $("#grid");
+  if (reset){ grid.innerHTML = Array.from({length:8}, () => `<div class="card"><div class="noimg skel"></div><div class="meta"><div class="cn skel" style="height:14px;border-radius:4px"></div></div></div>`).join(""); $("#more").hidden = true; }
+
+  try{
+    const data = await getJSON(`${API.inat}/observations/species_counts?${p}`, state.abort.signal);
+    state.total = data.total_results;
+    $("#total").textContent = `${fmt(data.total_results)} Arten`;
+    const html = data.results.map(({count, taxon:t}) => {
+      const img = photo(t.default_photo?.square_url, "small");
+      return `<button class="card" data-id="${t.id}" style="--c:${groupColor(t)}">
+        ${img ? `<img src="${esc(img)}" alt="" loading="lazy">` : `<div class="noimg"></div>`}
+        <div class="meta">
+          <span class="cn">${esc(t.preferred_common_name || t.name)}</span>
+          ${t.preferred_common_name ? `<span class="sn">${esc(t.name)}</span>` : ""}
+          <span class="ct">${fmt(count)} Beobachtungen hier</span>
+        </div></button>`;
+    }).join("");
+    if (reset) grid.innerHTML = html || `<div class="state">Hier wurden noch keine Arten dieser Gruppe gemeldet. Zoom heraus oder wähle eine andere Gruppe.</div>`;
+    else grid.insertAdjacentHTML("beforeend", html);
+    $("#more").hidden = state.page * state.perPage >= data.total_results;
+    if (reset) $("#list").scrollTop = 0;
+  }catch(err){
+    if (err.name === "AbortError") return;
+    grid.innerHTML = `<div class="state">Arten konnten nicht geladen werden (${esc(err.message)}). Prüfe die Internetverbindung; iNaturalist erlaubt etwa eine Anfrage pro Sekunde.</div>`;
+  }
+}
+$("#grid").onclick = e => { const c = e.target.closest(".card"); if (c?.dataset.id) openDetail(+c.dataset.id); };
+
+/* ---------------- Ortsname (Nominatim, gedrosselt) ---------------- */
+let placeAbort;
+async function loadPlaceName(){
+  if (isGlobal()){ $("#place").textContent = "Die ganze Welt"; $("#scope").textContent = "Globus"; return; }
+  const z = map.getZoom(), c = map.getCenter();
+  const nz = z < 5 ? 3 : z < 7 ? 5 : z < 10 ? 8 : 10;
+  placeAbort?.abort(); placeAbort = new AbortController();
+  try{
+    const d = await getJSON(`${API.nominatim}/reverse?format=jsonv2&lat=${c.lat}&lon=${c.lng}&zoom=${nz}&accept-language=de`, placeAbort.signal);
+    const a = d.address || {};
+    $("#place").textContent = d.name || a.state || a.country || "Unbenannte Gegend";
+    $("#scope").textContent = [a.state !== d.name ? a.state : null, a.country !== d.name ? a.country : null].filter(Boolean).join(" · ") || "Kartenausschnitt";
+  }catch(err){
+    if (err.name !== "AbortError"){ $("#place").textContent = "Offenes Meer oder unbenannt"; $("#scope").textContent = "Kartenausschnitt"; }
+  }
+}
+
+/* ---------------- Ortssuche ---------------- */
+let searchTimer;
+$("#searchInput").addEventListener("input", e => {
+  clearTimeout(searchTimer);
+  const q = e.target.value.trim();
+  if (q.length < 3){ $("#searchResults").hidden = true; return; }
+  searchTimer = setTimeout(async () => {
+    try{
+      const res = await getJSON(`${API.nominatim}/search?format=jsonv2&limit=6&accept-language=de&q=${encodeURIComponent(q)}`);
+      $("#searchResults").innerHTML = res.map(r => `<li><button type="button" data-bb="${r.boundingbox.join(",")}">${esc(r.display_name)}</button></li>`).join("") || `<li class="state">Nichts gefunden</li>`;
+      $("#searchResults").hidden = false;
+    }catch{ /* still */ }
+  }, 600);
+});
+$("#searchResults").onclick = e => {
+  const b = e.target.closest("button[data-bb]"); if (!b) return;
+  const [s, n, w, ea] = b.dataset.bb.split(",").map(Number);
+  map.fitBounds([[w, s], [ea, n]], { padding:60, maxZoom:11, duration:1800 });
+  $("#searchResults").hidden = true; $("#searchInput").blur();
+};
+$("#searchForm").onsubmit = e => { e.preventDefault(); $("#searchResults").querySelector("button")?.click(); };
+
+/* ---------------- Detailansicht ---------------- */
+$("#back").onclick = closeDetail;
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#detail").hidden) closeDetail(); });
+
+function closeDetail(){
+  $("#detail").hidden = true;
+  setSpeciesOverlay(null);
+}
+
+async function openDetail(id){
+  const body = $("#detailBody");
+  $("#detail").hidden = false;
+  body.innerHTML = `<div class="hero"><div class="skel" style="aspect-ratio:3/2"></div></div><div class="d-sec"><div class="skel" style="height:26px;border-radius:6px;width:70%"></div></div>`;
+  try{
+    const { results:[t] } = await getJSON(`${API.inat}/taxa/${id}?locale=de&preferred_place_id=7207`);
+    state.selectedTaxon = t;
+    renderDetail(t);
+    // Zusatzquellen parallel
+    loadWikipedia(t); loadGbif(t); loadLocalCount(t);
+  }catch(err){
+    body.innerHTML = `<div class="state">Details konnten nicht geladen werden (${esc(err.message)}).</div>`;
+  }
+}
+
+function iucnOf(t){
+  const s = (t.conservation_statuses || []).find(x => !x.place && x.iucn) || (t.conservation_statuses || []).find(x => x.iucn);
+  return s ? { ...s, code: IUCN[s.iucn] } : null;
+}
+
+function renderDetail(t){
+  const photos = (t.taxon_photos || []).slice(0, 8).map(x => x.photo);
+  const first = photos[0] || t.default_photo;
+  const iucn = iucnOf(t);
+  const ancestors = (t.ancestors || []).filter(a => RANK_DE[a.rank] && ["kingdom","phylum","class","order","family","genus"].includes(a.rank));
+
+  $("#detailBody").innerHTML = `
+    <div class="hero"><img id="heroImg" src="${esc(photo(first?.url || first?.square_url, "large") || "")}" alt="${esc(t.preferred_common_name || t.name)}"></div>
+    <div class="credit" id="heroCredit">${esc(first?.attribution || "")}</div>
+    ${photos.length > 1 ? `<div class="thumbs" id="thumbs">${photos.map((p,i) =>
+      `<button data-i="${i}" aria-pressed="${i===0}" aria-label="Foto ${i+1}"><img src="${esc(photo(p.url || p.square_url, "square"))}" alt=""></button>`).join("")}</div>` : ""}
+
+    <div class="d-sec">
+      <div>
+        <h2 class="d-name">${esc(t.preferred_common_name || t.name)}</h2>
+        ${t.preferred_common_name ? `<p class="d-sci">${esc(t.name)}</p>` : ""}
+      </div>
+      <div class="badges">
+        <span class="badge">${esc(RANK_DE[t.rank] || t.rank)}</span>
+        ${t.iconic_taxon_name ? `<span class="badge">${esc(t.iconic_taxon_name)}</span>` : ""}
+        ${iucn?.code ? `<span class="badge iucn" style="--sc:${iucn.code[2]}" title="${esc(iucn.authority || "IUCN")}">IUCN ${iucn.code[0]} · ${iucn.code[1]}</span>` : ""}
+        ${t.extinct ? `<span class="badge">ausgestorben</span>` : ""}
+      </div>
+      <div class="facts">
+        <div class="fact"><b>${fmt(t.observations_count)}</b><span>Beobachtungen weltweit (iNat)</span></div>
+        <div class="fact"><b id="gbifCount">…</b><span>Fundmeldungen (GBIF)</span></div>
+        <div class="fact"><b id="localCount">…</b><span>im Kartenausschnitt</span></div>
+      </div>
+      <div class="actions">
+        <button class="btn primary" id="showRange" aria-pressed="false">Verbreitung auf dem Globus zeigen</button>
+      </div>
+    </div>
+
+    <div class="d-sec">
+      <h3 class="h">Beschreibung</h3>
+      <p class="prose" id="wiki"><span class="skel" style="display:block;height:60px;border-radius:6px"></span></p>
+    </div>
+
+    ${ancestors.length ? `<div class="d-sec">
+      <h3 class="h">Systematik</h3>
+      <ul class="tax">${ancestors.map(a => `<li><span class="r">${RANK_DE[a.rank]}</span><span class="n">${esc(a.preferred_common_name || "")}${a.preferred_common_name ? " · " : ""}<i>${esc(a.name)}</i></span></li>`).join("")}
+      <li><span class="r">${RANK_DE[t.rank] || t.rank}</span><span class="n"><i>${esc(t.name)}</i></span></li></ul>
+    </div>` : ""}
+
+    <div class="d-sec">
+      <h3 class="h">Noch zu definieren</h3>
+      <div class="placeholder">
+        <div>Lebensraum</div><div>Größe &amp; Merkmale</div>
+        <div>Jahreszeit / Phänologie</div><div>Verwechslungsarten</div>
+        <div>Laute &amp; Rufe</div><div>Nahrung &amp; Beziehungen</div>
+      </div>
+    </div>
+
+    <div class="d-sec">
+      <h3 class="h">Mehr erfahren</h3>
+      <div class="actions">
+        <a class="btn" href="https://www.inaturalist.org/taxa/${t.id}" target="_blank" rel="noopener">iNaturalist</a>
+        <a class="btn" id="gbifLink" href="https://www.gbif.org/search?q=${encodeURIComponent(t.name)}" target="_blank" rel="noopener">GBIF</a>
+        <a class="btn" id="wikiLink" href="https://de.wikipedia.org/wiki/${encodeURIComponent(t.name)}" target="_blank" rel="noopener">Wikipedia</a>
+      </div>
+    </div>`;
+
+  $("#thumbs")?.addEventListener("click", e => {
+    const b = e.target.closest("button[data-i]"); if (!b) return;
+    const p = photos[+b.dataset.i];
+    $("#heroImg").src = photo(p.url || p.square_url, "large");
+    $("#heroCredit").textContent = p.attribution || "";
+    document.querySelectorAll("#thumbs button").forEach(x => x.setAttribute("aria-pressed", x === b));
+  });
+  $("#showRange").onclick = e => {
+    const on = e.currentTarget.getAttribute("aria-pressed") !== "true";
+    e.currentTarget.setAttribute("aria-pressed", on);
+    e.currentTarget.textContent = on ? "Verbreitung ausblenden" : "Verbreitung auf dem Globus zeigen";
+    setSpeciesOverlay(on ? t.id : null);
+    if (on) map.easeTo({ zoom: Math.min(map.getZoom(), 2.5), duration:1200 });
+  };
+  $("#detailBody").scrollTop = 0;
+}
+
+async function loadWikipedia(t){
+  const el = () => $("#wiki");
+  const tryTitles = [t.name];
+  try{
+    for (const title of tryTitles){
+      const r = await fetch(API.wikiDe + encodeURIComponent(title.replace(/ /g, "_")));
+      if (r.ok){
+        const d = await r.json();
+        if (d.type !== "disambiguation" && d.extract && el()){
+          el().innerHTML = `${esc(d.extract)} <span style="color:var(--muted);font-size:12px">– Wikipedia, CC BY-SA 4.0</span>`;
+          $("#wikiLink").href = d.content_urls?.desktop?.page || $("#wikiLink").href;
+          return;
+        }
+      }
+    }
+  }catch{}
+  // Fallback: Zusammenfassung von iNaturalist (meist englische Wikipedia)
+  if (el()){
+    const txt = (t.wikipedia_summary || "").replace(/<[^>]+>/g, "");
+    el().textContent = txt || "Für diese Art gibt es noch keine Beschreibung. Hier könnten später eigene Inhalte stehen.";
+  }
+}
+
+async function loadGbif(t){
+  try{
+    const m = await getJSON(`${API.gbif}/species/match?name=${encodeURIComponent(t.name)}&strict=true`);
+    if (!m.usageKey){ $("#gbifCount").textContent = "–"; return; }
+    const o = await getJSON(`${API.gbif}/occurrence/search?taxonKey=${m.usageKey}&limit=0`);
+    $("#gbifCount").textContent = fmt(o.count);
+    $("#gbifLink").href = `https://www.gbif.org/species/${m.usageKey}`;
+  }catch{ const e = $("#gbifCount"); if (e) e.textContent = "–"; }
+}
+
+async function loadLocalCount(t){
+  try{
+    const c = map.getCenter();
+    const p = new URLSearchParams({ taxon_id:t.id, per_page:0 });
+    if (!isGlobal()){ p.set("lat", c.lat); p.set("lng", c.lng); p.set("radius", radiusKm()); }
+    const d = await getJSON(`${API.inat}/observations?${p}`);
+    $("#localCount").textContent = fmt(d.total_results);
+  }catch{ const e = $("#localCount"); if (e) e.textContent = "–"; }
+}
+
+/* Verbreitungs-Overlay einer Art (iNaturalist Grid-Kacheln) */
+function setSpeciesOverlay(taxonId){
+  if (map.getLayer("species")) map.removeLayer("species");
+  if (map.getSource("species")) map.removeSource("species");
+  if (!taxonId) return;
+  map.addSource("species", { type:"raster", tileSize:256,
+    tiles:[`${API.inat}/grid/{z}/{x}/{y}.png?taxon_id=${taxonId}&color=%23e7ad4f${state.research ? "&quality_grade=research" : ""}`],
+    attribution:'<a href="https://www.inaturalist.org" target="_blank">iNaturalist</a>' });
+  map.addLayer({ id:"species", type:"raster", source:"species", paint:{ "raster-opacity":0.9 } });
+}
+
+/* Mobil: Bottom-Sheet vergrößern */
+$("#handle").onclick = () => { $("#panel").classList.toggle("expanded"); setTimeout(() => map.resize(), 250); };
+updateReadout();
+</script>
+</body>
+</html>
