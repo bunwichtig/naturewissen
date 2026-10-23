@@ -80,6 +80,13 @@ button,input{font:inherit;color:inherit}
 .eyebrow{font:500 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 .place{font:700 22px/1.15 var(--f-display);letter-spacing:-.01em;margin:4px 0 0;text-wrap:balance}
 .where{font:12px var(--f-data);color:var(--muted);font-variant-numeric:tabular-nums}
+.filter-toggle{display:flex;align-items:center;gap:8px;width:100%;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:9px 12px;cursor:pointer;text-align:left}
+.filter-toggle .dot{width:10px;height:10px;border-radius:50%;background:var(--c,var(--pollen));flex:0 0 auto}
+.filter-toggle .lbl{font-weight:600}
+.filter-toggle .total{margin-left:auto;color:var(--muted)}
+.filter-toggle .chev{transition:transform .2s;color:var(--muted);font-size:12px}
+.filter-toggle[aria-expanded="true"] .chev{transform:rotate(180deg)}
+.filters{display:grid;gap:10px}
 .groups{display:flex;gap:6px;flex-wrap:wrap}
 .chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel-2);border-radius:999px;padding:5px 11px;font-size:13px;cursor:pointer;color:var(--ink)}
 .chip i{width:8px;height:8px;border-radius:50%;background:var(--c,var(--muted))}
@@ -143,19 +150,38 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
 @keyframes sh{to{background-position:-200% 0}}
 @media (prefers-reduced-motion:reduce){.skel{animation:none}}
 
-/* Mobil: Panel als Bottom-Sheet */
+/* Mobil: Panel als ziehbares Bottom-Sheet, Globus liegt vollflächig dahinter */
+.handle{display:none}
 @media (max-width:820px){
-  :root{--panel-w:0px}
-  #map{right:0;bottom:46vh}
-  .topbar{right:0}
+  :root{--panel-w:0px;--sheet-h:64vh}
+  #map{right:0}
+  .topbar{right:0;gap:8px;padding-bottom:8px}
+  .brand{width:100%}
+  .brand h1{font-size:22px}
   .brand small{display:none}
-  .panel{top:auto;left:0;height:46vh;width:auto;border-left:0;border-top:1px solid var(--line);border-radius:16px 16px 0 0;padding-left:env(safe-area-inset-left,0px)}
-  .panel.expanded{height:88vh}
-  .readout{bottom:calc(46vh + 30px)}
-  .grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}
-  .handle{display:block!important}
+  .search{flex:1;min-width:0}
+  .search input{width:100%;padding:7px 12px}
+  .pill{padding:6px 10px;font-size:12px}
+  .readout{display:none}
+  .maplibregl-ctrl-bottom-right{bottom:calc(var(--sheet-h) + 4px)}
+  .maplibregl-ctrl-bottom-left,.maplibregl-ctrl-bottom-right .maplibregl-ctrl-attrib{display:none}
+
+  .panel{top:auto;left:0;width:auto;height:var(--sheet-h);border-left:0;border-top:1px solid var(--line);border-radius:18px 18px 0 0;
+    padding-left:env(safe-area-inset-left,0px);box-shadow:0 -12px 40px rgba(0,0,0,.45);transition:height .28s cubic-bezier(.2,.8,.2,1)}
+  .panel.dragging{transition:none}
+  .handle{display:flex;justify-content:center;align-items:center;width:100%;height:26px;background:none;border:0;padding:0;cursor:grab;touch-action:none;flex:0 0 auto}
+  .handle::before{content:"";width:44px;height:5px;border-radius:3px;background:var(--muted);opacity:.6}
+  .panel-head{padding:0 16px 10px;gap:8px;touch-action:none}
+  .place{font-size:19px;margin-top:2px}
+  .list{padding:12px 16px 20px}
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .card .cn{font-size:15px}
+  .sources{padding:8px 16px}
+  .detail{border-radius:18px 18px 0 0}
+  .detail-bar{padding-top:12px}
+  .back{padding:9px 14px;font-size:14px}
 }
-.handle{display:none;width:44px;height:5px;border-radius:3px;background:var(--line);margin:8px auto 0;border:0;cursor:pointer;padding:0}
+@media (max-width:820px) and (prefers-reduced-motion:reduce){.panel{transition:none}}
 </style>
 </head>
 <body>
@@ -177,17 +203,22 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
 <div class="readout" id="readout">–</div>
 
 <aside class="panel" id="panel" aria-label="Arten im Kartenausschnitt">
-  <button class="handle" id="handle" aria-label="Panel vergrößern"></button>
-  <div class="panel-head">
+  <button class="handle" id="handle" aria-label="Artenliste größer oder kleiner ziehen"></button>
+  <div class="panel-head" id="panelHead">
     <div>
       <div class="eyebrow" id="scope">Kartenausschnitt</div>
       <p class="place" id="place">Die ganze Welt</p>
       <div class="where" id="where"></div>
     </div>
-    <div class="groups" id="groups" role="group" aria-label="Artengruppe"></div>
-    <div class="opts">
-      <label><input type="checkbox" id="research" checked> nur bestätigte Bestimmungen</label>
-      <span class="total" id="total"></span>
+    <button class="filter-toggle" id="filterToggle" aria-expanded="true" aria-controls="filters">
+      <span class="dot" id="ftDot"></span><span class="lbl" id="ftLabel">Alle Gruppen</span>
+      <span class="total" id="total"></span><span class="chev" aria-hidden="true">▾</span>
+    </button>
+    <div class="filters" id="filters">
+      <div class="groups" id="groups" role="group" aria-label="Artengruppe"></div>
+      <div class="opts">
+        <label><input type="checkbox" id="research" checked> nur bestätigte Bestimmungen</label>
+      </div>
     </div>
   </div>
   <div class="list" id="list"><div class="grid" id="grid"></div><button class="btn more" id="more" hidden>Weitere Arten laden</button></div>
@@ -332,8 +363,20 @@ $("#groups").onclick = e => {
   const b = e.target.closest(".chip"); if (!b) return;
   state.group = b.dataset.id;
   document.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", x === b));
+  updateFilterLabel();
+  if (isMobile()) setFiltersOpen(false);   // auf dem Handy nach der Wahl wieder einklappen
   loadSpecies(true);
 };
+function updateFilterLabel(){
+  const g = GROUPS.find(x => x.id === state.group);
+  $("#ftLabel").textContent = g.id === "all" ? "Alle Gruppen" : g.label;
+  $("#ftDot").style.setProperty("--c", g.c);
+}
+function setFiltersOpen(open){
+  $("#filters").hidden = !open;
+  $("#filterToggle").setAttribute("aria-expanded", open);
+}
+$("#filterToggle").onclick = () => setFiltersOpen($("#filters").hidden);
 $("#research").onchange = e => { state.research = e.target.checked; loadSpecies(true); };
 $("#more").onclick = () => { state.page++; loadSpecies(false); };
 
@@ -352,6 +395,9 @@ async function loadSpecies(reset){
   map.getSource("area")?.setData(isGlobal() ? { type:"FeatureCollection", features:[] } : circle(c.lng, c.lat, r));
   $("#where").textContent = isGlobal() ? "weltweit" : `Umkreis ${fmt(r)} km um ${c.lat.toFixed(2)}°, ${c.lng.toFixed(2)}°`;
 
+  const key = [state.group, state.research, state.page, isGlobal() ? "world" : `${c.lat.toFixed(3)},${c.lng.toFixed(3)},${r}`].join("|");
+  if (key === state.lastQuery) return;
+  state.lastQuery = key;
   state.abort?.abort(); state.abort = new AbortController();
   const grid = $("#grid");
   if (reset){ grid.innerHTML = Array.from({length:8}, () => `<div class="card"><div class="noimg skel"></div><div class="meta"><div class="cn skel" style="height:14px;border-radius:4px"></div></div></div>`).join(""); $("#more").hidden = true; }
@@ -376,6 +422,7 @@ async function loadSpecies(reset){
     if (reset) $("#list").scrollTop = 0;
   }catch(err){
     if (err.name === "AbortError") return;
+    state.lastQuery = null;
     grid.innerHTML = `<div class="state">Arten konnten nicht geladen werden (${esc(err.message)}). Prüfe die Internetverbindung; iNaturalist erlaubt etwa eine Anfrage pro Sekunde.</div>`;
   }
 }
@@ -523,7 +570,10 @@ function renderDetail(t){
     e.currentTarget.setAttribute("aria-pressed", on);
     e.currentTarget.textContent = on ? "Verbreitung ausblenden" : "Verbreitung auf dem Globus zeigen";
     setSpeciesOverlay(on ? t.id : null);
-    if (on) map.easeTo({ zoom: Math.min(map.getZoom(), 2.5), duration:1200 });
+    if (on){
+      if (isMobile()) setSheet("peek");
+      map.easeTo({ zoom: Math.min(map.getZoom(), 2.5), duration:1200 });
+    }
   };
   $("#detailBody").scrollTop = 0;
 }
@@ -582,8 +632,91 @@ function setSpeciesOverlay(taxonId){
   map.addLayer({ id:"species", type:"raster", source:"species", paint:{ "raster-opacity":0.9 } });
 }
 
-/* Mobil: Bottom-Sheet vergrößern */
-$("#handle").onclick = () => { $("#panel").classList.toggle("expanded"); setTimeout(() => map.resize(), 250); };
+/* ---------------- Mobil: ziehbares Bottom-Sheet ----------------
+   Drei Stufen: "peek" (nur Kopf, Globus frei), "mid" (Standard), "full" (Liste bildschirmfüllend). */
+const mq = window.matchMedia("(max-width:820px)");
+const isMobile = () => mq.matches;
+const SNAPS = { peek:0.24, mid:0.64, full:0.93 };
+let snap = "mid", beforeDetail = "mid";
+const panel = $("#panel");
+
+function vh(){ return window.innerHeight; }
+function setSheet(name){
+  snap = name;
+  document.documentElement.style.setProperty("--sheet-h", Math.round(SNAPS[name] * vh()) + "px");
+  // Kartenmitte über dem Sheet halten (bei "full" ist der Globus ohnehin verdeckt)
+  const pad = Math.round(Math.min(SNAPS[name], SNAPS.mid) * vh());
+  map.easeTo({ padding:{ bottom:pad, top:0, left:0, right:0 }, duration:280 });
+  $("#handle").setAttribute("aria-label", name === "full" ? "Artenliste verkleinern" : "Artenliste vergrößern");
+}
+
+function applyLayout(){
+  if (isMobile()){
+    setFiltersOpen(false);
+    setSheet(snap);
+  } else {
+    document.documentElement.style.removeProperty("--sheet-h");
+    setFiltersOpen(true);
+    map.easeTo({ padding:{ top:0, bottom:0, left:0, right:0 }, duration:0 });
+  }
+}
+mq.addEventListener("change", applyLayout);
+window.addEventListener("resize", () => { if (isMobile()) document.documentElement.style.setProperty("--sheet-h", Math.round(SNAPS[snap] * vh()) + "px"); });
+
+// Ziehen am Griff oder am Kopfbereich
+(function enableDrag(){
+  let startY = 0, startH = 0, moved = false, active = false;
+  const targets = [$("#handle"), $("#panelHead")];
+  const down = e => {
+    if (!isMobile()) return;
+    if (e.target.closest("button:not(#handle), input, label, a")) return; // Bedienelemente bleiben klickbar
+    active = true; moved = false; startY = e.clientY; startH = panel.getBoundingClientRect().height;
+    panel.classList.add("dragging");
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+  };
+  const move = e => {
+    if (!active) return;
+    const dy = startY - e.clientY;
+    if (Math.abs(dy) > 4) moved = true;
+    const h = Math.max(SNAPS.peek * vh() * 0.8, Math.min(SNAPS.full * vh(), startH + dy));
+    document.documentElement.style.setProperty("--sheet-h", h + "px");
+  };
+  const up = e => {
+    if (!active) return;
+    active = false; panel.classList.remove("dragging");
+    const h = panel.getBoundingClientRect().height / vh();
+    if (!moved){ // Tippen auf den Griff: eine Stufe weiter
+      if (e.currentTarget.id === "handle") setSheet(snap === "full" ? "mid" : snap === "mid" ? "full" : "mid");
+      else setSheet(snap);
+      return;
+    }
+    const nearest = Object.entries(SNAPS).sort((a, b) => Math.abs(a[1] - h) - Math.abs(b[1] - h))[0][0];
+    setSheet(nearest);
+  };
+  targets.forEach(t => {
+    t.addEventListener("pointerdown", down);
+    t.addEventListener("pointermove", move);
+    t.addEventListener("pointerup", up);
+    t.addEventListener("pointercancel", up);
+  });
+})();
+
+// Beim Scrollen in der Liste klappt das Sheet ganz auf
+$("#list").addEventListener("scroll", () => {
+  if (isMobile() && snap !== "full" && $("#list").scrollTop > 30) setSheet("full");
+}, { passive:true });
+
+// Detailansicht auf dem Handy immer bildschirmfüllend, danach zurück zur vorherigen Höhe
+const _open = openDetail, _close = closeDetail;
+openDetail = id => { if (isMobile()){ beforeDetail = snap; setSheet("full"); } return _open(id); };
+closeDetail = () => { _close(); if (isMobile()) setSheet(beforeDetail === "full" ? "mid" : beforeDetail); };
+$("#back").onclick = () => closeDetail();
+
+// Auf dem Handy: Antippen des Globus verkleinert das Sheet, damit man frei navigieren kann
+map.on("dragstart", () => { if (isMobile() && snap === "full" && $("#detail").hidden) setSheet("mid"); });
+
+updateFilterLabel();
+applyLayout();
 updateReadout();
 </script>
 </body>
