@@ -106,7 +106,19 @@ button,input{font:inherit;color:inherit}
 .card .sn{font:italic 13px/1.25 var(--f-sci);color:var(--muted);overflow-wrap:anywhere}
 .card .ct{font:11px var(--f-data);color:var(--muted);margin-top:4px}
 .state{color:var(--muted);font-size:14px;padding:24px 4px;text-align:center}
-.more{margin:16px auto 0;display:block}
+.more{margin:12px auto 0;display:block}
+.more:disabled{opacity:.6;cursor:progress}
+.tier{display:grid;gap:8px;padding-bottom:22px}
+.tier+.tier{border-top:1px solid var(--line);padding-top:4px}
+.tier-head{position:sticky;top:-14px;z-index:1;display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--panel);padding:12px 0 6px}
+.tier-head h3{font:700 17px/1.1 var(--f-display);margin:0;letter-spacing:-.01em}
+.tier-meta{margin-left:auto;font:11px var(--f-data);color:var(--muted);font-variant-numeric:tabular-nums}
+.tier-range{margin:-4px 0 4px;font-size:12px;color:var(--muted)}
+.tier-range:empty{display:none}
+.tier-note{font-size:12px;color:var(--muted);margin:0;max-width:65ch}
+.freq{display:inline-flex;align-items:flex-end;gap:2px;height:16px}
+.freq i{width:4px;border-radius:1px;background:var(--line)}
+.freq i.on{background:var(--pollen)}
 .sources{padding:10px 20px;border-top:1px solid var(--line);font-size:11px;color:var(--muted)}
 .sources summary{cursor:pointer}
 .sources ul{margin:8px 0 0;padding-left:16px;display:grid;gap:4px}
@@ -175,6 +187,7 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
   .place{font-size:19px;margin-top:2px}
   .list{padding:12px 16px 20px}
   .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .tier-head{top:-12px}
   .card .cn{font-size:15px}
   .sources{padding:8px 16px}
   .detail{border-radius:18px 18px 0 0}
@@ -221,7 +234,7 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
       </div>
     </div>
   </div>
-  <div class="list" id="list"><div class="grid" id="grid"></div><button class="btn more" id="more" hidden>Weitere Arten laden</button></div>
+  <div class="list" id="list"><div id="tiers"></div></div>
   <details class="sources">
     <summary>Datenquellen &amp; Lizenzen</summary>
     <ul>
@@ -272,7 +285,7 @@ const KINGDOM_COLOR = { Plantae:"var(--plantae)", Fungi:"var(--fungi)" }; // son
 const RANK_DE = { kingdom:"Reich", phylum:"Stamm", subphylum:"Unterstamm", class:"Klasse", subclass:"Unterklasse", order:"Ordnung", suborder:"Unterordnung", superfamily:"Überfamilie", family:"Familie", subfamily:"Unterfamilie", tribe:"Tribus", genus:"Gattung", species:"Art", subspecies:"Unterart", variety:"Varietät" };
 const IUCN = { 10:["LC","Nicht gefährdet","#86b86f"], 20:["NT","Potenziell gefährdet","#c5c45a"], 30:["VU","Gefährdet","#e7ad4f"], 40:["EN","Stark gefährdet","#e0794a"], 50:["CR","Vom Aussterben bedroht","#e04a4a"], 60:["EW","In der Natur ausgestorben","#b07cc0"], 70:["EX","Ausgestorben","#9a9a9a"] };
 
-const state = { group:"all", research:true, page:1, perPage:48, total:0, lastQuery:null, abort:null, selectedTaxon:null };
+const state = { group:"all", research:true, lastQuery:null, abort:null, selectedTaxon:null };
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, m => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
 const fmt = n => new Intl.NumberFormat("de-DE").format(n ?? 0);
@@ -365,7 +378,7 @@ $("#groups").onclick = e => {
   document.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", x === b));
   updateFilterLabel();
   if (isMobile()) setFiltersOpen(false);   // auf dem Handy nach der Wahl wieder einklappen
-  loadSpecies(true);
+  loadSpecies();
 };
 function updateFilterLabel(){
   const g = GROUPS.find(x => x.id === state.group);
@@ -377,56 +390,143 @@ function setFiltersOpen(open){
   $("#filterToggle").setAttribute("aria-expanded", open);
 }
 $("#filterToggle").onclick = () => setFiltersOpen($("#filters").hidden);
-$("#research").onchange = e => { state.research = e.target.checked; loadSpecies(true); };
-$("#more").onclick = () => { state.page++; loadSpecies(false); };
+$("#research").onchange = e => { state.research = e.target.checked; loadSpecies(); };
+/* ---------------- Artenliste in Häufigkeitsstufen (iNaturalist species_counts) ----------------
+   Die API liefert die Arten nach Anzahl der Beobachtungen im Ausschnitt sortiert.
+   Wir teilen diese Rangfolge in fünf Stufen und laden pro Stufe gezielt die passenden Seiten nach. */
+const TIERS = [
+  { id:"t1", label:"Häufig",          bars:5, to:0.05 },
+  { id:"t2", label:"Mittelhäufig",    bars:4, to:0.20 },
+  { id:"t3", label:"Weniger häufig",  bars:3, to:0.45 },
+  { id:"t4", label:"Selten",          bars:2, to:0.75 },
+  { id:"t5", label:"Sehr selten",     bars:1, to:1.00 }
+];
+const PAGE = 50, MAX_RANK = 10000 /* iNaturalist liefert höchstens 10.000 Ergebnisse */, FIRST = 6, MORE = 12;
+let ctx = null;   // aktuelle Abfrage: Parameter, Seiten-Cache, Stufen
 
-/* ---------------- Artenliste (iNaturalist species_counts) ---------------- */
 let loadTimer;
-function scheduleLoad(ms){ clearTimeout(loadTimer); loadTimer = setTimeout(() => { loadSpecies(true); loadPlaceName(); }, ms); }
+function scheduleLoad(ms){ clearTimeout(loadTimer); loadTimer = setTimeout(() => { loadSpecies(); loadPlaceName(); }, ms); }
 
-async function loadSpecies(reset){
-  if (reset) state.page = 1;
+function cardHTML({count, taxon:t}){
+  const img = photo(t.default_photo?.square_url, "small");
+  return `<button class="card" data-id="${t.id}" style="--c:${groupColor(t)}">
+    ${img ? `<img src="${esc(img)}" alt="" loading="lazy">` : `<div class="noimg"></div>`}
+    <div class="meta">
+      <span class="cn">${esc(t.preferred_common_name || t.name)}</span>
+      ${t.preferred_common_name ? `<span class="sn">${esc(t.name)}</span>` : ""}
+      <span class="ct">${fmt(count)} Beobachtung${count === 1 ? "" : "en"} hier</span>
+    </div></button>`;
+}
+const skeletons = n => Array.from({length:n}, () => `<div class="card"><div class="noimg skel"></div><div class="meta"><div class="cn skel" style="height:14px;border-radius:4px"></div></div></div>`).join("");
+const barsHTML = n => `<span class="freq" aria-hidden="true">${[1,2,3,4,5].map(i => `<i class="${i <= n ? "on" : ""}" style="height:${3 + i*2.4}px"></i>`).join("")}</span>`;
+
+function getPage(c, n){
+  if (!c.pages.has(n)){
+    const p = new URLSearchParams(c.params); p.set("per_page", PAGE); p.set("page", n);
+    const pr = getJSON(`${API.inat}/observations/species_counts?${p}`, c.signal);
+    pr.catch(() => c.pages.delete(n));
+    c.pages.set(n, pr);
+  }
+  return c.pages.get(n);
+}
+async function fetchRange(c, start, count){
+  const out = [];
+  for (let n = Math.floor(start/PAGE) + 1; n <= Math.floor((start + count - 1)/PAGE) + 1; n++){
+    const d = await getPage(c, n);
+    const base = (n - 1) * PAGE;
+    d.results.forEach((r, i) => { const rank = base + i; if (rank >= start && rank < start + count) out.push(r); });
+  }
+  return out;
+}
+
+async function loadSpecies(){
   const c = map.getCenter(), r = radiusKm(), g = GROUPS.find(x => x.id === state.group);
-  const p = new URLSearchParams({ iconic_taxa:g.taxa, per_page:state.perPage, page:state.page, locale:"de", preferred_place_id:"7207" /* Deutschland für dt. Namen */ });
-  if (state.research) p.set("quality_grade","research");
-  if (!isGlobal()){ p.set("lat", c.lat.toFixed(4)); p.set("lng", c.lng.toFixed(4)); p.set("radius", r); }
+  const params = new URLSearchParams({ iconic_taxa:g.taxa, locale:"de", preferred_place_id:"7207" /* Deutschland für dt. Namen */ });
+  if (state.research) params.set("quality_grade","research");
+  if (!isGlobal()){ params.set("lat", c.lat.toFixed(4)); params.set("lng", c.lng.toFixed(4)); params.set("radius", r); }
 
-  // Suchkreis zeigen
   map.getSource("area")?.setData(isGlobal() ? { type:"FeatureCollection", features:[] } : circle(c.lng, c.lat, r));
   $("#where").textContent = isGlobal() ? "weltweit" : `Umkreis ${fmt(r)} km um ${c.lat.toFixed(2)}°, ${c.lng.toFixed(2)}°`;
 
-  const key = [state.group, state.research, state.page, isGlobal() ? "world" : `${c.lat.toFixed(3)},${c.lng.toFixed(3)},${r}`].join("|");
+  const key = params.toString();
   if (key === state.lastQuery) return;
   state.lastQuery = key;
   state.abort?.abort(); state.abort = new AbortController();
-  const grid = $("#grid");
-  if (reset){ grid.innerHTML = Array.from({length:8}, () => `<div class="card"><div class="noimg skel"></div><div class="meta"><div class="cn skel" style="height:14px;border-radius:4px"></div></div></div>`).join(""); $("#more").hidden = true; }
+  const my = ctx = { params, pages:new Map(), signal:state.abort.signal, tiers:[] };
+  const box = $("#tiers");
+  box.innerHTML = `<section class="tier"><div class="grid">${skeletons(6)}</div></section>`;
+  $("#total").textContent = "";
+  $("#list").scrollTop = 0;
 
   try{
-    const data = await getJSON(`${API.inat}/observations/species_counts?${p}`, state.abort.signal);
-    state.total = data.total_results;
-    $("#total").textContent = `${fmt(data.total_results)} Arten`;
-    const html = data.results.map(({count, taxon:t}) => {
-      const img = photo(t.default_photo?.square_url, "small");
-      return `<button class="card" data-id="${t.id}" style="--c:${groupColor(t)}">
-        ${img ? `<img src="${esc(img)}" alt="" loading="lazy">` : `<div class="noimg"></div>`}
-        <div class="meta">
-          <span class="cn">${esc(t.preferred_common_name || t.name)}</span>
-          ${t.preferred_common_name ? `<span class="sn">${esc(t.name)}</span>` : ""}
-          <span class="ct">${fmt(count)} Beobachtungen hier</span>
-        </div></button>`;
-    }).join("");
-    if (reset) grid.innerHTML = html || `<div class="state">Hier wurden noch keine Arten dieser Gruppe gemeldet. Zoom heraus oder wähle eine andere Gruppe.</div>`;
-    else grid.insertAdjacentHTML("beforeend", html);
-    $("#more").hidden = state.page * state.perPage >= data.total_results;
-    if (reset) $("#list").scrollTop = 0;
+    const first = await getPage(my, 1);
+    if (ctx !== my) return;
+    const total = first.total_results;
+    $("#total").textContent = `${fmt(total)} Arten`;
+    if (!total){ box.innerHTML = `<div class="state">Hier wurden noch keine Arten dieser Gruppe gemeldet. Zoom heraus oder wähle eine andere Gruppe.</div>`; return; }
+
+    // Rangbereiche je Stufe
+    const n = Math.min(total, MAX_RANK);
+    let prev = 0;
+    my.tiers = TIERS.map(t => {
+      const endR = t.to === 1 ? n : Math.min(n, Math.max(prev + 1, Math.round(t.to * n)));
+      const tier = { ...t, start:prev, end:endR, shown:0 };
+      prev = endR; return tier;
+    }).filter(t => t.end > t.start);
+
+    box.innerHTML = my.tiers.map(t => `
+      <section class="tier" id="tier-${t.id}">
+        <header class="tier-head">
+          ${barsHTML(t.bars)}<h3>${t.label}</h3>
+          <span class="tier-meta">${fmt(t.end - t.start)} Arten · Rang ${fmt(t.start + 1)}–${fmt(t.end)}</span>
+        </header>
+        <p class="tier-range" id="range-${t.id}"></p>
+        <div class="grid" id="grid-${t.id}">${skeletons(Math.min(FIRST, t.end - t.start))}</div>
+        <button class="btn more" data-tier="${t.id}" hidden>Weitere Arten laden</button>
+      </section>`).join("") +
+      (total > MAX_RANK ? `<p class="tier-note">Hier gibt es ${fmt(total)} Arten. iNaturalist liefert nur die ersten ${fmt(MAX_RANK)}; die Stufen beziehen sich auf diese. Zoom hinein für eine vollständige Einteilung.</p>` : "");
+
+    // Stufen nacheinander füllen (schont das Anfragelimit der API)
+    for (const t of my.tiers){
+      await fillTier(my, t, FIRST, true);
+      if (ctx !== my) return;
+    }
   }catch(err){
-    if (err.name === "AbortError") return;
+    if (err.name === "AbortError" || ctx !== my) return;
     state.lastQuery = null;
-    grid.innerHTML = `<div class="state">Arten konnten nicht geladen werden (${esc(err.message)}). Prüfe die Internetverbindung; iNaturalist erlaubt etwa eine Anfrage pro Sekunde.</div>`;
+    box.innerHTML = `<div class="state">Arten konnten nicht geladen werden (${esc(err.message)}). Prüfe die Internetverbindung; iNaturalist erlaubt etwa eine Anfrage pro Sekunde.</div>`;
   }
 }
-$("#grid").onclick = e => { const c = e.target.closest(".card"); if (c?.dataset.id) openDetail(+c.dataset.id); };
+
+async function fillTier(my, t, howMany, replace){
+  const grid = $(`#grid-${t.id}`), btn = document.querySelector(`.more[data-tier="${t.id}"]`);
+  const count = Math.min(howMany, t.end - (t.start + t.shown));
+  if (count <= 0) return;
+  if (!replace){ btn.disabled = true; btn.textContent = "Lädt …"; grid.insertAdjacentHTML("beforeend", `<span class="pending" hidden></span>`); }
+  const items = await fetchRange(my, t.start + t.shown, count);
+  if (ctx !== my) return;
+  const html = items.map(cardHTML).join("");
+  if (replace) grid.innerHTML = html; else { grid.querySelector(".pending")?.remove(); grid.insertAdjacentHTML("beforeend", html); }
+  if (replace && items.length){
+    const hi = items[0].count;
+    $(`#range-${t.id}`).textContent = `bis ${fmt(hi)} Beobachtung${hi === 1 ? "" : "en"} je Art`;
+  }
+  t.shown += items.length;
+  const left = t.end - t.start - t.shown;
+  btn.hidden = left <= 0 || !items.length;
+  btn.disabled = false;
+  btn.textContent = `Weitere Arten laden · noch ${fmt(left)}`;
+}
+
+$("#tiers").onclick = async e => {
+  const card = e.target.closest(".card");
+  if (card?.dataset.id) return openDetail(+card.dataset.id);
+  const btn = e.target.closest(".more[data-tier]");
+  if (!btn || !ctx) return;
+  const my = ctx, t = my.tiers.find(x => x.id === btn.dataset.tier);
+  try{ await fillTier(my, t, MORE, false); }
+  catch(err){ if (ctx === my){ btn.disabled = false; btn.textContent = "Laden fehlgeschlagen – erneut versuchen"; } }
+};
 
 /* ---------------- Ortsname (Nominatim, gedrosselt) ---------------- */
 let placeAbort;
