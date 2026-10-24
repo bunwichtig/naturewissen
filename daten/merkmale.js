@@ -601,6 +601,8 @@ export const BELEG = {
 //   Reptilien, Größe: Amniote Life-History Database
 //   Amphibien, Größe und Ort: Trochet et al. 2014, europäische Amphibien (Biodiversity Data Journal, CC BY 4.0)
 //   Pilze, Form und Ort: FungalTraits 1.2 (Põlme et al. 2020), laut Autoren zur öffentlichen Nutzung
+//   Tagfalter, Größe und Ort: Trait data of European and Maghreb butterflies v1.2 (Middleton-Welling et al. 2020, CC0) – Spannweite, Lichtverhältnisse bei der Eiablage, Rast an Bauwerken
+//   Säugetiere, Wasser und Bäume: COMBINE (Soria et al. 2021, Kopie bei Dryad, CC0) – nur Lebensraum-Angaben; die Längen dieser Kopie haben verlorene Dezimaltrennzeichen und werden nicht verwendet
 // Je Gruppe zählen die in Deutschland bei iNaturalist bestätigt beobachteten Arten, gewichtet nach Zahl der Beobachtungen.
 // n = Arten mit Werten, cov = Anteil der Beobachtungen, für die es Werte gibt (in %).
 // Die Werte ergänzen die Tabelle: Ein Merkmal passt, wenn es im Wikipedia-Artikel steht ODER aus den Daten folgt.
@@ -755,7 +757,9 @@ export const DATEN = {
   "Muridae": { q:"Amniote + EltonTraits", z:"3,4", n:6, cov:100 },
   "Bovidae": { q:"Amniote + EltonTraits", z:"5,6", n:3, cov:100 },
   "Gliridae": { q:"Amniote + EltonTraits", z:"3", h:"wd", n:3, cov:100 },
-  "Chiroptera": { q:"Amniote + EltonTraits", z:"2,3", n:14, cov:100 },
+  "Chiroptera": { q:"Amniote + EltonTraits + COMBINE", z:"2,3", h:"wd", n:14, cov:100 },
+  "Cricetidae": { q:"COMBINE", h:"wa", n:5, cov:100 },
+  "Papilionoidea": { q:"Tagfalter Europas", z:"2,3", h:"wd,wi,ga", n:95, cov:98 },
   "Soricidae": { q:"Amniote + EltonTraits", z:"3", n:5, cov:100 },
   "Felidae": { q:"Amniote + EltonTraits", z:"5", n:3, cov:100 },
   "Phocoenidae": { q:"Amniote + EltonTraits", z:"6", h:"wa", n:1, cov:100 },
