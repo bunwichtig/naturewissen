@@ -74,7 +74,7 @@ export async function load(){
       if (ids.length){ p.delete("iconic_taxa"); p.set("taxon_id", ids.join(",")); }
     }catch{}
   }
-  const key = p.toString() + "|" + state.combo;
+  const key = p.toString() + "|" + state.combo + "|" + state.group;
   if (key === lastKey) return;
   lastKey = key; lastParams = p;
   abort?.abort(); abort = new AbortController();
