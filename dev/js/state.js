@@ -38,7 +38,7 @@ export const GROUPS = [
 ];
 
 export const state = {
-  mode:"entdecken",          // "entdecken" | "bestimmen"
+  mode:"entdecken",          // "entdecken" | "bestimmen" | "liste"
   center:{ lng:HOME.center[0], lat:HOME.center[1] },
   radius:HOME.km,
   place:HOME.name,

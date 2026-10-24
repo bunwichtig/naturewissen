@@ -245,3 +245,48 @@ body:not(.detail-open) .backdrop{display:none}
 .badge-ver:hover{background:var(--pollen)}
 .chips.sub{margin-top:8px;padding:8px 10px;border-left:2px solid var(--plantae);background:var(--panel);border-radius:0 12px 12px 0}
 .chips.sub .sub-label{font:400 11px/1 var(--f-data);text-transform:uppercase;letter-spacing:.08em;color:var(--plantae);align-self:center;margin-right:4px}
+
+/* ---------- Liste: alle Arten als Baum ---------- */
+.ls{grid-template-columns:1fr}
+.ls-side{display:grid;gap:12px;align-content:start}
+.ls-search input{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:10px 16px;color:var(--ink);font:inherit}
+.ls-search input::placeholder{color:var(--muted)}
+.ls-opts{display:grid;gap:8px}
+.ls-label{font:400 11px/1 var(--f-data);text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.ls-sort{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--muted)}
+.ls-sort select{background:var(--panel-2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font:inherit}
+.ls-hits{list-style:none;margin:0;padding:4px;display:grid;gap:2px;background:var(--panel);border:1px solid var(--line);border-radius:12px;max-height:340px;overflow:auto}
+.ls-hits button{display:grid;width:100%;text-align:left;background:none;border:0;border-radius:8px;padding:7px 9px;cursor:pointer;color:var(--ink)}
+.ls-hits button:hover{background:var(--panel-2)}
+.ls-hits b{font-weight:600;font-size:14px}
+.ls-hits i{font:italic 13px var(--f-sci);color:var(--muted)}
+.ls-hits small{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ls-main{display:grid;gap:10px;align-content:start;min-width:0}
+.ls-tree{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--panel)}
+.ls-node>.ls-row{border-top:1px solid var(--line)}
+.ls-tree>.ls-node:first-child>.ls-row{border-top:0}
+.ls-row{display:flex;align-items:center;gap:8px;width:100%;background:none;border:0;color:var(--ink);text-align:left;cursor:pointer;
+  padding:8px 12px 8px calc(12px + var(--d,0) * 18px);min-height:42px;font:inherit}
+.ls-row:hover{background:var(--panel-2)}
+.ls-row.flash{background:rgba(231,173,79,.18)}
+.ls-tw{width:14px;flex:none;color:var(--muted);font-size:12px;transition:transform .15s}
+.ls-row[aria-expanded="true"] .ls-tw{transform:rotate(90deg);color:var(--pollen)}
+.ls-node[style*="--d:0"]>.ls-row .ls-nm b{font:700 16px/1.2 var(--f-display)}
+.ls-nm{display:grid;min-width:0;flex:1}
+.ls-nm b{font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ls-nm i{font:italic 12.5px var(--f-sci);color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ls-row.leaf .ls-nm b{font-weight:500}
+.ls-ct{font:12px var(--f-data);color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.ls-th,.ls-thumbs img{width:26px;height:26px;border-radius:6px;flex:none;overflow:hidden;background:var(--line)}
+.ls-th:empty{background:transparent}
+.ls-th img{width:100%;height:100%;object-fit:cover;display:block}
+.ls-thumbs{display:flex;gap:3px;flex:none}
+.ls-thumbs img{object-fit:cover;display:block}
+.ls-kids{background:rgba(0,0,0,.12)}
+.ls-more{display:block;width:100%;background:none;border:0;border-top:1px solid var(--line);color:var(--pollen);text-align:left;cursor:pointer;
+  padding:8px 12px 8px calc(34px + var(--d,0) * 18px);font:600 13px var(--f-body)}
+@media (min-width:900px){
+  .ls{grid-template-columns:300px minmax(0,1fr);gap:24px}
+  .ls-side{position:sticky;top:calc(var(--head-h) + 12px);max-height:calc(100vh - var(--head-h) - 24px);overflow:auto;padding-right:4px}
+}
+@media (max-width:640px){ .ls-row{padding-left:calc(8px + var(--d,0) * 12px)} .ls-thumbs img:nth-child(3){display:none} }

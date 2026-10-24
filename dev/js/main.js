@@ -1,5 +1,5 @@
 // Pure Nature – Einstieg.
-// Ablauf: Ort suchen → Lebewesen im Umkreis (Entdecken) oder Bestimmen → Steckbrief mit Verbreitungskarte auf Wunsch.
+// Ablauf: Ort suchen → Lebewesen im Umkreis (Entdecken), Bestimmen oder alle Arten als Baum (Liste) → Steckbrief mit Verbreitungskarte auf Wunsch.
 import { $, $$, fmt, esc } from "./util.js";
 import { state, set, on, RADII } from "./state.js";
 import { initOrt } from "./ort.js";
@@ -7,12 +7,14 @@ import { initArtsuche } from "./artsuche.js";
 import { initEntdecken, load as loadEntdecken, setDetailOpener as exOpener } from "./entdecken.js";
 import { initBestimmen, onEnter as enterBestimmen, setDetailOpener as beOpener } from "./bestimmen.js";
 import { initSteckbrief, openDetail, closeDetail, setDetailHooks } from "./steckbrief.js";
+import { initListe, load as loadListe, setDetailOpener as lsOpener } from "./liste-baum.js";
 
-[exOpener, beOpener].forEach(f => f(openDetail));
+[exOpener, beOpener, lsOpener].forEach(f => f(openDetail));
 
 initOrt();
 initEntdecken();
 initBestimmen();
+initListe();
 initSteckbrief();
 initArtsuche(openDetail);
 
@@ -39,6 +41,7 @@ function showMode(){
   $$("#modes [data-mode]").forEach(b => b.setAttribute("aria-selected", b.dataset.mode === state.mode));
   $("#paneEntdecken").hidden = state.mode !== "entdecken";
   $("#paneBestimmen").hidden = state.mode !== "bestimmen";
+  $("#paneListe").hidden = state.mode !== "liste";
 }
 
 on("*", (s, changed) => {
@@ -47,7 +50,7 @@ on("*", (s, changed) => {
   if (changed.includes("mode")) showMode();
   if (!state.placeSet) return;
   if (changed.includes("mode") || changed.includes("placeSet") || changed.includes("place")){
-    if (state.mode === "entdecken") loadEntdecken(); else enterBestimmen();
+    if (state.mode === "entdecken") loadEntdecken(); else if (state.mode === "liste") loadListe(); else enterBestimmen();
   }
 });
 

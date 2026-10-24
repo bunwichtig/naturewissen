@@ -57,6 +57,7 @@
     <div class="modes" id="modes" role="tablist">
       <button class="mode" role="tab" data-mode="entdecken" aria-selected="true">Entdecken<small>Was lebt hier?</small></button>
       <button class="mode" role="tab" data-mode="bestimmen" aria-selected="false">Bestimmen<small>Was habe ich gesehen?</small></button>
+      <button class="mode" role="tab" data-mode="liste" aria-selected="false">Liste<small>Alle Arten aufklappen</small></button>
     </div>
   </div>
 
@@ -134,6 +135,30 @@
         <div id="mkSummary"></div>
         <div class="reshead"><h3>Das könnte es sein</h3><span class="total" id="mkTotal"></span><button class="linkbtn" id="mkReset" type="button">Neu anfangen</button></div>
         <div id="mkList"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Liste: alle Arten als aufklappbarer Baum -->
+  <section id="paneListe" hidden>
+    <div class="pane-body ls" id="lsBody">
+      <aside class="ls-side">
+        <form class="ls-search" id="lsForm" role="search" autocomplete="off">
+          <input type="search" id="lsQ" placeholder="In der Liste suchen, z. B. Meise, Eiche, Quercus" aria-label="In der Liste suchen" enterkeyhint="search">
+        </form>
+        <div id="lsHits"></div>
+        <div class="ls-opts">
+          <span class="ls-label">Vorfilter</span>
+          <div class="chips" id="lsFilter" role="group" aria-label="Gruppe"></div>
+          <label class="ls-sort">Sortieren
+            <select id="lsSort"><option value="count">häufigste zuerst</option><option value="az">A–Z (wissenschaftlich)</option></select>
+          </label>
+        </div>
+      </aside>
+      <div class="ls-main">
+        <div class="reshead"><h3>Alle Lebewesen</h3><span class="total" id="lsStat"></span></div>
+        <p class="note">Gruppe › Ordnung › Familie › Gattung › Art. Aufklappen zeigt die nächste Stufe, ein Tipp auf eine Art öffnet den Steckbrief.</p>
+        <div class="ls-tree" id="lsTree"></div>
       </div>
     </div>
   </section>
