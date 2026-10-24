@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a0f0e">
+<title>Pure Nature – Was lebt hier?</title>
+<meta name="description" content="Welche Tiere, Pflanzen und Pilze leben an einem Ort – und was habe ich gesehen? Alles live aus freien Quellen.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%2386b86f'/%3E%3Cpath d='M16 6c6 4 6 16 0 20c-6-4-6-16 0-20z' fill='%230a0f0e'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="vendor/maplibre-gl.css">
+<link rel="stylesheet" href="css/app.css">
+<script src="vendor/maplibre-gl.js"></script>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" id="home" href="./">Pure <span>Nature</span></a>
+    <form class="search" role="search" autocomplete="off">
+      <input type="search" placeholder="Anderen Ort suchen" aria-label="Ort suchen" enterkeyhint="search">
+      <button type="submit" aria-label="Suchen"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
+      <ul hidden></ul>
+    </form>
+    <a class="srclink" href="quellen.html">Quellen</a>
+  </div>
+</header>
+
+<!-- Startseite: Ort wählen -->
+<main class="wrap start" id="start">
+  <div class="start-in">
+    <h2>Was lebt an diesem Ort?</h2>
+    <p>Such einen Ort. Pure Nature zeigt dir die Tiere, Pflanzen und Pilze, die dort am häufigsten beobachtet wurden, und hilft beim Bestimmen.</p>
+    <form class="search" role="search" autocomplete="off">
+      <input id="startInput" type="search" placeholder="Ort, z. B. Pinnow oder Schweriner See" aria-label="Ort suchen" enterkeyhint="search" autofocus>
+      <button type="submit" aria-label="Suchen"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
+      <ul hidden></ul>
+    </form>
+    <div class="start-row"><button class="btn" type="button" data-locate>Meinen Standort verwenden</button></div>
+    <div class="start-or"><span>oder ein Lebewesen suchen</span></div>
+    <form class="search taxsearch" role="search" autocomplete="off">
+      <input type="search" placeholder="Lebewesen, z. B. Eisvogel, Bärlauch, Fliegenpilz" aria-label="Lebewesen suchen" enterkeyhint="search">
+      <button type="submit" aria-label="Lebewesen suchen"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
+      <ul class="taxlist" hidden></ul>
+    </form>
+    <div class="start-row" id="recentBox" hidden><span class="label">Zuletzt</span><div class="chips" id="recent"></div></div>
+  </div>
+</main>
+
+<!-- Ergebnis -->
+<main class="wrap" id="app" hidden>
+  <div class="placebar">
+    <div class="placeline">
+      <h2 class="place" id="place">Pinnow</h2>
+      <div class="radius" id="radius" role="group" aria-label="Umkreis"></div>
+    </div>
+    <div class="modes" id="modes" role="tablist">
+      <button class="mode" role="tab" data-mode="entdecken" aria-selected="true">Entdecken<small>Was lebt hier?</small></button>
+      <button class="mode" role="tab" data-mode="bestimmen" aria-selected="false">Bestimmen<small>Was habe ich gesehen?</small></button>
+    </div>
+  </div>
+
+  <!-- Entdecken -->
+  <section id="paneEntdecken">
+    <div class="pane-body" id="exBody">
+      <div class="opts">
+        <div class="chips" id="groups" role="group" aria-label="Gruppe"></div>
+        <div class="switches">
+          <label><input type="checkbox" id="research"> nur bestätigte Funde</label>
+          <label><input type="checkbox" id="combo"> genauer rechnen (mit GBIF)</label>
+        </div>
+        <div id="comboNote" hidden>
+          <p class="note" id="comboStat"></p>
+          <p class="note">Nimmt zu iNaturalist die Fundmeldungen von GBIF dazu (Museen, Kartierungen, Zählungen). Oben steht nur, was beide Quellen häufig sehen.</p>
+        </div>
+      </div>
+      <div class="alert more-gbif" id="gbifMore" hidden></div>
+      <div class="reshead"><h3>Arten nach Häufigkeit</h3><span class="total" id="exTotal"></span></div>
+      <div id="exList"></div>
+    </div>
+  </section>
+
+  <!-- Bestimmen -->
+  <section id="paneBestimmen" hidden>
+    <div class="pane-body" id="beBody">
+      <div class="ways" id="ways">
+        <button class="way" data-way="foto" aria-pressed="true"><b>Mit Foto</b><span>Pflanzen automatisch</span></button>
+        <button class="way" data-way="merkmale" aria-pressed="false"><b>Nach Merkmalen</b><span>Tiere, Pflanzen, Pilze</span></button>
+      </div>
+
+      <div id="wayFoto" class="opts">
+        <div class="chips" id="fotoKind" role="group" aria-label="Was ist auf dem Foto?">
+          <button class="chip" data-kind="pflanze" aria-pressed="true">Pflanze</button>
+          <button class="chip" data-kind="anderes" aria-pressed="false">Tier oder Pilz</button>
+        </div>
+
+        <div id="fotoPlant" class="opts">
+          <div class="keybox" id="keyBox" hidden>
+            <b>Pl@ntNet-Schlüssel</b>
+            <p class="note">Die Pflanzenbestimmung braucht einen kostenlosen Schlüssel von <a href="https://my.plantnet.org/" target="_blank" rel="noopener">my.plantnet.org</a> (500 Bestimmungen am Tag). Er wird nur auf diesem Gerät gespeichert.</p>
+            <input id="keyInput" type="text" autocomplete="off" spellcheck="false" placeholder="Schlüssel einfügen" aria-label="Pl@ntNet-Schlüssel">
+            <div class="actions"><button class="btn primary" id="keySave" type="button">Prüfen &amp; speichern</button></div>
+            <div id="keyMsg"></div>
+          </div>
+          <p class="note">Bis zu 5 Fotos, am besten Blüte, Blatt oder Frucht einzeln und scharf.</p>
+          <div class="filebtns">
+            <label class="btn primary filebtn">Foto aufnehmen<input id="fileCam" type="file" accept="image/*" capture="environment"></label>
+            <label class="btn filebtn">Aus der Galerie<input id="fileGallery" type="file" accept="image/*" multiple></label>
+          </div>
+          <ul class="shots" id="shots"></ul>
+          <div id="idfMsg"></div>
+          <div class="actions"><button class="btn primary" id="idfGo" disabled>Pflanze bestimmen</button><button class="linkbtn" id="keyEdit" type="button">Schlüssel ändern</button></div>
+          <span class="quota" id="quota"></span>
+          <div id="idfResult" class="opts"></div>
+        </div>
+
+        <div id="fotoOther" class="opts" hidden>
+          <p class="note">Für Tiere und Pilze gibt es keine frei nutzbare automatische Bestimmung. Dein Foto bleibt als Vergleich oben stehen, während du die Merkmale antippst. Es verlässt dein Gerät nicht.</p>
+          <div class="filebtns">
+            <label class="btn primary filebtn">Foto wählen<input id="fileOther" type="file" accept="image/*"></label>
+            <button class="btn" id="toMerkmale" type="button">Ohne Foto weiter</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="wayMerkmale" class="opts" hidden>
+        <div class="cmp" id="cmp" hidden>
+          <img id="cmpImg" alt="Dein Foto zum Vergleich">
+          <div><b>Dein Foto</b><span class="note">Antippen zum Vergrößern</span></div>
+          <button class="btn" id="cmpClose" aria-label="Foto entfernen">✕</button>
+        </div>
+        <div id="mkForm"></div>
+        <div id="mkSummary"></div>
+        <div class="reshead"><h3>Das könnte es sein</h3><span class="total" id="mkTotal"></span><button class="linkbtn" id="mkReset" type="button">Neu anfangen</button></div>
+        <div id="mkList"></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- Steckbrief -->
+<div class="backdrop" id="backdrop"></div>
+<section class="detail" id="detail" hidden aria-label="Steckbrief">
+    <div class="detail-bar"><button class="back" id="back">← Zurück</button></div>
+    <div class="detail-body" id="detailBody"></div>
+</section>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
