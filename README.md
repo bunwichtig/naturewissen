@@ -12,7 +12,7 @@ Für das Handy und für die Fotobestimmung braucht die Seite eine `https://`-Adr
 
 ## Funktionen
 
-- 3D-Globus mit Zoom, Ortssuche, Satellitenbild und GBIF-Dichtekarte
+- 3D-Globus mit Zoom, Ortssuche, Satellitenbild und Fotos der Lebewesen an ihren Fundorten
 - Arten im Umkreis der Kartenmitte; der Radius passt sich dem Zoom an
 - Gruppen: Pflanzen, Pilze, Säugetiere, Vögel, Reptilien, Amphibien, Fische, Insekten, Spinnentiere, Weichtiere
 - Detailansicht: Fotogalerie mit Lizenz, IUCN-Status, Systematik, Wikipedia-Text, Zahlen von iNaturalist und GBIF, Verbreitungskarte
@@ -112,7 +112,7 @@ Danach die Seite neu laden.
 | Quelle | Wofür | Lizenz / Bedingungen |
 |---|---|---|
 | [iNaturalist API](https://api.inaturalist.org/v1/docs/) | Artenlisten, Fotos, Systematik, Verbreitung | API frei für nicht-kommerzielle Nutzung; Fotos mit eigener CC-Lizenz je Bild |
-| [GBIF API](https://techdocs.gbif.org/en/openapi/) | Fundmeldungen, Dichtekarte | CC0 / CC BY / CC BY-NC je Datensatz |
+| [GBIF API](https://techdocs.gbif.org/en/openapi/) | Fundmeldungen | CC0 / CC BY / CC BY-NC je Datensatz |
 | [Wikipedia REST API](https://de.wikipedia.org/api/rest_v1/) | Artbeschreibungen | CC BY-SA 4.0 |
 | [Pl@ntNet API](https://my.plantnet.org/) | Pflanzenbestimmung per Foto | Kostenlos bis 500 Bestimmungen/Tag, Quellenangabe auf der Seite, [Nutzungsbedingungen](https://my.plantnet.org/terms_of_use) |
 | [OpenFreeMap](https://openfreemap.org) / [OpenStreetMap](https://www.openstreetmap.org/copyright) | Kartenbasis | ODbL |
