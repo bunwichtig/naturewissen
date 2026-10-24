@@ -236,6 +236,15 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
 .checks label{display:flex;gap:6px;align-items:center;cursor:pointer}
 .checks input{accent-color:var(--pollen)}
 .key-res{padding-top:4px}
+.look-sec{padding:14px 0;border-bottom:1px solid var(--line);display:grid;gap:12px}
+.look-sec>h4{margin:0;font:700 15px/1.1 var(--f-display);letter-spacing:-.01em;display:flex;align-items:baseline;gap:8px}
+.look-sec>h4 small{font:400 12px var(--f-body);color:var(--muted)}
+.look-q{display:grid;gap:6px}
+.look-q .trait-label{display:flex;gap:6px}
+.look-q .trait-label b{color:var(--pollen);font-weight:500;text-transform:none;letter-spacing:0}
+#lSummary .note{margin:0 0 8px}
+.matchlist{display:flex;gap:4px;flex-wrap:wrap;margin:0 0 8px}
+.matchlist span{font-size:11px;padding:3px 7px;border-radius:4px;background:var(--panel-2);border:1px solid var(--line);color:var(--muted)}
 .key-res-head{position:sticky;top:0;z-index:1;background:var(--panel);display:flex;align-items:center;gap:10px;padding:14px 0 6px}
 .key-res-head h3{font:700 17px/1.1 var(--f-display);margin:0}
 .key-res-head .linkbtn{margin-left:auto;font-size:12px;color:var(--muted)}
@@ -338,6 +347,7 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
   <nav class="tabs" role="tablist" aria-label="Ansicht">
     <button class="tab" role="tab" id="tabBtnExplore" aria-controls="paneExplore" aria-selected="true"><small>Arten</small>Entdecken</button>
     <button class="tab" role="tab" id="tabBtnKey" aria-controls="paneKey" aria-selected="false"><small>Bestimmen</small>biologisch</button>
+    <button class="tab" role="tab" id="tabBtnLook" aria-controls="paneLook" aria-selected="false"><small>Bestimmen</small>nach Aussehen</button>
   </nav>
   <div class="pane" id="paneExplore" role="tabpanel" aria-labelledby="tabBtnExplore">
   <div class="panel-head" id="panelHead">
@@ -419,6 +429,27 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
         <p class="note" id="kSummary"></p>
         <div class="grid" id="kGrid"></div>
         <button class="btn more" id="kMore" hidden>Weitere Arten laden</button>
+      </section>
+    </div>
+  </div>
+
+  <!-- Bestimmung nach Aussehen: alle Merkmale auf einer Seite, Ergebnis live -->
+  <div class="pane" id="paneLook" role="tabpanel" aria-labelledby="tabBtnLook" hidden>
+    <div class="key-head" id="lookHead">
+      <div class="eyebrow">Bestimmen nach Aussehen</div>
+      <p class="place">Wie sah es aus?</p>
+      <div class="where" id="lookWhere"></div>
+    </div>
+    <div class="key-body" id="lookBody">
+      <div id="lookForm"></div>
+      <section class="key-res" id="lookRes">
+        <header class="key-res-head">
+          <h3>Das könnte es sein</h3><span class="total" id="lTotal"></span>
+          <button class="linkbtn" id="lReset">Alles abwählen</button>
+        </header>
+        <div id="lSummary"><p class="note">Tippe oben an, was dir aufgefallen ist. Schon ein Merkmal reicht für den Anfang; jedes weitere grenzt ein.</p></div>
+        <div class="grid" id="lGrid"></div>
+        <button class="btn more" id="lMore" hidden>Weitere Arten laden</button>
       </section>
     </div>
   </div>
@@ -639,7 +670,9 @@ const PAGE = 50, MAX_RANK = 10000 /* iNaturalist liefert höchstens 10.000 Ergeb
 let ctx = null;   // aktuelle Abfrage: Parameter, Seiten-Cache, Stufen
 
 let loadTimer;
-function scheduleLoad(ms){ clearTimeout(loadTimer); loadTimer = setTimeout(() => { state.tab === "key" ? runKey() : loadSpecies(); loadPlaceName(); }, ms); }
+function scheduleLoad(ms){ clearTimeout(loadTimer); loadTimer = setTimeout(() => {
+    state.tab === "key" ? runKey() : state.tab === "look" ? runLook() : loadSpecies();
+    loadPlaceName(); }, ms); }
 
 function cardHTML({count, taxon:t}){
   const img = photo(t.default_photo?.square_url, "small");
@@ -985,7 +1018,7 @@ async function loadLocalCount(t){
   try{
     const c = map.getCenter();
     const p = new URLSearchParams({ taxon_id:t.id, per_page:0 });
-    if (state.tab === "key" || !isGlobal()){ p.set("lat", c.lat); p.set("lng", c.lng); p.set("radius", state.tab === "key" ? ks.radius : radiusKm()); }
+    if (state.tab !== "explore" || !isGlobal()){ p.set("lat", c.lat); p.set("lng", c.lng); p.set("radius", state.tab !== "explore" ? ks.radius : radiusKm()); }
     const d = await getJSON(`${API.inat}/observations?${p}`);
     $("#localCount").textContent = fmt(d.total_results);
   }catch{ const e = $("#localCount"); if (e) e.textContent = "–"; }
@@ -1036,7 +1069,7 @@ window.addEventListener("resize", () => { if (isMobile()) document.documentEleme
 // Ziehen am Griff oder am Kopfbereich
 (function enableDrag(){
   let startY = 0, startH = 0, moved = false, active = false;
-  const targets = [$("#handle"), $("#panelHead"), $("#keyHead")];
+  const targets = [$("#handle"), $("#panelHead"), $("#keyHead"), $("#lookHead")];
   const down = e => {
     if (!isMobile()) return;
     if (e.target.closest("button:not(#handle), input, label, a")) return; // Bedienelemente bleiben klickbar
@@ -1072,7 +1105,7 @@ window.addEventListener("resize", () => { if (isMobile()) document.documentEleme
 })();
 
 // Beim Scrollen in der Liste klappt das Sheet ganz auf
-["#list", "#keyBody"].forEach(sel => $(sel).addEventListener("scroll", e => {
+["#list", "#keyBody", "#lookBody"].forEach(sel => $(sel).addEventListener("scroll", e => {
   if (isMobile() && snap !== "full" && e.currentTarget.scrollTop > 30) setSheet("full");
 }, { passive:true }));
 
@@ -1495,29 +1528,25 @@ const catOf = () => KEY_CATS.find(c => c.id === ks.cat);
 const pressed = (b, on) => b.setAttribute("aria-pressed", on);
 
 /* --- Registerkarten --- */
+const TABS = [["explore","#tabBtnExplore","#paneExplore"],["key","#tabBtnKey","#paneKey"],["look","#tabBtnLook","#paneLook"]];
 function setTab(name){
   if (state.tab === name) return;
   state.tab = name;
-  $("#tabBtnExplore").setAttribute("aria-selected", name === "explore");
-  $("#tabBtnKey").setAttribute("aria-selected", name === "key");
-  $("#paneExplore").hidden = name !== "explore";
-  $("#paneKey").hidden = name !== "key";
+  TABS.forEach(([id, btn, pane]) => { $(btn).setAttribute("aria-selected", id === name); $(pane).hidden = id !== name; });
   if ($("#detail").hidden === false) closeDetail();
-  if (name === "key"){
-    setAreaCircle();
-    setKeyOverlay();
-    runKey();
-  } else {
-    setKeyOverlay(true);
-    state.lastQuery = null;      // Kreis & Liste für den Zoom-Radius neu aufbauen
-    loadSpecies();
-  }
+  setKeyOverlay(true); setLookOverlay(true);
+  syncRadiusChips();
+  if (name === "key"){ setAreaCircle(); ks.lastKey = null; runKey(); }
+  else if (name === "look"){ setAreaCircle(); ls.lastKey = null; runLook(); }
+  else { state.lastQuery = null; loadSpecies(); }   // Kreis & Liste für den Zoom-Radius neu aufbauen
 }
-$("#tabBtnExplore").onclick = () => setTab("explore");
-$("#tabBtnKey").onclick = () => setTab("key");
+TABS.forEach(([id, btn]) => $(btn).onclick = () => setTab(id));
 $(".tabs").addEventListener("keydown", e => {
-  if (e.key === "ArrowRight" || e.key === "ArrowLeft"){ const n = state.tab === "key" ? "explore" : "key"; setTab(n); $(n === "key" ? "#tabBtnKey" : "#tabBtnExplore").focus(); }
+  if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+  const i = TABS.findIndex(t => t[0] === state.tab), n = TABS[(i + (e.key === "ArrowRight" ? 1 : TABS.length - 1)) % TABS.length];
+  setTab(n[0]); $(n[1]).focus();
 });
+function syncRadiusChips(){ document.querySelectorAll("[data-r]").forEach(x => x.setAttribute("aria-pressed", +x.dataset.r === ks.radius)); }
 
 /* --- Aufbau der Bedienelemente --- */
 $("#kCat").innerHTML = KEY_CATS.map(c =>
@@ -1566,7 +1595,7 @@ $("#kHour").onclick = e => { const b = e.target.closest(".chip"); if (!b) return
 $("#kRadius").onclick = e => {
   const b = e.target.closest(".chip"); if (!b) return;
   ks.radius = +b.dataset.r;
-  document.querySelectorAll("#kRadius .chip").forEach(x => pressed(x, x === b));
+  syncRadiusChips();
   refreshSteps(); fitToRadius(); runKey();
 };
 $("#kResearch").onchange = e => { ks.research = e.target.checked; runKey(); };
@@ -1674,7 +1703,7 @@ function fitToRadius(){
 }
 function updateKeyWhere(){
   const place = $("#place").textContent;
-  $("#keyWhere").textContent = `Umkreis ${ks.radius} km um ${place && place !== "Die ganze Welt" ? place : "die Kartenmitte"}`;
+  $("#keyWhere").textContent = $("#lookWhere").textContent = `Umkreis ${ks.radius} km um ${place && place !== "Die ganze Welt" ? place : "die Kartenmitte"}`;
 }
 
 /* Beobachtungen der aktuellen Auswahl als Raster auf dem Globus */
@@ -1761,6 +1790,287 @@ async function loadCatCounts(){
   }
 }
 refreshSteps();
+
+/* ================= Bestimmen nach Aussehen =================
+   Subjektive Merkmale (Fell, Federn, Beine, Größe, Wuchs, Blatt …) sind in dieser Seite
+   als Wissen hinterlegt: Jede Zeile ordnet einer Tier-, Pflanzen- oder Pilzgruppe ihre
+   typischen Merkmale zu. Für die passenden Gruppen fragt die Seite live bei iNaturalist,
+   welche Arten im Umkreis vorkommen (dazu API-Filter: Monat, „blüht gerade“, bestätigte Funde).
+   Kürzel: s=Oberfläche l=Beine w=Flügel z=Größe h=Lebensraum g=Wuchs b=Blatt f=Pilzform */
+const LOOK_Q = [
+  { sec:"all", id:"s", label:"Was siehst du auf der Oberfläche?", opts:[["fell","Fell / Haare"],["feder","Federn"],["schuppe","Schuppen"],["haut","glatte, feuchte Haut"],
+      ["panzer","harter Panzer, Gliederbeine"],["schale","Schneckenhaus / Schale"],["schleim","weich & schleimig"],["blatt","Blätter / Nadeln / Halme"],["pilz","Pilz / Flechte"]] },
+  { sec:"tier", id:"l", label:"Wie viele Beine?", opts:[["0","keine"],["2","2"],["4","4"],["6","6"],["8","8"],["viele","mehr als 8"]] },
+  { sec:"tier", id:"w", label:"Flügel?", opts:[["1","ja, kann fliegen"],["0","nein"]] },
+  { sec:"tier", id:"z", label:"Wie groß etwa?", opts:[["1","winzig, unter 1 cm"],["2","bis Daumen, 1–5 cm"],["3","handgroß, 5–20 cm"],["4","katzengroß, 20–60 cm"],["5","groß, bis 1,5 m"],["6","sehr groß"]] },
+  { sec:"pflanze", id:"g", label:"Wuchs", opts:[["baum","Baum"],["strauch","Strauch / Busch"],["kraut","Kraut / Blume"],["gras","Gras / Binse"],["kletter","rankt / klettert"],["wasser","schwimmt im Wasser"],["moos","Moos / Farn"]] },
+  { sec:"pflanze", id:"b", label:"Blätter", opts:[["nadel","Nadeln / Schuppen"],["breit","breite, ganze Blätter"],["geteilt","gefiedert / geteilt"],["schmal","lang & schmal"],["ohne","kaum oder keine"]] },
+  { sec:"pflanze", id:"bl", api:true, label:"Blüte & Frucht", opts:[["ja","blüht gerade"],["frucht","trägt Früchte"]] },
+  { sec:"pilz", id:"f", label:"Form", opts:[["hut","Hut & Stiel"],["konsole","Konsole am Holz"],["kugel","Kugel / Bovist"],["becher","Becher / Schale"],["kruste","Kruste / Flechte"]] },
+  { sec:"ort", id:"h", label:"Wo war es?", opts:[["wa","im Wasser"],["uf","am Ufer / im Feuchten"],["wd","im Wald"],["wi","Wiese / Feld"],["ga","Garten / Siedlung"]] },
+  { sec:"ort", id:"jetzt", api:true, label:"Wann?", opts:[["ja",`gerade eben (${MONTH_DE[NOW_M-1]})`]] }
+];
+const LOOK_SECS = [["all","Erster Eindruck",""],["tier","Bei Tieren",""],["pflanze","Bei Pflanzen",""],["pilz","Bei Pilzen",""],["ort","Ort & Zeit","Umkreis um die Kartenmitte"]];
+// [Bezeichnung, wissenschaftlicher Name, iNaturalist-Grobgruppe, Merkmale]
+const LOOK_DB = [
+  ["Hirsche & Rehe","Cervidae","Mammalia","s:fell l:4 w:0 z:5,6 h:wd,wi"],
+  ["Wildschweine","Suidae","Mammalia","s:fell l:4 w:0 z:5 h:wd,wi"],
+  ["Füchse & Wölfe","Canidae","Mammalia","s:fell l:4 w:0 z:4,5 h:wd,wi,ga"],
+  ["Marder, Dachs & Otter","Mustelidae","Mammalia","s:fell l:4 w:0 z:3,4,5 h:wd,wi,ga,uf,wa"],
+  ["Katzen","Felidae","Mammalia","s:fell l:4 w:0 z:4,5 h:ga,wd,wi"],
+  ["Waschbären","Procyonidae","Mammalia","s:fell l:4 w:0 z:4 h:ga,wd,uf"],
+  ["Hasen & Kaninchen","Leporidae","Mammalia","s:fell l:4 w:0 z:4 h:wi,ga"],
+  ["Hörnchen","Sciuridae","Mammalia","s:fell l:4 w:0 z:3,4 h:wd,ga"],
+  ["Mäuse & Ratten","Muridae","Mammalia","s:fell l:4 w:0 z:2,3 h:wd,wi,ga"],
+  ["Wühlmäuse","Cricetidae","Mammalia","s:fell l:4 w:0 z:2,3 h:wi,ga,uf"],
+  ["Biber","Castoridae","Mammalia","s:fell l:4 w:0 z:5 h:uf,wa"],
+  ["Igel","Erinaceidae","Mammalia","s:fell l:4 w:0 z:3,4 h:ga,wd"],
+  ["Maulwürfe","Talpidae","Mammalia","s:fell l:4 w:0 z:3 h:wi,ga"],
+  ["Spitzmäuse","Soricidae","Mammalia","s:fell l:4 w:0 z:2,3 h:wd,wi,ga,uf"],
+  ["Fledermäuse","Chiroptera","Mammalia","s:fell l:2,4 w:1 z:2,3 h:wd,ga,uf"],
+  ["Robben","Phocidae","Mammalia","s:fell l:0,4 w:0 z:5,6 h:wa"],
+  ["Singvögel","Passeriformes","Aves","s:feder l:2 w:1 z:2,3,4 h:wd,wi,ga,uf"],
+  ["Rabenvögel","Corvidae","Aves","s:feder l:2 w:1 z:3,4 h:wi,ga,wd"],
+  ["Greifvögel","Accipitriformes","Aves","s:feder l:2 w:1 z:4,5 h:wi,wd,uf"],
+  ["Falken","Falconidae","Aves","s:feder l:2 w:1 z:4 h:wi,ga"],
+  ["Eulen","Strigiformes","Aves","s:feder l:2 w:1 z:3,4,5 h:wd,ga,wi"],
+  ["Spechte","Picidae","Aves","s:feder l:2 w:1 z:3,4 h:wd,ga"],
+  ["Tauben","Columbidae","Aves","s:feder l:2 w:1 z:4 h:ga,wi,wd"],
+  ["Enten, Gänse & Schwäne","Anatidae","Aves","s:feder l:2 w:1 z:4,5,6 h:wa,uf,wi"],
+  ["Möwen & Seeschwalben","Laridae","Aves","s:feder l:2 w:1 z:4,5 h:wa,uf,ga"],
+  ["Schnepfen & Strandläufer","Scolopacidae","Aves","s:feder l:2 w:1 z:3,4 h:uf"],
+  ["Regenpfeifer & Kiebitze","Charadriidae","Aves","s:feder l:2 w:1 z:3,4 h:uf,wi"],
+  ["Reiher","Ardeidae","Aves","s:feder l:2 w:1 z:5 h:uf,wi"],
+  ["Kraniche","Gruidae","Aves","s:feder l:2 w:1 z:5,6 h:wi,uf"],
+  ["Störche","Ciconiidae","Aves","s:feder l:2 w:1 z:5,6 h:wi,uf"],
+  ["Rallen & Blässhühner","Rallidae","Aves","s:feder l:2 w:1 z:3,4 h:wa,uf"],
+  ["Kormorane","Phalacrocoracidae","Aves","s:feder l:2 w:1 z:5 h:wa"],
+  ["Lappentaucher","Podicipedidae","Aves","s:feder l:2 w:1 z:4 h:wa"],
+  ["Fasane & Rebhühner","Phasianidae","Aves","s:feder l:2 w:1 z:4,5 h:wi"],
+  ["Eisvögel","Alcedinidae","Aves","s:feder l:2 w:1 z:3 h:uf,wa"],
+  ["Schlangen","Serpentes","Reptilia","s:schuppe l:0 w:0 z:4,5 h:wi,wd,uf,wa"],
+  ["Blindschleichen","Anguidae","Reptilia","s:schuppe l:0 w:0 z:3,4 h:ga,wd,wi"],
+  ["Eidechsen","Lacertidae","Reptilia","s:schuppe l:4 w:0 z:3 h:wi,ga,wd"],
+  ["Fische","Actinopterygii","Actinopterygii","s:schuppe,haut l:0 w:0 z:2,3,4,5 h:wa"],
+  ["Echte Frösche","Ranidae","Amphibia","s:haut l:4 w:0 z:2,3 h:uf,wa,wi"],
+  ["Kröten","Bufonidae","Amphibia","s:haut l:4 w:0 z:2,3 h:ga,wd,uf"],
+  ["Laubfrösche","Hylidae","Amphibia","s:haut l:4 w:0 z:2 h:uf"],
+  ["Unken","Bombinatoridae","Amphibia","s:haut l:4 w:0 z:2 h:uf,wa"],
+  ["Molche","Salamandridae","Amphibia","s:haut l:4 w:0 z:2,3 h:wa,uf,wd"],
+  ["Käfer","Coleoptera","Insecta","s:panzer l:6 w:0,1 z:1,2,3 h:wd,wi,ga,uf,wa"],
+  ["Wanzen & Zikaden","Hemiptera","Insecta","s:panzer l:6 w:0,1 z:1,2 h:wd,wi,ga,uf,wa"],
+  ["Ameisen","Formicidae","Insecta","s:panzer l:6 w:0,1 z:1 h:wd,wi,ga"],
+  ["Bienen & Hummeln","Apidae","Insecta","s:panzer,fell l:6 w:1 z:1,2 h:wi,ga"],
+  ["Wespen & Hornissen","Vespidae","Insecta","s:panzer l:6 w:1 z:1,2,3 h:ga,wd,wi"],
+  ["Fliegen & Mücken","Diptera","Insecta","s:panzer,fell l:6 w:1 z:1,2 h:wd,wi,ga,uf"],
+  ["Libellen","Odonata","Insecta","s:panzer l:6 w:1 z:2,3 h:uf,wa"],
+  ["Heuschrecken","Orthoptera","Insecta","s:panzer l:6 w:0,1 z:2,3 h:wi,ga"],
+  ["Schmetterlinge & Raupen","Lepidoptera","Insecta","s:schuppe,fell,schleim l:6,viele w:0,1 z:1,2,3 h:wi,ga,wd"],
+  ["Spinnen","Araneae","Arachnida","s:panzer,fell l:8 w:0 z:1,2 h:wd,wi,ga,uf"],
+  ["Weberknechte","Opiliones","Arachnida","s:panzer l:8 w:0 z:1,2 h:wd,ga"],
+  ["Zecken & Milben","Acari","Arachnida","s:panzer l:8 w:0 z:1 h:wd,wi,ga"],
+  ["Asseln","Isopoda","Animalia","s:panzer l:viele w:0 z:1,2 h:ga,wd"],
+  ["Krebse","Decapoda","Animalia","s:panzer l:viele w:0 z:2,3 h:wa,uf"],
+  ["Tausendfüßer","Diplopoda","Animalia","s:panzer l:viele w:0 z:2,3 h:wd,ga"],
+  ["Hundertfüßer","Chilopoda","Animalia","s:panzer l:viele w:0 z:2,3 h:wd,ga"],
+  ["Schnecken","Gastropoda","Mollusca","s:schale,schleim l:0 w:0 z:1,2,3 h:ga,wd,wi,uf,wa"],
+  ["Muscheln","Bivalvia","Mollusca","s:schale l:0 w:0 z:2,3 h:wa,uf"],
+  ["Regenwürmer","Lumbricidae","Animalia","s:schleim l:0 w:0 z:2,3 h:ga,wi,wd"],
+  ["Quallen","Scyphozoa","Animalia","s:schleim l:0 w:0 z:3,4 h:wa"],
+  ["Kiefern, Fichten & Tannen","Pinaceae","Plantae","s:blatt g:baum b:nadel h:wd,ga"],
+  ["Eiben","Taxaceae","Plantae","s:blatt g:baum,strauch b:nadel h:wd,ga"],
+  ["Wacholder & Lebensbäume","Cupressaceae","Plantae","s:blatt g:baum,strauch b:nadel h:ga,wd,wi"],
+  ["Buchen & Eichen","Fagaceae","Plantae","s:blatt g:baum b:breit h:wd,ga"],
+  ["Birken, Erlen & Hasel","Betulaceae","Plantae","s:blatt g:baum,strauch b:breit h:wd,uf,ga"],
+  ["Ahorne & Rosskastanien","Sapindaceae","Plantae","s:blatt g:baum b:breit,geteilt h:wd,ga"],
+  ["Linden","Tilia","Plantae","s:blatt g:baum b:breit h:ga,wd"],
+  ["Weiden & Pappeln","Salicaceae","Plantae","s:blatt g:baum,strauch b:breit,schmal h:uf,wd,ga"],
+  ["Eschen, Flieder & Liguster","Oleaceae","Plantae","s:blatt g:baum,strauch b:geteilt,breit h:wd,ga"],
+  ["Ulmen","Ulmaceae","Plantae","s:blatt g:baum b:breit h:wd,ga"],
+  ["Rosengewächse (Rose, Apfel, Brombeere …)","Rosaceae","Plantae","s:blatt g:baum,strauch,kraut,kletter b:breit,geteilt h:wd,wi,ga"],
+  ["Holunder","Sambucus","Plantae","s:blatt g:strauch b:geteilt h:wd,ga"],
+  ["Hartriegel","Cornaceae","Plantae","s:blatt g:strauch b:breit h:wd,ga"],
+  ["Heidekraut & Heidelbeere","Ericaceae","Plantae","s:blatt g:strauch b:nadel,breit h:wd"],
+  ["Efeu","Hedera","Plantae","s:blatt g:kletter b:breit h:wd,ga"],
+  ["Winden","Convolvulaceae","Plantae","s:blatt g:kletter,kraut b:breit h:wi,ga"],
+  ["Korbblütler (Gänseblümchen, Löwenzahn …)","Asteraceae","Plantae","s:blatt g:kraut b:breit,geteilt,schmal h:wi,ga,wd,uf"],
+  ["Doldenblütler","Apiaceae","Plantae","s:blatt g:kraut b:geteilt h:wi,wd,uf,ga"],
+  ["Lippenblütler (Minze, Taubnessel …)","Lamiaceae","Plantae","s:blatt g:kraut b:breit h:wi,wd,ga,uf"],
+  ["Hahnenfußgewächse","Ranunculaceae","Plantae","s:blatt g:kraut,kletter b:geteilt,breit h:wi,wd,uf"],
+  ["Kreuzblütler","Brassicaceae","Plantae","s:blatt g:kraut b:breit,geteilt h:wi,ga"],
+  ["Hülsenfrüchtler (Klee, Wicke, Ginster …)","Fabaceae","Plantae","s:blatt g:kraut,strauch,kletter b:geteilt h:wi,ga,wd"],
+  ["Nelkengewächse","Caryophyllaceae","Plantae","s:blatt g:kraut b:schmal,breit h:wi,ga,wd"],
+  ["Orchideen","Orchidaceae","Plantae","s:blatt g:kraut b:breit,schmal h:wi,wd,uf"],
+  ["Brennnesseln","Urticaceae","Plantae","s:blatt g:kraut b:breit h:wd,ga,uf"],
+  ["Knöteriche & Ampfer","Polygonaceae","Plantae","s:blatt g:kraut,kletter b:breit h:wi,ga,uf"],
+  ["Wegeriche & Ehrenpreis","Plantaginaceae","Plantae","s:blatt g:kraut b:breit,schmal h:wi,ga"],
+  ["Veilchen","Violaceae","Plantae","s:blatt g:kraut b:breit h:wd,wi,ga"],
+  ["Storchschnäbel","Geraniaceae","Plantae","s:blatt g:kraut b:geteilt h:wi,wd,ga"],
+  ["Glockenblumen","Campanulaceae","Plantae","s:blatt g:kraut b:breit,schmal h:wi,wd"],
+  ["Raublattgewächse (Vergissmeinnicht …)","Boraginaceae","Plantae","s:blatt g:kraut b:breit,schmal h:wi,ga,uf"],
+  ["Spargelgewächse (Maiglöckchen …)","Asparagaceae","Plantae","s:blatt g:kraut b:schmal,breit h:wd,ga"],
+  ["Lauch & Narzissen","Amaryllidaceae","Plantae","s:blatt g:kraut b:schmal h:wd,ga"],
+  ["Schwertlilien","Iridaceae","Plantae","s:blatt g:kraut b:schmal h:uf,ga"],
+  ["Süßgräser","Poaceae","Plantae","s:blatt g:gras b:schmal h:wi,uf,wd,ga"],
+  ["Sauergräser & Seggen","Cyperaceae","Plantae","s:blatt g:gras b:schmal h:uf,wi,wd"],
+  ["Binsen","Juncaceae","Plantae","s:blatt g:gras b:schmal,ohne h:uf,wi"],
+  ["Rohrkolben","Typhaceae","Plantae","s:blatt g:gras b:schmal h:uf,wa"],
+  ["Seerosen","Nymphaeaceae","Plantae","s:blatt g:wasser b:breit h:wa"],
+  ["Wasserlinsen","Lemna","Plantae","s:blatt g:wasser b:ohne h:wa"],
+  ["Laichkräuter","Potamogetonaceae","Plantae","s:blatt g:wasser b:schmal,breit h:wa"],
+  ["Farne","Polypodiopsida","Plantae","s:blatt g:moos b:geteilt h:wd,uf,ga"],
+  ["Schachtelhalme","Equisetum","Plantae","s:blatt g:moos b:nadel,ohne h:uf,wi"],
+  ["Moose","Bryophyta","Plantae","s:blatt g:moos b:ohne h:wd,ga,uf"],
+  ["Blätterpilze & Boviste","Agaricales","Fungi","s:pilz f:hut,kugel h:wd,wi,ga"],
+  ["Röhrlinge","Boletales","Fungi","s:pilz f:hut,kugel h:wd"],
+  ["Täublinge & Milchlinge","Russulales","Fungi","s:pilz f:hut,kruste h:wd"],
+  ["Porlinge","Polyporales","Fungi","s:pilz f:konsole,kruste h:wd,ga"],
+  ["Borstenscheiblinge","Hymenochaetales","Fungi","s:pilz f:konsole,kruste h:wd"],
+  ["Becherlinge & Morcheln","Pezizales","Fungi","s:pilz f:becher,hut h:wd,ga"],
+  ["Flechten","Lecanoromycetes","Fungi","s:pilz f:kruste h:wd,ga,wi"]
+].map(([label, sci, icon, attrs]) => ({ label, sci, icon,
+  a:Object.fromEntries(attrs.split(" ").map(x => { const [k, v] = x.split(":"); return [k, new Set(v.split(","))]; })) }));
+const SEC_OF_SURFACE = { blatt:"pflanze", pilz:"pilz" };   // alle anderen Oberflächen → Tier
+const LOOK_DIRECT = 25;   // bis zu so vielen Gruppen einzeln abfragen, darüber grob nach Klasse/Reich
+const LOOK_HINT = `<p class="note">Tippe oben an, was dir aufgefallen ist. Schon ein Merkmal reicht für den Anfang; jedes weitere grenzt ein.</p>`;
+
+const ls = { sel:{}, lastKey:null, abort:null, page:0, matches:[] };
+
+function lookMatches(sel){
+  return LOOK_DB.filter(e => Object.entries(sel).every(([k, v]) => {
+    if (LOOK_Q.find(x => x.id === k).api) return k !== "bl" || e.icon === "Plantae";   // Blüte nur bei Pflanzen
+    return e.a[k]?.has(v);
+  }));
+}
+const activeSec = () => ls.sel.s ? (SEC_OF_SURFACE[ls.sel.s] || "tier") : null;
+
+function renderLook(){
+  const act = activeSec();
+  $("#lookForm").innerHTML = LOOK_SECS.map(([sec, title, sub]) => {
+    if (act && ["tier","pflanze","pilz"].includes(sec) && sec !== act) return "";
+    const qs = LOOK_Q.filter(q => q.sec === sec);
+    return `<section class="look-sec"><h4>${title}${sub ? `<small>${sub}</small>` : ""}</h4>${qs.map(q => {
+      const cur = ls.sel[q.id];
+      const chips = q.opts.map(([v, l]) => {
+        const on = cur === v;
+        // würde diese Wahl noch etwas finden? (Oberfläche bleibt immer wählbar – ein Wechsel räumt Unpassendes ab)
+        const n = on || q.id === "s" ? 1 : lookMatches({ ...ls.sel, [q.id]:v }).length;
+        return `<button class="chip${n ? "" : " empty"}" data-q="${q.id}" data-v="${v}" aria-pressed="${on}"${n ? "" : ` disabled title="passt nicht zu deiner bisherigen Auswahl"`}>${esc(l)}</button>`;
+      }).join("");
+      const curLabel = cur ? q.opts.find(o => o[0] === cur)[1] : "";
+      return `<div class="look-q"><span class="trait-label">${esc(q.label)}${curLabel ? `<b>${esc(curLabel)}</b>` : ""}</span><div class="chips">${chips}</div></div>`;
+    }).join("")}${sec === "ort" ? `<div class="look-q"><span class="trait-label">Umkreis</span><div class="chips">${KEY_RADIUS.map(r => `<button class="chip" data-r="${r}" aria-pressed="${r === ks.radius}">${r} km</button>`).join("")}</div></div>` : ""}</section>`;
+  }).join("");
+}
+
+$("#lookForm").onclick = e => {
+  const r = e.target.closest(".chip[data-r]");
+  if (r){ ks.radius = +r.dataset.r; syncRadiusChips(); fitToRadius(); runLook(); return; }
+  const b = e.target.closest(".chip[data-q]"); if (!b || b.disabled) return;
+  const q = b.dataset.q, v = b.dataset.v;
+  if (ls.sel[q] === v) delete ls.sel[q]; else ls.sel[q] = v;
+  if (q === "s"){   // andere Oberfläche → Merkmale der ausgeblendeten Bereiche entfernen
+    const act = activeSec();
+    LOOK_Q.forEach(x => { if (act && ["tier","pflanze","pilz"].includes(x.sec) && x.sec !== act) delete ls.sel[x.id]; });
+    if (!lookMatches(ls.sel).length) ["z","l","w","h"].forEach(k => { if (k in ls.sel && !lookMatches(ls.sel).length) delete ls.sel[k]; });
+  }
+  const y = $("#lookBody").scrollTop;
+  renderLook(); $("#lookBody").scrollTop = y;
+  runLook();
+};
+$("#lReset").onclick = () => { ls.sel = {}; renderLook(); runLook(); $("#lookBody").scrollTo({ top:0, behavior:"smooth" }); };
+$("#lGrid").onclick = e => { const c = e.target.closest(".card"); if (c?.dataset.id) openDetail(+c.dataset.id); };
+$("#lMore").onclick = () => loadLookPage(true);
+
+/* Viele Namen → IDs, höchstens 3 Anfragen gleichzeitig; IDs ändern sich nicht und werden auf dem Gerät gemerkt */
+const ID_STORE = "pn-taxon-ids";
+try{ Object.entries(JSON.parse(localStorage.getItem(ID_STORE) || "{}")).forEach(([k, v]) => ks.taxonIds.set(k, v)); }catch{}
+async function resolveMany(names){
+  const todo = names.filter(n => !ks.taxonIds.has(n));
+  let i = 0;
+  const worker = async () => { while (i < todo.length){ const n = todo[i++]; try{ await resolveTaxon(n); }catch{} } };
+  await Promise.all([worker(), worker(), worker()]);
+  try{ localStorage.setItem(ID_STORE, JSON.stringify(Object.fromEntries([...ks.taxonIds].filter(([, v]) => v)))); }catch{}
+  return names.map(n => ks.taxonIds.get(n)).filter(Boolean);
+}
+
+async function lookParams(){
+  const ctr = map.getCenter(), m = ls.matches;
+  const p = new URLSearchParams({ lat:ctr.lat.toFixed(4), lng:ctr.lng.toFixed(4), radius:ks.radius, quality_grade:"research" });
+  if (m.length <= LOOK_DIRECT){
+    const ids = await resolveMany(m.map(e => e.sci));
+    if (!ids.length) return null;
+    p.set("taxon_id", ids.join(","));
+  } else {
+    p.set("iconic_taxa", [...new Set(m.map(e => e.icon))].join(","));
+  }
+  if (ls.sel.jetzt) p.set("month", NOW_M);
+  if (ls.sel.bl){ p.set("term_id", 12); p.set("term_value_id", ls.sel.bl === "ja" ? 13 : 14); }
+  return p;
+}
+
+function setLookOverlay(remove, p){
+  if (map.getLayer("lookobs")) map.removeLayer("lookobs");
+  if (map.getSource("lookobs")) map.removeSource("lookobs");
+  if (remove || state.tab !== "look" || !p || !map.isStyleLoaded()) return;
+  const q = new URLSearchParams(p); q.set("color", "#e7ad4f");
+  map.addSource("lookobs", { type:"raster", tileSize:256, tiles:[`${API.inat}/grid/{z}/{x}/{y}.png?${q}`],
+    attribution:'<a href="https://www.inaturalist.org" target="_blank">iNaturalist</a>' });
+  map.addLayer({ id:"lookobs", type:"raster", source:"lookobs", paint:{ "raster-opacity":0.85 } });
+}
+
+let lookTimer;
+function runLook(){ clearTimeout(lookTimer); lookTimer = setTimeout(doRunLook, 400); }
+async function doRunLook(){
+  if (state.tab !== "look") return;
+  setAreaCircle(); updateKeyWhere();
+  const ctr = map.getCenter();
+  const key = JSON.stringify(ls.sel) + `|${ctr.lat.toFixed(4)},${ctr.lng.toFixed(4)},${ks.radius}`;
+  if (key === ls.lastKey) return;
+  ls.lastKey = key;
+  const anyLook = Object.keys(ls.sel).some(k => !LOOK_Q.find(q => q.id === k).api);
+  ls.matches = anyLook ? lookMatches(ls.sel) : [];
+  if (!anyLook){
+    ls.abort?.abort(); setLookOverlay(true);
+    $("#lTotal").textContent = ""; $("#lGrid").innerHTML = ""; $("#lMore").hidden = true; $("#lSummary").innerHTML = LOOK_HINT;
+    return;
+  }
+  ls.page = 0;
+  await loadLookPage(false);
+}
+
+async function loadLookPage(append){
+  ls.abort?.abort(); ls.abort = new AbortController();
+  const signal = ls.abort.signal, grid = $("#lGrid"), more = $("#lMore"), m = ls.matches;
+  if (!append){
+    grid.innerHTML = skeletons(6); $("#lTotal").textContent = ""; more.hidden = true;
+    const names = m.slice(0, 14).map(e => `<span>${esc(e.label)}</span>`).join("") + (m.length > 14 ? `<span>+ ${m.length - 14} weitere</span>` : "");
+    $("#lSummary").innerHTML = `<p class="note">Passt zu ${m.length} Gruppe${m.length === 1 ? "" : "n"}:</p><div class="matchlist">${names}</div><p class="note">${
+      m.length > LOOK_DIRECT ? "Noch sehr allgemein – ein, zwei weitere Merkmale machen das Ergebnis deutlich genauer." : "Sortiert nach Häufigkeit im Umkreis: oben steht, was hier am wahrscheinlichsten ist."}</p>`;
+  } else { more.disabled = true; more.textContent = "Lädt …"; }
+  try{
+    const p = await lookParams();
+    if (signal.aborted) return;
+    if (!p){ grid.innerHTML = `<div class="state" style="grid-column:1/-1">Die passenden Gruppen sind bei iNaturalist gerade nicht erreichbar.</div>`; return; }
+    if (!append) setLookOverlay(false, p);
+    p.set("locale", "de"); p.set("preferred_place_id", "7207"); p.set("per_page", KEY_PAGE); p.set("page", ls.page + 1);
+    const d = await getJSON(`${API.inat}/observations/species_counts?${p}`, signal);
+    ls.page++;
+    $("#lTotal").textContent = `${fmt(d.total_results)} Art${d.total_results === 1 ? "" : "en"}`;
+    const html = d.results.map(cardHTML).join("");
+    if (!append) grid.innerHTML = html || `<div class="state" style="grid-column:1/-1">Im Umkreis wurde dazu nichts gemeldet. Lass ein Merkmal weg oder vergrößere den Umkreis.</div>`;
+    else grid.insertAdjacentHTML("beforeend", html);
+    const shown = Math.min(ls.page * KEY_PAGE, d.total_results);
+    more.hidden = shown >= Math.min(d.total_results, MAX_RANK) || !d.results.length;
+    more.disabled = false; more.textContent = `Weitere Arten laden · noch ${fmt(d.total_results - shown)}`;
+  }catch(err){
+    if (err.name === "AbortError") return;
+    ls.lastKey = null;
+    if (!append) grid.innerHTML = `<div class="state" style="grid-column:1/-1">Arten konnten nicht geladen werden (${esc(err.message)}).</div>`;
+    else { more.disabled = false; more.textContent = "Laden fehlgeschlagen – erneut versuchen"; }
+  }
+}
+renderLook();
 
 updateFilterLabel();
 applyLayout();

@@ -136,3 +136,9 @@ Ein Bestimmungsschlüssel in sechs Schritten, alles live aus iNaturalist:
 6. **Wo?** – Umkreis 5–100 km um die Kartenmitte, optional nur gefährdete Arten
 
 Das Ergebnis sind die passenden Arten, sortiert nach Anzahl passender Beobachtungen; die Karte zeigt, wo diese Beobachtungen liegen. Startansicht ist Pinnow (Mecklenburg) mit 30 km Umkreis.
+
+## Registerkarte „Bestimmen nach Aussehen“
+
+Alle Merkmale auf einer Seite: Oberfläche (Fell, Federn, Schuppen, glatte Haut, Panzer, Schale, schleimig, Blätter, Pilz), bei Tieren Beine, Flügel und Größe, bei Pflanzen Wuchs, Blätter und Blüte/Frucht, bei Pilzen die Form, dazu Lebensraum, „gerade eben“ und Umkreis.
+
+Die Zuordnung „Merkmal → Tier-/Pflanzengruppe“ steht als Tabelle `LOOK_DB` in `index.html` (leicht erweiterbar). Welche Arten dieser Gruppen im Umkreis vorkommen, kommt live aus iNaturalist; „blüht gerade“, „trägt Früchte“ und „gerade eben“ sind echte API-Filter. Auswahlen, die zu nichts mehr passen würden, sind ausgegraut.
