@@ -99,6 +99,7 @@ button,input{font:inherit;color:inherit}
 .ppin{width:46px;height:46px;border-radius:50%;padding:0;border:3px solid var(--c,var(--pollen));background:var(--panel-2);overflow:hidden;cursor:pointer;
   box-shadow:0 3px 10px rgba(0,0,0,.5);display:grid;place-items:center;color:var(--ink);font:600 16px var(--f-body);transition:transform .15s}
 .ppin:hover,.ppin:focus-visible{transform:scale(1.25);z-index:2}
+.ppin.zone{border-style:dashed}
 .ppin img{width:100%;height:100%;object-fit:cover;display:block}
 .pin-more{position:fixed;z-index:5;left:max(16px,env(safe-area-inset-left,0px));bottom:calc(76px + env(safe-area-inset-bottom,0px));
   height:26px;padding:0 9px;border-radius:999px;background:rgba(16,24,22,.6);border:1px solid var(--line);color:var(--muted);font-size:11px;cursor:pointer}
@@ -252,9 +253,10 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
 @media (max-width:820px) and (prefers-reduced-motion:reduce){.panel{transition:none}}
 
 /* Registerkarten im Panel */
-.tabs{display:flex;gap:18px;padding:10px 20px 0;border-bottom:1px solid var(--line);flex:0 0 auto}
+.tabs{display:flex;gap:14px;overflow-x:auto;scrollbar-width:none;padding:10px 20px 0;border-bottom:1px solid var(--line);flex:0 0 auto}
 .tab{background:none;border:0;border-bottom:2px solid transparent;padding:8px 2px 10px;color:var(--muted);font:600 14px var(--f-body);cursor:pointer;margin-bottom:-1px}
 .tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--pollen)}
+.tab{white-space:nowrap;flex:0 0 auto;font-size:13px}
 .tab small{display:block;font:500 10px/1.2 var(--f-body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
 .chip.empty{opacity:.35;cursor:not-allowed}
 .pane{flex:1;min-height:0;display:flex;flex-direction:column}
@@ -304,6 +306,9 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
 .checks label{display:flex;gap:6px;align-items:center;cursor:pointer}
 .checks input{accent-color:var(--pollen)}
 .key-res{padding-top:4px}
+.combo-top{display:grid;gap:10px;padding:14px 0 4px}
+.combo-how summary{cursor:pointer;font-size:12px;color:var(--muted)}
+.combo-how p{margin-top:6px}
 .look-sec{padding:14px 0;border-bottom:1px solid var(--line);display:grid;gap:12px}
 .look-sec>h4{margin:0;font:700 15px/1.1 var(--f-display);letter-spacing:-.01em;display:flex;align-items:baseline;gap:8px}
 .look-sec>h4 small{font:400 12px var(--f-body);color:var(--muted)}
@@ -319,7 +324,10 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
 .key-res-head .linkbtn{margin-left:auto;font-size:12px;color:var(--muted)}
 #kSummary{margin:0 0 12px}
 @media (max-width:820px){
-  .tabs{padding:0 16px}
+  .tabs{padding:0 12px;gap:12px;overflow-x:auto;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{font-size:13px;white-space:nowrap;flex:0 0 auto}
+  .tab small{font-size:9px}
   .panel-head{padding-top:10px}
   .key-head{padding:10px 16px 10px;touch-action:none}
   .key-body{padding:0 16px 24px}
@@ -430,6 +438,7 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
   <button class="handle" id="handle" aria-label="Artenliste größer oder kleiner ziehen"></button>
   <nav class="tabs" role="tablist" aria-label="Ansicht">
     <button class="tab" role="tab" id="tabBtnExplore" aria-controls="paneExplore" aria-selected="true"><small>Arten</small>Entdecken</button>
+    <button class="tab" role="tab" id="tabBtnCombo" aria-controls="paneCombo" aria-selected="false"><small>Arten entdecken</small>Kombi</button>
     <button class="tab" role="tab" id="tabBtnKey" aria-controls="paneKey" aria-selected="false"><small>Bestimmen</small>biologisch</button>
     <button class="tab" role="tab" id="tabBtnLook" aria-controls="paneLook" aria-selected="false"><small>Bestimmen</small>nach Aussehen</button>
     <button class="grow" id="growBtn" aria-pressed="false" title="Liste vergrößern" aria-label="Liste vergrößern">
@@ -469,6 +478,27 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
       <li><a href="https://my.plantnet.org/" target="_blank" rel="noopener">Pl@ntNet</a> – Pflanzenbestimmung per Foto. The image-based plant species identification service used, is based on the Pl@ntNet recognition API, regularly updated and accessible through the site https://my.plantnet.org/</li>
     </ul>
   </details>
+  </div>
+
+  <!-- Arten entdecken · Kombi: iNaturalist und GBIF konservativ gemittelt -->
+  <div class="pane" id="paneCombo" role="tabpanel" aria-labelledby="tabBtnCombo" hidden>
+    <div class="key-head" id="comboHead">
+      <div class="eyebrow">Kombiniert aus iNaturalist &amp; GBIF</div>
+      <p class="place">Was lebt hier wirklich?</p>
+      <div class="where" id="cWhere"></div>
+    </div>
+    <div class="key-body" id="comboBody">
+      <div class="combo-top">
+        <div class="groups" id="cGroups" role="group" aria-label="Artengruppe"></div>
+        <details class="combo-how">
+          <summary>So wird gerechnet</summary>
+          <p class="note">Zwei unabhängige Quellen: iNaturalist (bestätigte Beobachtungen mit Foto) und GBIF (Fundmeldungen aus vielen Datenbanken, z. B. Museen, Kartierungen, Vogelzählungen). Je Quelle zählt der Anteil einer Art an ihrer Gruppe – Vögel unter Vögeln, Pflanzen unter Pflanzen. Daraus das geometrische Mittel: Oben steht nur, was <b>beide</b> Quellen häufig sehen. Arten aus nur einer Quelle werden nicht gewertet.</p>
+        </details>
+        <p class="note" id="cStat"></p>
+      </div>
+      <header class="key-res-head"><h3>Häufigkeit, kombiniert</h3><span class="total" id="cTotal"></span></header>
+      <div id="cTiers"></div>
+    </div>
   </div>
 
   <!-- Bestimmungsschlüssel: Kategorie → Gruppe → Merkmal → Zeit → Ort, Ergebnis live aus iNaturalist -->
@@ -782,23 +812,24 @@ const PAGE = 50, MAX_RANK = 10000 /* iNaturalist liefert höchstens 10.000 Ergeb
 
 let loadTimer;
 function scheduleLoad(ms){ clearTimeout(loadTimer); loadTimer = setTimeout(() => {
-    state.tab === "key" ? runKey() : state.tab === "look" ? runLook() : loadSpecies();
+    state.tab === "key" ? runKey() : state.tab === "look" ? runLook() : state.tab === "combo" ? runCombo() : loadSpecies();
     loadPlaceName(); }, ms); }
 
-function cardHTML({count, taxon:t}, suffix = "hier"){
+function cardHTML({count, taxon:t, label}, suffix = "hier"){
   const img = photo(t.default_photo?.square_url, "small");
   return `<button class="card" data-id="${t.id}" style="--c:${groupColor(t)}">
     ${img ? `<img src="${esc(img)}" alt="" loading="lazy">` : `<div class="noimg"></div>`}
     <div class="meta">
       <span class="cn">${esc(t.preferred_common_name || t.name)}</span>
       ${t.preferred_common_name ? `<span class="sn">${esc(t.name)}</span>` : ""}
-      <span class="ct">${fmt(count)} Beobachtung${count === 1 ? "" : "en"} ${suffix}</span>
+      <span class="ct">${label ? esc(label) : `${fmt(count)} Beobachtung${count === 1 ? "" : "en"} ${suffix}`}</span>
     </div></button>`;
 }
 const skeletons = n => Array.from({length:n}, () => `<div class="card"><div class="noimg skel"></div><div class="meta"><div class="cn skel" style="height:14px;border-radius:4px"></div></div></div>`).join("");
 const barsHTML = n => `<span class="freq" aria-hidden="true">${[1,2,3,4,5].map(i => `<i class="${i <= n ? "on" : ""}" style="height:${3 + i*2.4}px"></i>`).join("")}</span>`;
 
 function getPage(c, n){
+  if (c.static) return Promise.resolve({ total_results:c.static.length, results:c.static.slice((n - 1) * PAGE, n * PAGE) });
   if (!c.pages.has(n)){
     const p = new URLSearchParams(c.params); p.set("per_page", PAGE); p.set("page", n);
     const pr = getJSON(`${API.inat}/observations/species_counts?${p}`, c.signal);
@@ -865,7 +896,7 @@ function makeTierList(box, prefix, { suffix = "hier", emptyHTML, onTotal = () =>
     if (L.ctx !== my) return;
     const html = items.map(r => cardHTML(r, suffix)).join("");
     if (replace) grid.innerHTML = html; else grid.insertAdjacentHTML("beforeend", html);
-    if (replace && items.length){
+    if (replace && items.length && !my.static){
       const hi = items[0].count;
       document.getElementById(`${prefix}-range-${t.id}`).textContent = `bis ${fmt(hi)} Beobachtung${hi === 1 ? "" : "en"} je Art`;
     }
@@ -875,8 +906,8 @@ function makeTierList(box, prefix, { suffix = "hier", emptyHTML, onTotal = () =>
     btn.disabled = false;
     btn.textContent = `${Math.min(MORE, left)} weitere anzeigen · noch ${fmt(left)}`;
   }
-  L.load = async (params, signal) => {
-    const my = L.ctx = { params, pages:new Map(), signal, tiers:[] };
+  L.load = async (params, signal, staticList) => {
+    const my = L.ctx = { params, pages:new Map(), signal, tiers:[], static:staticList || null };
     box.innerHTML = `<section class="tier"><div class="grid">${skeletons(4)}</div></section>`;
     onTotal(null);
     try{
@@ -1179,7 +1210,8 @@ async function loadLocalCount(t){
   try{
     const c = searchCenter();
     const p = new URLSearchParams({ taxon_id:t.id, per_page:0 });
-    if (state.tab !== "explore" || !isGlobal()){ p.set("lat", c.lat); p.set("lng", c.lng); p.set("radius", state.tab !== "explore" ? ks.radius : radiusKm()); }
+    const fixed = state.tab === "key" || state.tab === "look";
+    if (fixed || state.tab === "combo" || !isGlobal()){ p.set("lat", c.lat); p.set("lng", c.lng); p.set("radius", fixed ? ks.radius : Math.min(radiusKm(), state.tab === "combo" ? 250 : 1e9)); }
     const d = await getJSON(`${API.inat}/observations?${p}`);
     $("#localCount").textContent = fmt(d.total_results);
   }catch{ const e = $("#localCount"); if (e) e.textContent = "–"; }
@@ -1247,7 +1279,7 @@ window.addEventListener("resize", () => { if (isMobile()) document.documentEleme
 // Ziehen am Griff oder am Kopfbereich
 (function enableDrag(){
   let startY = 0, startH = 0, moved = false, active = false;
-  const targets = [$("#handle"), $("#panelHead"), $("#keyHead"), $("#lookHead")];
+  const targets = [$("#handle"), $("#panelHead"), $("#keyHead"), $("#lookHead"), $("#comboHead")];
   const down = e => {
     if (!isMobile()) return;
     if (e.target.closest("button:not(#handle), input, label, a")) return; // Bedienelemente bleiben klickbar
@@ -1283,7 +1315,7 @@ window.addEventListener("resize", () => { if (isMobile()) document.documentEleme
 })();
 
 // Beim Scrollen in der Liste klappt das Sheet ganz auf
-["#list", "#keyBody", "#lookBody"].forEach(sel => $(sel).addEventListener("scroll", e => {
+["#list", "#keyBody", "#lookBody", "#comboBody"].forEach(sel => $(sel).addEventListener("scroll", e => {
   if (isMobile() && snap !== "full" && e.currentTarget.scrollTop > 30) setSheet("full");
 }, { passive:true }));
 
@@ -1706,7 +1738,7 @@ const catOf = () => KEY_CATS.find(c => c.id === ks.cat);
 const pressed = (b, on) => b.setAttribute("aria-pressed", on);
 
 /* --- Registerkarten --- */
-const TABS = [["explore","#tabBtnExplore","#paneExplore"],["key","#tabBtnKey","#paneKey"],["look","#tabBtnLook","#paneLook"]];
+const TABS = [["explore","#tabBtnExplore","#paneExplore"],["combo","#tabBtnCombo","#paneCombo"],["key","#tabBtnKey","#paneKey"],["look","#tabBtnLook","#paneLook"]];
 function setTab(name){
   if (state.tab === name) return;
   state.tab = name;
@@ -1716,6 +1748,7 @@ function setTab(name){
   syncRadiusChips();
   if (name === "key"){ setAreaCircle(); ks.lastKey = null; runKey(); }
   else if (name === "look"){ setAreaCircle(); ls.lastKey = null; runLook(); }
+  else if (name === "combo"){ cs.lastKey = null; runCombo(); }
   else { state.lastQuery = null; loadSpecies(); }   // Kreis & Liste für den Zoom-Radius neu aufbauen
 }
 TABS.forEach(([id, btn]) => $(btn).onclick = () => setTab(id));
@@ -2238,92 +2271,265 @@ async function loadLookPage(){
 renderLook();
 
 /* ================= Fotos der Lebewesen auf der Karte =================
-   Statt einer Dichtekarte stehen runde Fotos an echten Fundorten (iNaturalist).
-   Bis 100 km Umkreis: die 5 häufigsten – 3 Tiere, 2 Pflanzen (2/3 zu 1/3).
-   Größerer Umkreis: je 2 pro Gruppe. Der kleine „+“-Knopf ergänzt je Gruppe 2 weitere. */
+   Runde Fotos an echten Fundorten (iNaturalist), aufgeteilt nach Zonen:
+   – Grundauswahl bis 100 km: die 5 häufigsten, 3 Tiere + 2 Pflanzen; darüber je 2 pro Gruppe.
+   – Zonen: Der Umkreis wird in ein Raster geteilt. Hat eine Zone (z. B. ein See) Arten, die dort
+     deutlich häufiger sind als im ganzen Umkreis, bekommt sie ein eigenes Foto dieser Art.
+   – Kein Überdecken: Fotos, die sich berühren würden, rücken auf einem Ring zur Seite. */
 const PIN_ANIMALS = ["Mammalia","Aves","Reptilia","Amphibia","Actinopterygii","Insecta","Arachnida","Mollusca","Animalia"];
 const PIN_GROUPS = ["Plantae","Fungi", ...PIN_ANIMALS];
-const pins = { markers:[], key:null, abort:null, pool:null, extra:0, params:null, radius:0 };
+const PIN_PX = 54;            // Mindestabstand der Mittelpunkte in Pixeln (Foto 46 px + Luft)
+const ZONE_GRID = 5;          // 5 × 5 Zonen über den Umkreis
+const ZONE_MAX = 3;           // höchstens so viele Zonen-Fotos zusätzlich
+const pins = { markers:[], key:null, abort:null, pool:null, sample:null, extra:0, params:null, radius:0 };
+const iconOf = t => t?.iconic_taxon_name || "Animalia";
 
 function clearPins(){ pins.markers.forEach(m => m.remove()); pins.markers = []; }
 
-/* Auswahl aus der nach Häufigkeit sortierten Artenliste */
 function pickPins(pool, radius, extra){
-  const by = g => pool.filter(r => (r.taxon.iconic_taxon_name || "Animalia") === g);
-  const isAnimal = r => PIN_ANIMALS.includes(r.taxon.iconic_taxon_name || "Animalia");
+  const by = g => pool.filter(r => iconOf(r.taxon) === g);
   let out = [];
   if (radius <= 100){
-    const animals = pool.filter(isAnimal), plants = by("Plantae");
+    const animals = pool.filter(r => PIN_ANIMALS.includes(iconOf(r.taxon))), plants = by("Plantae");
     out = [...animals.slice(0, 3), ...plants.slice(0, 2)];
-    if (out.length < 5) out = [...out, ...pool.filter(r => !out.includes(r))].slice(0, 5);   // z. B. nur Pflanzen gewählt
+    if (out.length < 5) out = [...out, ...pool.filter(r => !out.includes(r))].slice(0, 5);
   }
   const per = radius <= 100 ? extra * 2 : 2 + extra * 2;
   if (per){ const top = [...out]; PIN_GROUPS.forEach(g => by(g).filter(r => !top.includes(r)).slice(0, per).forEach(r => out.push(r))); }
-  return out;
+  return out.map(r => r.taxon);
 }
 
-function pinEl(t, obsPhoto){
+/* Zonen: Arten, die in einer Rasterzelle auffällig häufiger sind als im ganzen Umkreis */
+function zoneOf(o, c, radius){
+  const [lng, lat] = o.geojson.coordinates;
+  const dy = (lat - c.lat) * 111.32, dx = (lng - c.lng) * 111.32 * Math.cos(c.lat * Math.PI / 180);
+  const size = 2 * radius / ZONE_GRID;
+  return `${Math.floor((dx + radius) / size)}:${Math.floor((dy + radius) / size)}`;
+}
+function zonePicks(sample, c, radius, taken){
+  const all = new Map(), zones = new Map();
+  sample.forEach(o => {
+    if (!o.taxon || !o.geojson) return;
+    const id = o.taxon.id, z = zoneOf(o, c, radius);
+    all.set(id, (all.get(id) || 0) + 1);
+    if (!zones.has(z)) zones.set(z, { n:0, sp:new Map() });
+    const Z = zones.get(z); Z.n++; Z.sp.set(id, [(Z.sp.get(id)?.[0] || 0) + 1, o]);
+  });
+  const N = sample.length, cands = [];
+  zones.forEach((Z, z) => {
+    if (Z.n < 4) return;   // zu wenig Daten für eine Aussage
+    let best = null;
+    Z.sp.forEach(([k, o], id) => {
+      if (k < 2 || taken.has(id)) return;
+      const lift = (k / Z.n) / (all.get(id) / N);   // wie viel häufiger als im ganzen Umkreis
+      const score = lift * Math.sqrt(k);
+      if (lift >= 1.8 && (!best || score > best.score)) best = { score, o, id };
+    });
+    if (best) cands.push(best);
+  });
+  return cands.sort((a, b) => b.score - a.score).slice(0, ZONE_MAX);
+}
+
+function pinEl(t, obsPhoto, zone){
   const el = document.createElement("button");
-  el.className = "ppin"; el.style.setProperty("--c", groupColor(t));
-  el.title = t.preferred_common_name || t.name;
-  el.setAttribute("aria-label", `${el.title} – Steckbrief öffnen`);
+  el.className = "ppin" + (zone ? " zone" : ""); el.style.setProperty("--c", groupColor(t));
+  el.title = (t.preferred_common_name || t.name) + (zone ? " – typisch für diese Stelle" : "");
+  el.setAttribute("aria-label", `${t.preferred_common_name || t.name} – Steckbrief öffnen`);
   const src = photo(obsPhoto || t.default_photo?.square_url, "square");
   el.innerHTML = src ? `<img src="${esc(src)}" alt="" loading="lazy">` : `<span>${esc((t.preferred_common_name || t.name)[0])}</span>`;
   el.addEventListener("click", e => { e.stopPropagation(); openDetail(t.id); });
   return el;
 }
+function addPin(t, o, zone){
+  const m = new maplibregl.Marker({ element:pinEl(t, o.photos?.[0]?.url, zone), anchor:"center" }).setLngLat(o.geojson.coordinates).addTo(map);
+  pins.markers.push(m);
+}
 
-/* Ein Fundort je Art: jüngste Beobachtung mit Foto im Umkreis (höchstens 3 Anfragen gleichzeitig) */
-async function placePins(list, base, signal){
+/* Überdecken vermeiden: der Reihe nach (wichtigste zuerst) einen freien Platz auf Ringen um den Fundort suchen */
+const RING = [[0,0]];
+[1, 2, 3].forEach(r => { const n = 6 * r; for (let i = 0; i < n; i++){ const a = 2 * Math.PI * i / n + r; RING.push([Math.cos(a) * PIN_PX * r, Math.sin(a) * PIN_PX * r]); } });
+function declutter(){
+  const placed = [];
+  pins.markers.forEach(m => {
+    const p = map.project(m.getLngLat());
+    const spot = RING.find(([ox, oy]) => placed.every(q => Math.hypot(p.x + ox - q[0], p.y + oy - q[1]) >= PIN_PX));
+    m.getElement().style.visibility = spot ? "" : "hidden";
+    if (!spot) return;
+    m.setOffset(spot);
+    placed.push([p.x + spot[0], p.y + spot[1]]);
+  });
+}
+let declutterRaf = 0;
+map.on("zoom", () => { cancelAnimationFrame(declutterRaf); declutterRaf = requestAnimationFrame(declutter); });
+map.on("moveend", declutter);
+
+async function locateMissing(list, base, signal){
   let i = 0;
   const work = async () => {
     while (i < list.length){
-      const r = list[i++];
-      const p = new URLSearchParams({ taxon_id:r.taxon.id, lat:base.get("lat"), lng:base.get("lng"), radius:base.get("radius"),
-        photos:"true", per_page:"1", order_by:"observed_on" });
+      const t = list[i++];
+      const p = new URLSearchParams({ taxon_id:t.id, lat:base.get("lat"), lng:base.get("lng"), radius:base.get("radius"), photos:"true", per_page:"1" });
       if (base.get("quality_grade")) p.set("quality_grade", base.get("quality_grade"));
       try{
         const d = await getJSON(`${API.inat}/observations?${p}`, signal);
         const o = d.results?.[0];
-        const ll = o?.geojson?.coordinates;
-        if (!ll || signal.aborted) continue;
-        const m = new maplibregl.Marker({ element:pinEl(r.taxon, o.photos?.[0]?.url), anchor:"center" }).setLngLat(ll).addTo(map);
-        pins.markers.push(m);
+        if (o?.geojson && !signal.aborted){ addPin(t, o); declutter(); }
       }catch(err){ if (err.name === "AbortError") return; }
     }
   };
   await Promise.all([work(), work(), work()]);
 }
 
-async function updatePins(params, radius, force){
+async function updatePins(params, radius){
   const base = new URLSearchParams(params);
   ["locale","preferred_place_id","per_page","page"].forEach(k => base.delete(k));
   if (!base.get("lat")){ pins.key = null; clearPins(); $("#pinMore").hidden = true; return; }   // Globus-Ansicht: keine Fotos
-  const key = base.toString() + "|" + radius + "|" + pins.extra;
-  if (key === pins.key && !force) return;
-  const poolKey = base.toString();
+  const poolKey = base.toString(), key = poolKey + "|" + radius + "|" + pins.extra;
+  if (key === pins.key) return;
   pins.key = key; pins.params = params; pins.radius = radius;
   pins.abort?.abort(); pins.abort = new AbortController();
   const signal = pins.abort.signal;
   try{
-    if (!pins.pool || pins.pool.key !== poolKey){
+    if (pins.pool?.key !== poolKey){
       const q = new URLSearchParams(base); q.set("per_page", "200"); q.set("locale", "de"); q.set("preferred_place_id", "7207");
-      const d = await getJSON(`${API.inat}/observations/species_counts?${q}`, signal);
+      const s = new URLSearchParams(base); s.set("photos", "true"); s.set("per_page", "200"); s.set("locale", "de"); s.set("preferred_place_id", "7207");
+      const [d, o] = await Promise.all([
+        getJSON(`${API.inat}/observations/species_counts?${q}`, signal),
+        getJSON(`${API.inat}/observations?${s}`, signal).catch(err => { if (err.name === "AbortError") throw err; return { results:[] }; })
+      ]);
       pins.pool = { key:poolKey, list:d.results || [] };
+      pins.sample = (o.results || []).filter(x => x.geojson && x.taxon);
     }
     clearPins();
-    const list = pickPins(pins.pool.list, radius, pins.extra);
-    $("#pinMore").hidden = !list.length;
-    await placePins(list, base, signal);
+    const c = { lat:+base.get("lat"), lng:+base.get("lng") };
+    const main = pickPins(pins.pool.list, radius, pins.extra);
+    const taken = new Set(main.map(t => t.id));
+    // Grundauswahl: Fundort aus der Stichprobe, sonst einzeln nachschlagen
+    const missing = [];
+    main.forEach(t => { const o = pins.sample.find(x => x.taxon.id === t.id); o ? addPin(t, o) : missing.push(t); });
+    // Zonen-Fotos: andere Arten an Stellen, wo sie typisch sind (Wasser, Wald, Stadt …)
+    zonePicks(pins.sample, c, radius, taken).forEach(z => addPin(z.o.taxon, z.o, true));
+    declutter();
+    $("#pinMore").hidden = !main.length;
+    await locateMissing(missing, base, signal);
   }catch(err){ if (err.name !== "AbortError") pins.key = null; }
 }
-/* Neuer Ort oder Filter → zurück auf die Grundauswahl */
-function resetPinExtra(params){
+function showPins(params, radius){
   const base = new URLSearchParams(params); ["locale","preferred_place_id","per_page","page"].forEach(k => base.delete(k));
-  if (pins.pool?.key !== base.toString()) pins.extra = 0;
+  if (pins.pool?.key !== base.toString()) pins.extra = 0;   // neuer Ort oder Filter → Grundauswahl
+  updatePins(params, radius);
 }
-function showPins(params, radius){ resetPinExtra(params); updatePins(params, radius); }
 $("#pinMore").onclick = () => { if (!pins.params) return; pins.extra++; updatePins(pins.params, pins.radius); };
+
+/* ================= Arten entdecken · Kombi =================
+   Zwei unabhängige Datenquellen, konservativ gemittelt:
+   – iNaturalist: bestätigte Beobachtungen im Umkreis (Bürgerwissenschaft, mit Fotos)
+   – GBIF: alle Fundmeldungen im Umkreis aus vielen Datenbanken (Museen, Kartierungen, Vogelzählungen …)
+   Je Quelle zählt der Anteil einer Art an ihrer eigenen Gruppe (Vögel unter Vögeln, Pflanzen unter
+   Pflanzen) – so verzerren riesige Vogelzähl-Datensätze nicht alles. Kombiniert wird mit dem
+   geometrischen Mittel: Eine Art ist nur dann weit oben, wenn BEIDE Quellen sie häufig sehen.
+   Arten, die nur eine Quelle kennt, werden nicht gewertet. */
+const GBIF_GROUP_KEY = { plants:6, fungi:5, mamm:359, birds:212, rept:358, amph:131, fish:204, ins:216, arach:367, moll:52 };
+const GBIF_NAME_STORE = "pn-gbif-names";
+const gbifNames = (() => { try{ return new Map(Object.entries(JSON.parse(localStorage.getItem(GBIF_NAME_STORE) || "{}"))); }catch{ return new Map(); } })();
+const COMBO_GBIF_TOP = 250, COMBO_INAT_TOP = 500;
+const cs = { group:"all", lastKey:null, abort:null };
+
+$("#cGroups").innerHTML = GROUPS.map(g =>
+  `<button class="chip" style="--c:${g.c}" data-id="${g.id}" aria-pressed="${g.id === cs.group}"><i></i>${g.label}</button>`).join("");
+$("#cGroups").onclick = e => {
+  const b = e.target.closest(".chip"); if (!b || b.disabled) return;
+  cs.group = b.dataset.id;
+  document.querySelectorAll("#cGroups .chip").forEach(x => x.setAttribute("aria-pressed", x === b));
+  runCombo();
+};
+
+function iconicFromGbif(s){
+  if (s.kingdom === "Plantae") return "Plantae";
+  if (s.kingdom === "Fungi") return "Fungi";
+  const cl = { Mammalia:"Mammalia", Aves:"Aves", Reptilia:"Reptilia", Squamata:"Reptilia", Testudines:"Reptilia", Amphibia:"Amphibia",
+    Actinopterygii:"Actinopterygii", Insecta:"Insecta", Arachnida:"Arachnida" }[s.class];
+  if (cl) return cl;
+  return s.phylum === "Mollusca" ? "Mollusca" : "Animalia";
+}
+/* GBIF-Artnummern → Namen (einmal je Art, danach auf dem Gerät gemerkt) */
+async function gbifResolve(keys, signal){
+  const todo = keys.filter(k => !gbifNames.has(String(k)));
+  let i = 0;
+  const work = async () => {
+    while (i < todo.length){
+      const k = todo[i++];
+      try{
+        const s = await getJSON(`${API.gbif}/species/${k}`, signal);
+        gbifNames.set(String(k), [s.canonicalName || s.species || "", iconicFromGbif(s)]);
+      }catch(err){ if (err.name === "AbortError") throw err; }
+    }
+  };
+  await Promise.all(Array.from({ length:6 }, work));
+  try{ localStorage.setItem(GBIF_NAME_STORE, JSON.stringify(Object.fromEntries(gbifNames))); }catch{}
+}
+
+const comboList = makeTierList($("#cTiers"), "cb", {
+  emptyHTML:`<div class="state">Keine Art wird hier von beiden Quellen gemeldet. Zoom heraus oder wähle eine andere Gruppe.</div>`,
+  onTotal:n => $("#cTotal").textContent = n == null ? "" : `${fmt(n)} Arten` });
+
+let comboTimer;
+function runCombo(){ clearTimeout(comboTimer); comboTimer = setTimeout(doRunCombo, 300); }
+async function doRunCombo(){
+  if (state.tab !== "combo") return;
+  const c = searchCenter(), r = Math.min(radiusKm(), 250), g = GROUPS.find(x => x.id === cs.group);
+  map.getSource("area")?.setData(circle(c.lng, c.lat, r));
+  $("#cWhere").textContent = `Umkreis ${fmt(r)} km um ${$("#place").textContent || "die Kartenmitte"}`;
+  const key = `${c.lat.toFixed(3)},${c.lng.toFixed(3)},${r},${cs.group}`;
+  if (key === cs.lastKey) return;
+  cs.lastKey = key;
+  cs.abort?.abort(); cs.abort = new AbortController();
+  const signal = cs.abort.signal;
+  const ip = new URLSearchParams({ iconic_taxa:g.taxa, quality_grade:"research", lat:c.lat.toFixed(4), lng:c.lng.toFixed(4), radius:r,
+    locale:"de", preferred_place_id:"7207", per_page:COMBO_INAT_TOP });
+  showPins(ip, r);
+  const gp = new URLSearchParams({ geoDistance:`${c.lat.toFixed(4)},${c.lng.toFixed(4)},${r}km`, facet:"speciesKey", facetLimit:COMBO_GBIF_TOP,
+    limit:0, occurrenceStatus:"PRESENT", hasGeospatialIssue:"false" });
+  if (GBIF_GROUP_KEY[g.id]) gp.set("taxonKey", GBIF_GROUP_KEY[g.id]);
+  $("#cTiers").innerHTML = `<section class="tier"><div class="grid">${skeletons(4)}</div></section>`;
+  $("#cTotal").textContent = ""; $("#cStat").textContent = "Lade iNaturalist und GBIF …";
+  try{
+    const [inat, gbif] = await Promise.all([
+      getJSON(`${API.inat}/observations/species_counts?${ip}`, signal),
+      getJSON(`${API.gbif}/occurrence/search?${gp}`, signal)
+    ]);
+    const counts = gbif.facets?.[0]?.counts || [];
+    $("#cStat").textContent = "Gleiche die Artnamen ab …";
+    await gbifResolve(counts.map(x => x.name), signal);
+    if (signal.aborted) return;
+    // GBIF: Name → [Anzahl, Gruppe]
+    const gMap = new Map();
+    counts.forEach(x => { const n = gbifNames.get(String(x.name)); if (n?.[0]) gMap.set(n[0].toLowerCase(), [x.count, n[1]]); });
+    // Summen je Gruppe und Quelle
+    const iTot = {}, gTot = {};
+    (inat.results || []).forEach(x => { const k = iconOf(x.taxon); iTot[k] = (iTot[k] || 0) + x.count; });
+    gMap.forEach(([n, k]) => { gTot[k] = (gTot[k] || 0) + n; });
+    let both = 0, onlyOne = 0;
+    const list = [];
+    (inat.results || []).forEach(x => {
+      const gm = gMap.get(x.taxon.name.toLowerCase());
+      if (!gm){ onlyOne++; return; }
+      both++;
+      const k = iconOf(x.taxon);
+      const sI = x.count / iTot[k], sG = gm[0] / (gTot[gm[1]] || gm[0]);
+      const score = Math.sqrt(sI * sG);   // geometrisches Mittel: beide Quellen müssen zustimmen
+      list.push({ taxon:x.taxon, count:x.count, score, label:`${fmt(x.count)} iNat · ${fmt(gm[0])} GBIF` });
+    });
+    list.sort((a, b) => b.score - a.score);
+    $("#cStat").textContent = `${fmt(both)} Arten in beiden Quellen gewertet, ${fmt(onlyOne + Math.max(0, gMap.size - both))} nur in einer Quelle – nicht gewertet.`;
+    await comboList.load(null, signal, list);
+  }catch(err){
+    if (err.name === "AbortError") return;
+    cs.lastKey = null;
+    $("#cStat").textContent = "";
+    $("#cTiers").innerHTML = `<div class="state">Daten konnten nicht geladen werden (${esc(err.message)}).</div>`;
+  }
+}
 
 updateFilterLabel();
 applyLayout();
