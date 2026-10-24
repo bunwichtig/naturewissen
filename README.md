@@ -135,4 +135,4 @@ Ein Bestimmungsschlüssel in sechs Schritten, alles live aus iNaturalist:
 5. **Tageszeit** – Uhrzeit der Beobachtungen
 6. **Wo?** – Umkreis 5–100 km um die Kartenmitte, optional nur gefährdete Arten
 
-Das Ergebnis sind die passenden Arten, sortiert nach Anzahl passender Beobachtungen; die Karte zeigt, wo diese Beobachtungen liegen. Startansicht ist Pinnow (Mecklenburg) mit 100 km Umkreis.
+Das Ergebnis sind die passenden Arten, sortiert nach Anzahl passender Beobachtungen; die Karte zeigt, wo diese Beobachtungen liegen. Startansicht ist Pinnow (Mecklenburg) mit 30 km Umkreis.

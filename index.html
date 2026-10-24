@@ -204,6 +204,8 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
 .tabs{display:flex;gap:18px;padding:10px 20px 0;border-bottom:1px solid var(--line);flex:0 0 auto}
 .tab{background:none;border:0;border-bottom:2px solid transparent;padding:8px 2px 10px;color:var(--muted);font:600 14px var(--f-body);cursor:pointer;margin-bottom:-1px}
 .tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--pollen)}
+.tab small{display:block;font:500 10px/1.2 var(--f-body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.chip.empty{opacity:.35;cursor:not-allowed}
 .pane{flex:1;min-height:0;display:flex;flex-direction:column}
 
 /* Bestimmungsschlüssel */
@@ -221,6 +223,7 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
 .cat i{width:10px;height:10px;border-radius:50%;background:var(--c)}
 .cat .n{font-weight:600;font-size:14px}
 .cat .c{grid-column:2;font:11px var(--f-data);color:var(--muted);font-variant-numeric:tabular-nums;min-height:14px}
+.cat.empty{opacity:.35;cursor:not-allowed}
 .cat[aria-pressed="true"]{border-color:var(--c);box-shadow:inset 0 0 0 1px var(--c)}
 .chips{display:flex;gap:6px;flex-wrap:wrap}
 .chip small{color:var(--muted);font:11px var(--f-data)}
@@ -333,8 +336,8 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
 <aside class="panel" id="panel" aria-label="Arten im Kartenausschnitt">
   <button class="handle" id="handle" aria-label="Artenliste größer oder kleiner ziehen"></button>
   <nav class="tabs" role="tablist" aria-label="Ansicht">
-    <button class="tab" role="tab" id="tabBtnExplore" aria-controls="paneExplore" aria-selected="true">Entdecken</button>
-    <button class="tab" role="tab" id="tabBtnKey" aria-controls="paneKey" aria-selected="false">Bestimmen</button>
+    <button class="tab" role="tab" id="tabBtnExplore" aria-controls="paneExplore" aria-selected="true"><small>Arten</small>Entdecken</button>
+    <button class="tab" role="tab" id="tabBtnKey" aria-controls="paneKey" aria-selected="false"><small>Bestimmen</small>biologisch</button>
   </nav>
   <div class="pane" id="paneExplore" role="tabpanel" aria-labelledby="tabBtnExplore">
   <div class="panel-head" id="panelHead">
@@ -526,8 +529,8 @@ async function getJSON(url, signal){
 }
 
 /* ---------------- Karte / Globus ---------------- */
-/* Startansicht: Pinnow bei Schwerin, Umkreis 100 km (radiusKm() ergibt bei diesem Zoom 100) */
-const HOME = { name:"Pinnow (Mecklenburg)", center:[11.548, 53.603], km:100 };
+/* Startansicht: Pinnow bei Schwerin, Umkreis 30 km (radiusKm() ergibt bei diesem Zoom 100) */
+const HOME = { name:"Pinnow (Mecklenburg)", center:[11.548, 53.603], km:30 };
 HOME.zoom = 1 + Math.log2(9000 / HOME.km);
 
 const SAT_TILES = "https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2020_3857/default/g/{z}/{y}/{x}.jpg";
@@ -670,6 +673,40 @@ async function fetchRange(c, start, count){
   return out;
 }
 
+/* Gruppen ohne Funde im Ausschnitt sind nicht anklickbar (eine Anfrage für alle Gruppen) */
+let availKey = null, availAbort;
+async function updateGroupAvailability(params){
+  const p = new URLSearchParams(params); p.delete("iconic_taxa"); p.delete("locale"); p.delete("preferred_place_id");
+  const key = p.toString();
+  if (key === availKey) return;
+  availKey = key;
+  availAbort?.abort(); availAbort = new AbortController();
+  try{
+    const d = await getJSON(`${API.inat}/observations/iconic_taxa_species_counts?${p}`, availAbort.signal);
+    const by = Object.fromEntries((d.results || []).map(r => [r.taxon?.name, r.count]));
+    let lost = false;
+    document.querySelectorAll("#groups .chip").forEach(b => {
+      const g = GROUPS.find(x => x.id === b.dataset.id);
+      if (g.id === "all"){ b.title = ""; return; }
+      const n = by[g.taxa] || 0;
+      b.disabled = n === 0;
+      b.classList.toggle("empty", n === 0);
+      b.title = n ? `${fmt(n)} Arten hier` : "Hier keine Funde";
+      if (!n && state.group === g.id) lost = true;
+    });
+    if (lost){ // gewählte Gruppe gibt es hier nicht → zurück auf „Alle“
+      state.group = "all";
+      document.querySelectorAll("#groups .chip").forEach(x => x.setAttribute("aria-pressed", x.dataset.id === "all"));
+      updateFilterLabel();
+      loadSpecies();
+    }
+  }catch(err){
+    if (err.name === "AbortError") return;
+    availKey = null;   // bei Fehler alles anklickbar lassen
+    document.querySelectorAll("#groups .chip").forEach(b => { b.disabled = false; b.classList.remove("empty"); });
+  }
+}
+
 async function loadSpecies(){
   const c = map.getCenter(), r = radiusKm(), g = GROUPS.find(x => x.id === state.group);
   const params = new URLSearchParams({ iconic_taxa:g.taxa, locale:"de", preferred_place_id:"7207" /* Deutschland für dt. Namen */ });
@@ -677,6 +714,7 @@ async function loadSpecies(){
   if (!isGlobal()){ params.set("lat", c.lat.toFixed(4)); params.set("lng", c.lng.toFixed(4)); params.set("radius", r); }
 
   map.getSource("area")?.setData(isGlobal() ? { type:"FeatureCollection", features:[] } : circle(c.lng, c.lat, r));
+  updateGroupAvailability(params);
   $("#where").textContent = isGlobal() ? "weltweit" : `Umkreis ${fmt(r)} km um ${c.lat.toFixed(2)}°, ${c.lng.toFixed(2)}°`;
 
   const key = params.toString();
@@ -1447,7 +1485,7 @@ const KEY_HOUR = [
   { id:"eve", label:"Abends", h:[17,18,19,20,21] },
   { id:"night", label:"Nachts", h:[22,23,0,1,2,3,4] }
 ];
-const KEY_RADIUS = [5, 10, 25, 50, 100];
+const KEY_RADIUS = [5, 10, 30, 50, 100];
 const KEY_PAGE = 24;
 
 const ks = { cat:null, sub:null, term:null, when:"any", hour:"any", radius:HOME.km, research:true, threat:false,
@@ -1712,7 +1750,10 @@ async function loadCatCounts(){
   try{
     const d = await getJSON(`${API.inat}/observations/iconic_taxa_species_counts?${p}`, catAbort.signal);
     const by = Object.fromEntries((d.results || []).map(r => [r.taxon?.name, r.count]));
-    KEY_CATS.forEach(c => { const el = $(`#cc-${c.id}`); if (el) el.textContent = by[c.id] != null ? `${fmt(by[c.id])} Arten hier` : "keine hier"; });
+    KEY_CATS.forEach(c => {
+      const el = $(`#cc-${c.id}`); if (el) el.textContent = by[c.id] ? `${fmt(by[c.id])} Arten hier` : "keine hier";
+      const b = document.querySelector(`#kCat [data-cat="${c.id}"]`); b.disabled = !by[c.id]; b.classList.toggle("empty", !by[c.id]);
+    });
   }catch(err){
     if (err.name === "AbortError") return;
     ks.catCountsKey = null;
