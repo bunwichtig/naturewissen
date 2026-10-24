@@ -492,7 +492,7 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
         <div class="groups" id="cGroups" role="group" aria-label="Artengruppe"></div>
         <details class="combo-how">
           <summary>So wird gerechnet</summary>
-          <p class="note">Zwei unabhängige Quellen: iNaturalist (bestätigte Beobachtungen mit Foto) und GBIF (Fundmeldungen aus vielen Datenbanken, z. B. Museen, Kartierungen, Vogelzählungen). Je Quelle zählt der Anteil einer Art an ihrer Gruppe – Vögel unter Vögeln, Pflanzen unter Pflanzen. Daraus das geometrische Mittel: Oben steht nur, was <b>beide</b> Quellen häufig sehen. Arten aus nur einer Quelle werden nicht gewertet.</p>
+          <p class="note">Zwei unabhängige Quellen: iNaturalist (bestätigte Beobachtungen mit Foto) und GBIF (Fundmeldungen aus vielen Datenbanken, z. B. Museen, Kartierungen, Vogelzählungen). Je Quelle zählt der Anteil einer Art an ihrer Gruppe – Vögel unter Vögeln, Pflanzen unter Pflanzen. Daraus das geometrische Mittel: Oben steht nur, was <b>beide</b> Quellen häufig sehen. Arten aus nur einer Quelle bleiben sichtbar, landen aber stark abgewertet weit unten.</p>
         </details>
         <p class="note" id="cStat"></p>
       </div>
@@ -817,7 +817,7 @@ function scheduleLoad(ms){ clearTimeout(loadTimer); loadTimer = setTimeout(() =>
 
 function cardHTML({count, taxon:t, label}, suffix = "hier"){
   const img = photo(t.default_photo?.square_url, "small");
-  return `<button class="card" data-id="${t.id}" style="--c:${groupColor(t)}">
+  return `<button class="card" ${t.id ? `data-id="${t.id}"` : `data-sci="${esc(t.name)}"`} style="--c:${groupColor(t)}">
     ${img ? `<img src="${esc(img)}" alt="" loading="lazy">` : `<div class="noimg"></div>`}
     <div class="meta">
       <span class="cn">${esc(t.preferred_common_name || t.name)}</span>
@@ -958,6 +958,12 @@ function makeTierList(box, prefix, { suffix = "hier", emptyHTML, onTotal = () =>
     if (shut){ e.preventDefault(); return toggle(shut.dataset.sec, true); }   // Tippen auf den Rest klappt wieder auf
     const card = e.target.closest(".card");
     if (card?.dataset.id) return openDetail(+card.dataset.id);
+    if (card?.dataset.sci){   // Art nur bei GBIF: bei iNaturalist nachschlagen
+      const ct = card.querySelector(".ct"), old = ct.textContent; ct.textContent = "Suche …";
+      try{ const id = await findInatTaxon(card.dataset.sci); if (id) return openDetail(id); ct.textContent = "Kein Steckbrief bei iNaturalist"; }
+      catch{ ct.textContent = old; }
+      return;
+    }
     const btn = e.target.closest(".more[data-tier]");
     if (!btn || !L.ctx) return;
     const my = L.ctx, t = my.tiers.find(x => x.id === btn.dataset.tier);
@@ -2428,11 +2434,11 @@ $("#pinMore").onclick = () => { if (!pins.params) return; pins.extra++; updatePi
    Je Quelle zählt der Anteil einer Art an ihrer eigenen Gruppe (Vögel unter Vögeln, Pflanzen unter
    Pflanzen) – so verzerren riesige Vogelzähl-Datensätze nicht alles. Kombiniert wird mit dem
    geometrischen Mittel: Eine Art ist nur dann weit oben, wenn BEIDE Quellen sie häufig sehen.
-   Arten, die nur eine Quelle kennt, werden nicht gewertet. */
+   Arten, die nur eine Quelle kennt, bleiben drin, aber stark abgewertet. */
 const GBIF_GROUP_KEY = { plants:6, fungi:5, mamm:359, birds:212, rept:358, amph:131, fish:204, ins:216, arach:367, moll:52 };
 const GBIF_NAME_STORE = "pn-gbif-names";
 const gbifNames = (() => { try{ return new Map(Object.entries(JSON.parse(localStorage.getItem(GBIF_NAME_STORE) || "{}"))); }catch{ return new Map(); } })();
-const COMBO_GBIF_TOP = 250, COMBO_INAT_TOP = 500;
+const COMBO_GBIF_TOP = 1000, COMBO_INAT_PAGES = 3;   // bis zu 1.000 GBIF- und 1.500 iNaturalist-Arten
 const cs = { group:"all", lastKey:null, abort:null };
 
 $("#cGroups").innerHTML = GROUPS.map(g =>
@@ -2453,12 +2459,13 @@ function iconicFromGbif(s){
   return s.phylum === "Mollusca" ? "Mollusca" : "Animalia";
 }
 /* GBIF-Artnummern → Namen (einmal je Art, danach auf dem Gerät gemerkt) */
-async function gbifResolve(keys, signal){
+async function gbifResolve(keys, signal, progress = () => {}){
   const todo = keys.filter(k => !gbifNames.has(String(k)));
-  let i = 0;
+  let i = 0, done = 0;
   const work = async () => {
     while (i < todo.length){
       const k = todo[i++];
+      if (++done % 25 === 0) progress(done, todo.length);
       try{
         const s = await getJSON(`${API.gbif}/species/${k}`, signal);
         gbifNames.set(String(k), [s.canonicalName || s.species || "", iconicFromGbif(s)]);
@@ -2486,7 +2493,7 @@ async function doRunCombo(){
   cs.abort?.abort(); cs.abort = new AbortController();
   const signal = cs.abort.signal;
   const ip = new URLSearchParams({ iconic_taxa:g.taxa, quality_grade:"research", lat:c.lat.toFixed(4), lng:c.lng.toFixed(4), radius:r,
-    locale:"de", preferred_place_id:"7207", per_page:COMBO_INAT_TOP });
+    locale:"de", preferred_place_id:"7207", per_page:500 });
   showPins(ip, r);
   const gp = new URLSearchParams({ geoDistance:`${c.lat.toFixed(4)},${c.lng.toFixed(4)},${r}km`, facet:"speciesKey", facetLimit:COMBO_GBIF_TOP,
     limit:0, occurrenceStatus:"PRESENT", hasGeospatialIssue:"false" });
@@ -2494,34 +2501,54 @@ async function doRunCombo(){
   $("#cTiers").innerHTML = `<section class="tier"><div class="grid">${skeletons(4)}</div></section>`;
   $("#cTotal").textContent = ""; $("#cStat").textContent = "Lade iNaturalist und GBIF …";
   try{
-    const [inat, gbif] = await Promise.all([
+    const [inat1, gbif] = await Promise.all([
       getJSON(`${API.inat}/observations/species_counts?${ip}`, signal),
       getJSON(`${API.gbif}/occurrence/search?${gp}`, signal)
     ]);
+    // iNaturalist: weitere Seiten nacheinander (schont das Anfragelimit)
+    const inat = [...(inat1.results || [])];
+    for (let pg = 2; pg <= COMBO_INAT_PAGES && inat.length < inat1.total_results; pg++){
+      $("#cStat").textContent = `Lade weitere iNaturalist-Arten … ${fmt(inat.length)} von ${fmt(inat1.total_results)}`;
+      const q = new URLSearchParams(ip); q.set("page", pg);
+      const d = await getJSON(`${API.inat}/observations/species_counts?${q}`, signal);
+      inat.push(...(d.results || []));
+    }
     const counts = gbif.facets?.[0]?.counts || [];
     $("#cStat").textContent = "Gleiche die Artnamen ab …";
-    await gbifResolve(counts.map(x => x.name), signal);
+    await gbifResolve(counts.map(x => x.name), signal, (n, all) => $("#cStat").textContent = `Gleiche die Artnamen ab … ${fmt(n)} von ${fmt(all)} (nur beim ersten Mal)`);
     if (signal.aborted) return;
     // GBIF: Name → [Anzahl, Gruppe]
     const gMap = new Map();
     counts.forEach(x => { const n = gbifNames.get(String(x.name)); if (n?.[0]) gMap.set(n[0].toLowerCase(), [x.count, n[1]]); });
-    // Summen je Gruppe und Quelle
-    const iTot = {}, gTot = {};
-    (inat.results || []).forEach(x => { const k = iconOf(x.taxon); iTot[k] = (iTot[k] || 0) + x.count; });
+    // Anteile je Gruppe und Quelle
+    const iTot = {}, gTot = {}, iMin = {}, gMin = {};
+    inat.forEach(x => { const k = iconOf(x.taxon); iTot[k] = (iTot[k] || 0) + x.count; });
     gMap.forEach(([n, k]) => { gTot[k] = (gTot[k] || 0) + n; });
-    let both = 0, onlyOne = 0;
-    const list = [];
-    (inat.results || []).forEach(x => {
-      const gm = gMap.get(x.taxon.name.toLowerCase());
-      if (!gm){ onlyOne++; return; }
-      both++;
-      const k = iconOf(x.taxon);
-      const sI = x.count / iTot[k], sG = gm[0] / (gTot[gm[1]] || gm[0]);
-      const score = Math.sqrt(sI * sG);   // geometrisches Mittel: beide Quellen müssen zustimmen
-      list.push({ taxon:x.taxon, count:x.count, score, label:`${fmt(x.count)} iNat · ${fmt(gm[0])} GBIF` });
+    inat.forEach(x => { const k = iconOf(x.taxon), sh = x.count / iTot[k]; iMin[k] = Math.min(iMin[k] ?? 1, sh); });
+    gMap.forEach(([n, k]) => { const sh = n / gTot[k]; gMin[k] = Math.min(gMin[k] ?? 1, sh); });
+    /* Fehlt eine Art in einer Quelle, zählt dort die Hälfte des kleinsten gemessenen Anteils –
+       die Art bleibt sichtbar, landet aber konservativ weit unten. */
+    const floorI = k => (iMin[k] ?? 1e-4) / 2, floorG = k => (gMin[k] ?? 1e-4) / 2;
+    let both = 0, onlyI = 0, onlyG = 0;
+    const list = [], seen = new Set();
+    inat.forEach(x => {
+      const nm = x.taxon.name.toLowerCase(), gm = gMap.get(nm), k = iconOf(x.taxon);
+      seen.add(nm);
+      const sI = x.count / iTot[k];
+      const sG = gm ? gm[0] / gTot[gm[1]] : floorG(k);
+      gm ? both++ : onlyI++;
+      list.push({ taxon:x.taxon, count:x.count, score:Math.sqrt(sI * sG),   // geometrisches Mittel
+        label: gm ? `${fmt(x.count)} iNat · ${fmt(gm[0])} GBIF` : `${fmt(x.count)} iNat · nicht bei GBIF` });
+    });
+    gMap.forEach(([n, k], nm) => {
+      if (seen.has(nm)) return;
+      onlyG++;
+      const name = nm.charAt(0).toUpperCase() + nm.slice(1);
+      list.push({ taxon:{ id:null, name, iconic_taxon_name:k }, count:n, score:Math.sqrt(floorI(k) * (n / gTot[k])),
+        label:`nicht bei iNat · ${fmt(n)} GBIF` });
     });
     list.sort((a, b) => b.score - a.score);
-    $("#cStat").textContent = `${fmt(both)} Arten in beiden Quellen gewertet, ${fmt(onlyOne + Math.max(0, gMap.size - both))} nur in einer Quelle – nicht gewertet.`;
+    $("#cStat").textContent = `${fmt(list.length)} Arten: ${fmt(both)} in beiden Quellen, ${fmt(onlyI + onlyG)} nur in einer – diese stark abgewertet.`;
     await comboList.load(null, signal, list);
   }catch(err){
     if (err.name === "AbortError") return;
