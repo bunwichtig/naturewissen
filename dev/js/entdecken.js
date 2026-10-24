@@ -2,7 +2,7 @@
 // Standard: Arten nach Häufigkeit bei iNaturalist. Schalter „Genauer rechnen“ nimmt GBIF dazu (früher Reiter „Kombi“).
 import { $, $$, esc, fmt, plural, local } from "./util.js";
 import { API, INAT_DE, PRIO, inat, getJSON, isAbort, findInatTaxon, taxonIdsOf } from "./api.js";
-import { state, set, on, GROUPS, GBIF_FISH_ORDERS, whereParams } from "./state.js";
+import { state, set, on, GROUPS, GBIF_FISH_ORDERS, whereParams, gbifWhere } from "./state.js";
 import { makeList } from "./liste.js";
 
 let openDetail = () => {};
@@ -40,7 +40,7 @@ export function initEntdecken(){
   on("*", (s, changed) => {
     if (changed.includes("group")) markGroups();
     if (state.mode !== "entdecken") return;
-    if (changed.some(k => ["center","radius","group","research","combo"].includes(k))) load();
+    if (changed.some(k => ["center","radius","group","research","combo","region"].includes(k))) load();
   });
 }
 
@@ -103,7 +103,7 @@ async function loadWuchs(g, p, signal){
   list.clear(`<section class="tier"><div class="grid"></div></section>`);
   stat.textContent = `Suche ${g.label} bei iNaturalist und GBIF …`;
   const km = Math.min(state.radius, COMBO_MAX_KM);
-  const gp = new URLSearchParams({ geoDistance:`${state.center.lat.toFixed(4)},${state.center.lng.toFixed(4)},${km}km`, taxonKey:6,
+  const gp = new URLSearchParams({ ...gbifWhere(km), taxonKey:6,
     facet:"scientificName", facetLimit:10000, limit:0, occurrenceStatus:"PRESENT", hasGeospatialIssue:"false" });
   try{
     const [keep, first, gbif] = await Promise.all([
@@ -163,7 +163,7 @@ function withPage(p, pg){ const q = new URLSearchParams(p); Object.entries(INAT_
 async function checkGbifMore(signal){
   const g = GROUPS.find(x => x.id === state.group);
   if (!g.gbif || lastTotal == null || signal.aborted) return;
-  const gp = new URLSearchParams({ geoDistance:`${state.center.lat.toFixed(4)},${state.center.lng.toFixed(4)},${state.radius}km`,
+  const gp = new URLSearchParams({ ...gbifWhere(),
     facet:"speciesKey", facetLimit:1000, limit:0, occurrenceStatus:"PRESENT", hasGeospatialIssue:"false" });
   g.gbif.forEach(k => gp.append("taxonKey", k));
   try{
@@ -240,7 +240,7 @@ async function loadCombo(p, signal){
   const ip = new URLSearchParams(p); ip.set("quality_grade", "research");
   Object.entries(INAT_DE).forEach(([k, v]) => ip.set(k, v));
   ip.set("radius", Math.min(state.radius, COMBO_MAX_KM)); ip.set("per_page", 500);
-  const gp = new URLSearchParams({ geoDistance:`${state.center.lat.toFixed(4)},${state.center.lng.toFixed(4)},${Math.min(state.radius, COMBO_MAX_KM)}km`,
+  const gp = new URLSearchParams({ ...gbifWhere(Math.min(state.radius, COMBO_MAX_KM)),
     facet:"speciesKey", facetLimit:COMBO_GBIF_TOP, limit:0, occurrenceStatus:"PRESENT", hasGeospatialIssue:"false" });
   (g.gbif || []).forEach(k => gp.append("taxonKey", k));
   list.clear(`<section class="tier"><div class="grid"></div></section>`);

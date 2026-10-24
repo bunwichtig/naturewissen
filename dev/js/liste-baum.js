@@ -31,7 +31,7 @@ export function initListe(){
   $("#lsHits").addEventListener("click", e => { const b = e.target.closest("[data-id]"); if (b) reveal(+b.dataset.id); });
   on("*", (s, changed) => {
     if (state.mode !== "liste") return;
-    if (changed.some(k => ["center", "radius", "research", "mode", "placeSet", "place"].includes(k))) load();
+    if (changed.some(k => ["center", "radius", "research", "mode", "placeSet", "place", "region"].includes(k))) load();
   });
 }
 const markFilter = () => $$("#lsFilter .chip").forEach(b => b.setAttribute("aria-pressed", b.dataset.f === ui.filter));
@@ -45,7 +45,7 @@ export async function load(){
   if (key === lastKey) return;
   lastKey = key;
   abort?.abort(); abort = new AbortController();
-  $("#lsTree").innerHTML = `<div class="state">Lade alle Lebewesen im Umkreis …</div>`;
+  $("#lsTree").innerHTML = `<div class="state">${state.region === "de" ? "Lade alle Lebewesen in Deutschland – das ist eine große Liste (etwa 8 MB), einen Moment …" : "Lade alle Lebewesen im Umkreis …"}</div>`;
   $("#lsStat").textContent = "";
   try{
     const d = await inat("/observations/taxonomy", p, { signal:abort.signal, prio:PRIO.high });
@@ -105,7 +105,7 @@ function render(){
   $$("#lsFilter .chip").forEach(b => { const r = T.nodes.get(b.dataset.f); if (r) b.disabled = !r.sp; });
   const shown = ui.filter === "all" ? roots : roots.filter(r => r.id === ui.filter);
   const sp = shown.reduce((a, r) => a + r.sp, 0);
-  $("#lsStat").textContent = `${plural(sp, "Art", "Arten")} · ${plural(T.families, "Familie", "Familien")} im Umkreis`;
+  $("#lsStat").textContent = `${plural(sp, "Art", "Arten")} · ${plural(T.families, "Familie", "Familien")} ${state.region === "de" ? "in Deutschland" : "im Umkreis"}`;
   $("#lsTree").innerHTML = shown.length ? shown.map(r => rowHTML(r, 0)).join("") : `<div class="state">Hier wurden noch keine Lebewesen gemeldet.</div>`;
   groupThumbs(shown);
   for (const id of open) expand(id, false);

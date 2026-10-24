@@ -46,7 +46,8 @@ export const state = {
   group:"all",
   research:true,             // nur bestätigte Funde
   combo:false,               // genauer rechnen mit GBIF
-  detail:null                // geöffnete Art (iNaturalist-Nummer)
+  detail:null,               // geöffnete Art (iNaturalist-Nummer)
+  region:null                // "de" = ganz Deutschland statt Umkreis (Einstieg „Alle Arten in Deutschland“)
 };
 
 const listeners = new Map();
@@ -59,4 +60,9 @@ export function set(patch){
 }
 
 // Ort und Umkreis als Abfrage-Parameter für iNaturalist
-export const whereParams = () => ({ lat:state.center.lat.toFixed(4), lng:state.center.lng.toFixed(4), radius:state.radius });
+export const whereParams = () => state.region === "de" ? { place_id:"7207" }
+  : { lat:state.center.lat.toFixed(4), lng:state.center.lng.toFixed(4), radius:state.radius };
+// Dasselbe für GBIF (km: Umkreis, bei „genauer rechnen“ gedeckelt)
+export const gbifWhere = (km = state.radius) => state.region === "de" ? { country:"DE" }
+  : { geoDistance:`${state.center.lat.toFixed(4)},${state.center.lng.toFixed(4)},${km}km` };
+export const GERMANY = { name:"Deutschland", center:{ lat:51.16, lng:10.45 } };

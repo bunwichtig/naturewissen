@@ -10,7 +10,7 @@ const recent = () => local.get(RECENT, []);
 export function choose(o){
   const list = [o, ...recent().filter(x => x.name !== o.name)].slice(0, 5);
   local.set(RECENT, list);
-  set({ center:{ lat:o.lat, lng:o.lng }, place:o.name, placeSet:true });
+  set({ center:{ lat:o.lat, lng:o.lng }, place:o.name, placeSet:true, region:null });
   renderRecent();
 }
 

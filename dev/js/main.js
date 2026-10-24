@@ -1,7 +1,7 @@
 // Pure Nature – Einstieg.
 // Ablauf: Ort suchen → Lebewesen im Umkreis (Entdecken), Bestimmen oder alle Arten als Baum (Liste) → Steckbrief mit Verbreitungskarte auf Wunsch.
 import { $, $$, fmt, esc } from "./util.js";
-import { state, set, on, RADII } from "./state.js";
+import { state, set, on, RADII, GERMANY } from "./state.js";
 import { initOrt } from "./ort.js";
 import { initArtsuche } from "./artsuche.js";
 import { initEntdecken, load as loadEntdecken, setDetailOpener as exOpener } from "./entdecken.js";
@@ -23,8 +23,13 @@ function showApp(){
   $("#start").hidden = state.placeSet;
   $("#app").hidden = !state.placeSet;
   document.body.classList.toggle("has-place", state.placeSet);
+  document.body.classList.toggle("region-de", state.region === "de");
 }
-$("#home").addEventListener("click", e => { e.preventDefault(); closeDetail(); set({ placeSet:false }); showApp(); $("#startInput").focus(); });
+// Einstieg ohne Ort: alle Arten in Deutschland als Liste
+$("#startListe").addEventListener("click", () => {
+  set({ center:{ ...GERMANY.center }, place:GERMANY.name, region:"de", mode:"liste", placeSet:true });
+});
+$("#home").addEventListener("click", e => { e.preventDefault(); closeDetail(); set({ placeSet:false, region:null }); showApp(); $("#startInput").focus(); });
 
 /* ---------- Ort und Umkreis ---------- */
 $("#radius").innerHTML = RADII.map(r => `<button class="chip" type="button" data-r="${r}">${r} km</button>`).join("");
@@ -46,10 +51,10 @@ function showMode(){
 
 on("*", (s, changed) => {
   readout();
-  if (changed.includes("placeSet") || changed.includes("place")) showApp();
+  if (changed.includes("placeSet") || changed.includes("place") || changed.includes("region")) showApp();
   if (changed.includes("mode")) showMode();
   if (!state.placeSet) return;
-  if (changed.includes("mode") || changed.includes("placeSet") || changed.includes("place")){
+  if (changed.includes("mode") || changed.includes("placeSet") || changed.includes("place") || changed.includes("region")){
     if (state.mode === "entdecken") loadEntdecken(); else if (state.mode === "liste") loadListe(); else enterBestimmen();
   }
 });
