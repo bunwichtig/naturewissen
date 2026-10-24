@@ -2,7 +2,12 @@
 
 Zeigt auf einem Globus, welche Tiere, Pflanzen und Pilze an einem Ort leben, und hilft beim Bestimmen. Die Seite speichert selbst **keine Funddaten**: Alles kommt live aus freien, legalen Quellen.
 
-**Seite:** <https://bunwichtig.github.io/naturewissen/> · **Quellen & Lizenzen:** [quellen.html](https://bunwichtig.github.io/naturewissen/quellen.html) · Alte Version (bis Oktober 2026): [alt/](https://bunwichtig.github.io/naturewissen/alt/)
+**Seite:** <https://bunwichtig.github.io/naturewissen/> – eine Startseite zur Wahl der Version:
+
+- **V1** (`v1/`): die Version, an der weitergearbeitet wird.
+- **V2** (`v2/`): eine eigene Fassung, vorerst unverändert auf dem Stand vom 25. Oktober 2026.
+
+**Quellen & Lizenzen:** [v1/quellen.html](https://bunwichtig.github.io/naturewissen/v1/quellen.html) · Alte Version (bis Oktober 2026): [alt/](https://bunwichtig.github.io/naturewissen/alt/)
 
 ## Aufbau
 
@@ -23,6 +28,8 @@ Eine Karte erscheint nur im Steckbrief. Die zuletzt gesuchten Orte merkt sich di
 - Einige Inhalte sind nur **nicht-kommerziell** frei (Satellitenbild, viele Naturfotos). Pure Nature ist ein privates, nicht-kommerzielles Projekt.
 
 ## Dateien
+
+Die Dateien unten liegen je Version in `v1/` bzw. `v2/`. Im Hauptordner liegen nur die Startseite (`index.html`), die Schriften für die Startseite und `alt/`.
 
 | Datei | Inhalt |
 |---|---|
