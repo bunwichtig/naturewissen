@@ -66,11 +66,49 @@ export function load(){
   $("#comboNote").hidden = !state.combo;
   updateGroupAvailability(p, abort.signal);
   $("#gbifMore").hidden = true;
+  const g = GROUPS.find(x => x.id === state.group);
+  if (g.wuchs) return loadWuchs(g, p, abort.signal).catch(() => { lastKey = null; });
   if (state.combo) return loadCombo(p, abort.signal).catch(() => { lastKey = null; });
   const signal = abort.signal;
   list.load(p, signal).then(() => checkGbifMore(signal)).catch(() => { lastKey = null; });
 }
 export const reset = () => { lastKey = null; };
+
+/* Bäume und Sträucher: iNaturalist kennt keine Wuchsform. Die Seite holt die Pflanzenarten im Umkreis
+   und behält die, die in der World Checklist of Vascular Plants (Kew) als Baum bzw. Strauch stehen.
+   Die Liste (daten/wuchsform.js) wird erst geladen, wenn jemand die Gruppe wählt. */
+const WUCHS_PAGES = 4;
+async function loadWuchs(g, p, signal){
+  const stat = $("#comboStat");
+  $("#comboNote").hidden = false;
+  list.clear(`<section class="tier"><div class="grid"></div></section>`);
+  stat.textContent = `Suche ${g.label} …`;
+  try{
+    const [{ BAEUME, STRAEUCHER }, first] = await Promise.all([
+      import("../daten/wuchsform.js"),
+      inat("/observations/species_counts", withPage(p, 1), { signal, prio:PRIO.high })
+    ]);
+    const all = [...(first.results || [])];
+    for (let pg = 2; pg <= WUCHS_PAGES && all.length < first.total_results; pg++){
+      stat.textContent = `Suche ${g.label} … ${fmt(all.length)} von ${fmt(first.total_results)} Pflanzenarten geprüft`;
+      const d = await inat("/observations/species_counts", withPage(p, pg), { signal });
+      all.push(...(d.results || []));
+    }
+    if (signal.aborted) return;
+    const set_ = g.wuchs === "baum" ? BAEUME : STRAEUCHER;
+    const out = all.filter(x => set_.has(x.taxon.name));
+    const rest = first.total_results - all.length;
+    stat.textContent = `${plural(out.length, "Art", "Arten")} unter ${fmt(all.length)} Pflanzenarten hier. Wuchsform nach der World Checklist of Vascular Plants (Kew)` +
+      (g.wuchs === "strauch" ? ", mit Halb- und Zwergsträuchern." : ".") + (rest > 0 ? ` Die ${fmt(rest)} seltensten Pflanzen sind nicht geprüft.` : "");
+    await list.load(null, signal, out);
+  }catch(err){
+    if (isAbort(err)) return;
+    stat.textContent = "";
+    list.clear(`<div class="state">Die Daten konnten nicht geladen werden. ${esc(err.message)}.</div>`);
+    throw err;
+  }
+}
+function withPage(p, pg){ const q = new URLSearchParams(p); Object.entries(INAT_DE).forEach(([k, v]) => q.set(k, v)); q.set("per_page", 500); q.set("page", pg); return q; }
 
 /* Für manche Gruppen (z. B. Fische) hat iNaturalist nur wenige Meldungen, GBIF aber viele aus Kartierungen
    und Museen. Dann bietet die Seite an, beide Quellen zusammen zu zeigen. */

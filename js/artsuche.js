@@ -2,6 +2,14 @@
 // Die Anfragen laufen über dieselbe Warteschlange wie alles andere; getippt wird erst nach einer kurzen Pause gesucht.
 import { esc, debounce, photoSize, freePhoto, commonName, groupColor } from "./util.js";
 import { inat, INAT_DE, PRIO, isAbort } from "./api.js";
+import { state, set } from "./state.js";
+
+// „Baum“, „Bäume“, „Strauch“ … ist keine Art, sondern eine Wuchsform: dafür ein eigener Vorschlag oben in der Liste.
+const WUCHS = [
+  { re:/^b(a|ä)u?m?e?$|^b(a|ä)um/i, group:"trees", label:"Bäume", min:3 },
+  { re:/^str(a|ä)u?c?h?e?r?$|^str(a|ä)uch|^geh(ö|oe)lz|^busch|^büsch/i, group:"shrubs", label:"Sträucher", min:4 }
+];
+const wuchsFor = q => WUCHS.find(w => q.length >= w.min && w.re.test(q));
 
 const RANK_DE = { kingdom:"Reich", phylum:"Stamm", subphylum:"Unterstamm", class:"Klasse", subclass:"Unterklasse", superorder:"Überordnung", order:"Ordnung",
   suborder:"Unterordnung", infraorder:"Teilordnung", superfamily:"Überfamilie", family:"Familie", subfamily:"Unterfamilie", tribe:"Tribus",
@@ -18,18 +26,22 @@ export function initArtsuche(openDetail){
     const input = form.querySelector("input"), box = form.querySelector("ul");
     let abort, list = [], active = -1;
 
+    let wuchs = null;
+    const wuchsHTML = () => wuchs ? `<li><button type="button" data-w="1"><span class="noimg wuchs" aria-hidden="true">🌳</span>
+      <span><b>Alle ${wuchs.label} ${state.placeSet ? "um " + esc(state.place) : "an einem Ort"}</b><i>${state.placeSet ? "Liste nach Häufigkeit" : "danach den Ort suchen"}</i><small>Wuchsform</small></span></button></li>` : "";
     const render = () => {
-      box.innerHTML = list.length ? list.map((t, i) => {
+      box.innerHTML = wuchsHTML() + (list.length ? list.map((t, i) => {
         const ph = freePhoto(t);
         return `<li><button type="button" data-i="${i}" aria-selected="${i === active}">
           ${ph ? `<img src="${esc(photoSize(ph.square_url || ph.url, "square"))}" alt="" loading="lazy">` : `<span class="noimg" style="--c:${groupColor(t)}"></span>`}
           <span><b>${esc(commonName(t))}</b><i>${esc(t.name)}</i><small>${esc(RANK_DE[t.rank] || t.rank)}</small></span></button></li>`;
-      }).join("") : `<li class="muted">Nichts gefunden.</li>`;
+      }).join("") : wuchs ? "" : `<li class="muted">Nichts gefunden.</li>`);
       box.hidden = false;
     };
     const search = debounce(async () => {
       const q = input.value.trim();
       if (q.length < 2){ box.hidden = true; return; }
+      wuchs = wuchsFor(q);
       abort?.abort(); abort = new AbortController();
       try{
         const d = await inat("/taxa/autocomplete", { q, per_page:12, is_active:"true", ...INAT_DE }, { signal:abort.signal, prio:PRIO.high });
@@ -38,6 +50,14 @@ export function initArtsuche(openDetail){
         active = -1; render();
       }catch(err){ if (!isAbort(err)){ box.innerHTML = `<li class="muted">Die Suche ist gerade nicht erreichbar.</li>`; box.hidden = false; } }
     }, 300);
+    const pickWuchs = () => {
+      box.hidden = true; input.value = ""; input.blur();
+      set({ group:wuchs.group, mode:"entdecken" });
+      if (!state.placeSet){
+        const s = document.getElementById("startInput");
+        s.placeholder = `Ort für ${wuchs.label} suchen …`; s.focus();
+      }
+    };
     const pick = i => {
       const t = list[i]; if (!t) return;
       box.hidden = true; input.blur();
@@ -52,8 +72,8 @@ export function initArtsuche(openDetail){
         active = (active + (e.key === "ArrowDown" ? 1 : -1) + list.length) % list.length; render();
       } else if (e.key === "Escape") box.hidden = true;
     });
-    form.addEventListener("submit", e => { e.preventDefault(); if (list.length) pick(active >= 0 ? active : 0); else search(); });
-    box.addEventListener("click", e => { const b = e.target.closest("button[data-i]"); if (b) pick(+b.dataset.i); });
+    form.addEventListener("submit", e => { e.preventDefault(); if (wuchs && active < 0) pickWuchs(); else if (list.length) pick(active >= 0 ? active : 0); else search(); });
+    box.addEventListener("click", e => { if (e.target.closest("button[data-w]")) return pickWuchs(); const b = e.target.closest("button[data-i]"); if (b) pick(+b.dataset.i); });
     document.addEventListener("click", e => { if (!form.contains(e.target)) box.hidden = true; });
   }
 }

@@ -59,6 +59,7 @@ body:not(.has-place) .top .search{display:none}
 .start-or::before,.start-or::after{content:"";flex:1;height:1px;background:var(--line)}
 .taxlist li button{grid-template-columns:44px 1fr;align-items:center;gap:10px}
 .taxlist img,.taxlist .noimg{width:44px;height:44px;border-radius:8px;object-fit:cover;display:block;background:var(--c,var(--line))}
+.taxlist .noimg.wuchs{display:grid;place-items:center;font-size:24px;background:var(--panel)}
 .taxlist span{display:grid;gap:0;min-width:0}
 .taxlist b{font-weight:600;font-size:14px}
 .taxlist i{font:italic 13px var(--f-sci);color:var(--muted)}

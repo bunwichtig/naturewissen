@@ -9,13 +9,15 @@ export const RADII = [5, 10, 30, 50, 100, 250];   // Auswahl für den Umkreis um
 export const radiusForZoom = z => Math.round(Math.min(RADIUS_MAX, Math.max(RADIUS_MIN, 9000 / Math.pow(2, z - 1))));
 export const zoomForRadius = km => 1 + Math.log2(9000 / km);
 
-// Gruppen für Entdecken (iNaturalist „iconic taxa“) und die passenden GBIF-Nummern für Waben und „genauer rechnen“.
+// Gruppen für Entdecken (iNaturalist „iconic taxa“; Bäume und Sträucher: Pflanzen, gefiltert nach Wuchsform aus WCVP) und die passenden GBIF-Nummern für Waben und „genauer rechnen“.
 // GBIF führt Strahlenflosser und Reptilien nicht als eigene Klasse; dort stehen die Ordnungen
 // (Fische: alle Ordnungen, die in Deutschland bei iNaturalist vorkommen; Reptilien: Schuppenkriechtiere und Schildkröten).
 export const GBIF_FISH_ORDERS = [548,1313,1153,587,550,590,495,588,549,708,773,538,498,547,1103,772,1068,537,496,1069,1165,1167,1067,499,1162,1311,1305,889];
 export const GROUPS = [
   { id:"all",   label:"Alle",         taxa:"Plantae,Fungi,Mammalia,Aves,Reptilia,Amphibia,Actinopterygii,Insecta,Arachnida,Mollusca,Animalia", gbif:null },
   { id:"plants",label:"Pflanzen",     taxa:"Plantae",        gbif:[6] },
+  { id:"trees", label:"Bäume",        taxa:"Plantae",        gbif:null, wuchs:"baum" },
+  { id:"shrubs",label:"Sträucher",    taxa:"Plantae",        gbif:null, wuchs:"strauch" },
   { id:"fungi", label:"Pilze",        taxa:"Fungi",          gbif:[5] },
   { id:"birds", label:"Vögel",        taxa:"Aves",           gbif:[212] },
   { id:"ins",   label:"Insekten",     taxa:"Insecta",        gbif:[216] },

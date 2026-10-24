@@ -229,6 +229,13 @@ footer{color:var(--muted);font-size:14px;border-top:1px solid var(--line);paddin
       <div class="proof"><a href="https://doi.org/10.1007/s13225-020-00466-2" target="_blank" rel="noopener">Artikel</a><a href="https://github.com/bokulich-lab/q2-fungal-traits" target="_blank" rel="noopener">verwendete Kopie der Tabelle</a></div>
     </article>
 
+    <article class="src">
+      <div class="src-head"><h3>World Checklist of Vascular Plants (WCVP)</h3><span class="lic">CC BY 4.0</span></div>
+      <p><b>Liefert:</b> die Wuchsform der Pflanzen für die Gruppen „Bäume“ und „Sträucher“ in Entdecken. Verwendet werden die <span id="wcvpB">…</span> Baum- und <span id="wcvpS">…</span> Straucharten mit Vorkommen in Europa (heimisch oder eingeführt). „Strauch oder Baum“ (z. B. Hasel, Schlehe) steht in beiden Gruppen, Halb- und Zwergsträucher (z. B. Heidekraut, Heidelbeere) bei den Sträuchern.</p>
+      <p><b>Lizenz:</b> Royal Botanic Gardens, Kew. Govaerts, R., Nic Lughadha, E., Black, N., Turner, R. &amp; Paton, A. (2021): The World Checklist of Vascular Plants, a continuously updated resource for exploring global plant diversity. Scientific Data 8: 215. Veröffentlicht unter CC BY 4.0.</p>
+      <div class="proof"><a href="https://doi.org/10.1038/s41597-021-00997-6" target="_blank" rel="noopener">Artikel</a><a href="https://www.gbif.org/dataset/f382f0ce-323a-4091-bb9f-add557f3a9a2" target="_blank" rel="noopener">Datensatz bei GBIF</a><a href="https://github.com/matildabrown/rWCVPdata" target="_blank" rel="noopener">verwendete Kopie (rWCVPdata)</a></div>
+    </article>
+
   </div>
 </section>
 
@@ -289,6 +296,10 @@ footer{color:var(--muted);font-size:14px;border-top:1px solid var(--line);paddin
 <script type="module">
 import { MERKMALE, GRUPPEN, BELEG, DATEN, STATS } from "./daten/merkmale.js";
 document.getElementById("stTotal").textContent = STATS.total;
+import("./daten/wuchsform.js").then(({ WUCHS_STATS:w }) => {
+  document.getElementById("wcvpB").textContent = w.baeume.toLocaleString("de");
+  document.getElementById("wcvpS").textContent = w.straeucher.toLocaleString("de");
+});
 document.getElementById("stConf").textContent = STATS.confirmed;
 document.getElementById("stAdd").textContent = STATS.added;
 
