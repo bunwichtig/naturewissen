@@ -1,0 +1,2645 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pure Nature</title>
+<meta name="theme-color" content="#0a0f0e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<!-- Kartenbibliothek: MapLibre GL JS (BSD-3-Clause, Open Source) mit Globus-Projektion -->
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.css">
+<script src="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.js"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&family=JetBrains+Mono:wght@400;500&display=swap">
+
+<style>
+/* Layout: Globus füllt den Bildschirm, rechts ein Feldbuch-Panel (mobil: Bottom-Sheet).
+   Bewusst nur ein dunkles Thema – der Globus im Nachthimmel ist das Motiv. */
+:root{
+  --night:#0a0f0e;      /* Weltraum hinter dem Globus */
+  --panel:#101816;      /* Feldbuch-Papier, nachts */
+  --panel-2:#16211e;
+  --line:#24332e;
+  --ink:#e6ede4;
+  --muted:#8b9d94;
+  --pollen:#e7ad4f;     /* Akzent */
+  --plantae:#86b86f;
+  --animalia:#d98a5f;
+  --fungi:#c79ad0;
+  --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body:"Figtree", "Segoe UI", system-ui, sans-serif;
+  --f-sci:"Newsreader", Georgia, "Times New Roman", serif;
+  --f-data:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  --panel-w:420px;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--night);color:var(--ink);font:15px/1.5 var(--f-body);overflow:hidden}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--pollen);outline-offset:2px}
+[hidden]{display:none!important}
+
+#map{position:fixed;inset:0;right:var(--panel-w)}
+.maplibregl-ctrl-attrib{background:rgba(10,15,14,.75)!important;color:var(--muted)!important;font-size:11px}
+.maplibregl-ctrl-attrib a{color:var(--ink)!important}
+.maplibregl-ctrl-group{background:var(--panel)!important;border:1px solid var(--line)}
+.maplibregl-ctrl-group button+button{border-top:1px solid var(--line)!important}
+.maplibregl-ctrl-group button .maplibregl-ctrl-icon{filter:invert(.9)}
+
+/* Kopfleiste über der Karte */
+.topbar{position:fixed;top:0;left:0;right:var(--panel-w);z-index:5;display:flex;gap:12px;align-items:center;flex-wrap:wrap;
+  padding:max(14px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 14px max(16px,env(safe-area-inset-left,0px));
+  background:linear-gradient(var(--night),rgba(10,15,14,0));pointer-events:none}
+.topbar>*{pointer-events:auto}
+.brand{display:flex;align-items:baseline;gap:10px;margin-right:auto}
+.brand h1{font:700 26px/1 var(--f-display);letter-spacing:-.02em;margin:0}
+.brand h1 span{color:var(--pollen)}
+.brand small{color:var(--muted);font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+.search{position:relative}
+.search input{width:min(280px,70vw);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:8px 14px}
+.search input::placeholder{color:var(--muted)}
+.search ul{position:absolute;top:110%;left:0;right:0;margin:0;padding:4px;list-style:none;background:var(--panel);border:1px solid var(--line);border-radius:12px;max-height:260px;overflow:auto}
+.search li button{width:100%;text-align:left;background:none;border:0;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:13px}
+.search li button:hover{background:var(--panel-2)}
+.toggles{display:flex;gap:6px;flex-wrap:wrap}
+.pill{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:7px 12px;font-size:13px;cursor:pointer;color:var(--muted)}
+.pill[aria-pressed="true"]{color:var(--night);background:var(--pollen);border-color:var(--pollen)}
+
+/* Ortsanzeige: schwebt rechts unter der Suche; Pin setzt den Suchort fest */
+.loc-row{flex:1 1 100%;display:flex;justify-content:flex-end;pointer-events:none!important}
+.loc{pointer-events:auto;display:flex;align-items:center;gap:9px;max-width:100%;background:rgba(16,24,22,.88);border:1px solid var(--line);border-radius:12px;padding:5px 12px 5px 5px;
+  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);box-shadow:0 6px 20px rgba(0,0,0,.3)}
+.loc.pinned{border-color:var(--pollen)}
+/* Unten auf der Karte: halbtransparent; mit Knöpfen einklappbar und nach oben verschiebbar */
+.loc-dock{position:fixed;z-index:5;left:0;right:var(--panel-w);bottom:calc(34px + env(safe-area-inset-bottom,0px));display:flex;justify-content:center;padding:0 70px;pointer-events:none}
+.loc-dock .loc{background:rgba(16,24,22,.5);box-shadow:none;transition:background .2s}
+.loc-dock .loc:hover,.loc-dock .loc:focus-within{background:rgba(16,24,22,.88)}
+.loc-btn{flex:0 0 auto;width:26px;height:26px;border-radius:7px;display:grid;place-items:center;padding:0;background:none;border:1px solid transparent;color:var(--muted);cursor:pointer}
+.loc-btn:hover{color:var(--ink);border-color:var(--line)}
+.loc-btn svg{width:15px;height:15px;transition:transform .2s}
+.loc #locMove{margin-left:2px}
+.loc.folded{padding-right:5px}
+.loc.folded .loc-txt,.loc.folded #locMove{display:none}
+.loc.folded #locFold svg{transform:rotate(180deg)}
+.pin{flex:0 0 auto;width:32px;height:32px;border-radius:9px;display:grid;place-items:center;background:var(--panel-2);border:1px solid var(--line);color:var(--muted);cursor:pointer;padding:0}
+.pin svg{width:17px;height:17px}
+.pin[aria-pressed="true"]{background:var(--pollen);border-color:var(--pollen);color:var(--night)}
+.loc-txt{display:grid;min-width:0}
+.loc-txt b{font:600 13px/1.2 var(--f-body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.loc-txt span{font:11px/1.3 var(--f-data);color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.pin-mark{width:16px;height:16px;border-radius:50%;background:var(--pollen);border:3px solid var(--night);box-shadow:0 0 0 2px var(--pollen)}
+
+/* Fotos der Lebewesen auf der Karte */
+.ppin{width:46px;height:46px;border-radius:50%;padding:0;border:3px solid var(--c,var(--pollen));background:var(--panel-2);overflow:hidden;cursor:pointer;
+  box-shadow:0 3px 10px rgba(0,0,0,.5);display:grid;place-items:center;color:var(--ink);font:600 16px var(--f-body);transition:transform .15s}
+.ppin:hover,.ppin:focus-visible{transform:scale(1.25);z-index:2}
+.ppin.zone{border-style:dashed}
+.ppin img{width:100%;height:100%;object-fit:cover;display:block}
+.pin-more{position:fixed;z-index:5;left:max(16px,env(safe-area-inset-left,0px));bottom:calc(76px + env(safe-area-inset-bottom,0px));
+  height:26px;padding:0 9px;border-radius:999px;background:rgba(16,24,22,.6);border:1px solid var(--line);color:var(--muted);font-size:11px;cursor:pointer}
+.pin-more:hover{color:var(--ink);border-color:var(--pollen)}
+@media (max-width:820px){ .pin-more{bottom:min(calc(var(--sheet-h) + 56px),calc(100% - 200px))} .ppin{width:40px;height:40px} }
+
+/* Panel */
+.panel{position:fixed;top:0;right:0;bottom:0;width:var(--panel-w);z-index:6;background:var(--panel);border-left:1px solid var(--line);
+  display:flex;flex-direction:column;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);padding-right:env(safe-area-inset-right,0px)}
+.panel-head{padding:18px 20px 12px;border-bottom:1px solid var(--line);display:grid;gap:12px}
+.eyebrow{font:500 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.place{font:700 22px/1.15 var(--f-display);letter-spacing:-.01em;margin:4px 0 0;text-wrap:balance}
+.where{font:12px var(--f-data);color:var(--muted);font-variant-numeric:tabular-nums}
+.filter-toggle{display:flex;align-items:center;gap:8px;width:100%;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:9px 12px;cursor:pointer;text-align:left}
+.filter-toggle .dot{width:10px;height:10px;border-radius:50%;background:var(--c,var(--pollen));flex:0 0 auto}
+.filter-toggle .lbl{font-weight:600}
+.filter-toggle .total{margin-left:auto;color:var(--muted)}
+.filter-toggle .chev{transition:transform .2s;color:var(--muted);font-size:12px}
+.filter-toggle[aria-expanded="true"] .chev{transform:rotate(180deg)}
+.filters{display:grid;gap:10px}
+.groups{display:flex;gap:6px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel-2);border-radius:999px;padding:5px 11px;font-size:13px;cursor:pointer;color:var(--ink)}
+.chip i{width:8px;height:8px;border-radius:50%;background:var(--c,var(--muted))}
+.chip[aria-pressed="true"]{border-color:var(--c,var(--pollen));box-shadow:inset 0 0 0 1px var(--c,var(--pollen))}
+.opts{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);gap:10px;flex-wrap:wrap}
+.opts label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.opts input{accent-color:var(--pollen)}
+.total{font:500 12px var(--f-data);color:var(--ink)}
+
+.list{flex:1;overflow:auto;padding:14px 20px 24px;min-height:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.card{display:flex;flex-direction:column;text-align:left;background:var(--panel-2);border:1px solid transparent;border-radius:10px;overflow:hidden;cursor:pointer;padding:0;min-width:0}
+.card:hover{border-color:var(--line)}
+.card img,.card .noimg{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:var(--line)}
+.card .meta{padding:8px 10px 10px;display:grid;gap:2px;min-width:0;border-top:3px solid var(--c,var(--line))}
+.card .cn{font-weight:600;font-size:14px;line-height:1.25;overflow-wrap:anywhere}
+.card .sn{font:italic 13px/1.25 var(--f-sci);color:var(--muted);overflow-wrap:anywhere}
+.card .ct{font:11px var(--f-data);color:var(--muted);margin-top:4px}
+.state{color:var(--muted);font-size:14px;padding:24px 4px;text-align:center}
+.more{margin:12px auto 0;display:block}
+.more:disabled{opacity:.6;cursor:progress}
+.tier{display:grid;gap:8px;padding-bottom:22px}
+.tier+.tier{border-top:1px solid var(--line);padding-top:4px}
+.tier-head{position:sticky;top:-14px;z-index:1;display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--panel);padding:12px 0 6px}
+.tier-head h3{font:700 17px/1.1 var(--f-display);margin:0;letter-spacing:-.01em}
+.tier-tog{display:inline-flex;align-items:center;gap:6px;background:none;border:0;padding:0;margin:0;font:inherit;color:inherit;cursor:pointer}
+.tier-tog .chev{font-size:12px;color:var(--muted);transition:transform .2s}
+.tier-tog:hover .chev{color:var(--pollen)}
+.tier.collapsed .tier-tog .chev{transform:rotate(-90deg)}
+/* Halb eingeklappt: oberer Streifen der Karten bleibt sichtbar und blendet aus */
+.tier.collapsed{padding-bottom:10px}
+.tier.collapsed .grid{max-height:72px;overflow:hidden;cursor:pointer;
+  -webkit-mask-image:linear-gradient(#000 15%,transparent);mask-image:linear-gradient(#000 15%,transparent)}
+.tier.collapsed .grid .card{pointer-events:none}
+.tier.collapsed .tier-range,.tier.collapsed .more{display:none}
+@media (prefers-reduced-motion:reduce){.tier-tog .chev{transition:none}}
+.tier-meta{margin-left:auto;font:11px var(--f-data);color:var(--muted);font-variant-numeric:tabular-nums}
+.tier-range{margin:-4px 0 4px;font-size:12px;color:var(--muted)}
+.tier-range:empty{display:none}
+.tier-note{font-size:12px;color:var(--muted);margin:0;max-width:65ch}
+.freq{display:inline-flex;align-items:flex-end;gap:2px;height:16px}
+.freq i{width:4px;border-radius:1px;background:var(--line)}
+.freq i.on{background:var(--pollen)}
+.sources{padding:10px 20px;border-top:1px solid var(--line);font-size:11px;color:var(--muted)}
+.sources summary{cursor:pointer}
+.sources ul{margin:8px 0 0;padding-left:16px;display:grid;gap:4px}
+.sources a{color:var(--ink)}
+
+/* Detailansicht */
+.detail{position:absolute;inset:0;background:var(--panel);display:flex;flex-direction:column;z-index:2}
+.detail-bar{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line);padding-top:max(12px,env(safe-area-inset-top,0px))}
+.back{background:none;border:1px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer;font-size:13px}
+.detail-body{flex:1;overflow:auto;min-height:0}
+.hero{position:relative}
+.hero img{width:100%;aspect-ratio:3/2;object-fit:cover;display:block;background:var(--line)}
+.credit{font-size:11px;color:var(--muted);padding:6px 20px 0}
+.thumbs{display:flex;gap:6px;padding:8px 20px 0;overflow-x:auto}
+.thumbs button{padding:0;border:2px solid transparent;border-radius:6px;cursor:pointer;flex:0 0 auto;background:none}
+.thumbs button[aria-pressed="true"]{border-color:var(--pollen)}
+.thumbs img{width:56px;height:56px;object-fit:cover;border-radius:4px;display:block}
+.d-sec{padding:16px 20px;border-bottom:1px solid var(--line);display:grid;gap:10px}
+.d-name{font:700 26px/1.1 var(--f-display);letter-spacing:-.01em;margin:0;text-wrap:balance}
+.d-sci{font:italic 19px/1.2 var(--f-sci);color:var(--muted);margin:0}
+.badges{display:flex;gap:6px;flex-wrap:wrap}
+.badge{font:500 11px/1 var(--f-body);letter-spacing:.06em;text-transform:uppercase;padding:5px 8px;border-radius:4px;background:var(--panel-2);border:1px solid var(--line)}
+.badge.iucn{border-color:var(--sc);color:var(--sc)}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.fact{background:var(--panel-2);border-radius:8px;padding:10px}
+.fact b{display:block;font:500 17px var(--f-data);font-variant-numeric:tabular-nums}
+.fact span{font-size:11px;color:var(--muted)}
+.tax{list-style:none;margin:0;padding:0;display:grid;gap:3px;font-size:13px}
+.tax li{display:grid;grid-template-columns:76px 1fr;gap:8px}
+.tax .r{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;padding-top:2px}
+.tax .n i{font-family:var(--f-sci)}
+.prose{font-size:14px;line-height:1.6;max-width:65ch;margin:0}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.miniglobe{display:grid;grid-template-columns:112px 1fr;gap:14px;align-items:center;width:100%;text-align:left;background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:10px;cursor:pointer;color:var(--ink)}
+.miniglobe:hover{border-color:var(--pollen)}
+.miniglobe[aria-pressed="true"]{border-color:var(--pollen);box-shadow:inset 0 0 0 1px var(--pollen)}
+.mg-map{display:block;width:112px;height:112px;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 35% 30%,#1b2b26,#0a0f0e 70%);pointer-events:none}
+.mg-map .maplibregl-canvas{outline:none}
+.mg-txt{display:grid;gap:3px;font-size:13px;color:var(--muted)}
+.mg-txt b{color:var(--ink);font:600 15px var(--f-body)}
+.mg-txt small{font-size:10px;margin-top:4px}
+.btn{background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:13px;cursor:pointer;text-decoration:none;color:var(--ink)}
+.btn.primary{background:var(--pollen);color:var(--night);border-color:var(--pollen);font-weight:600}
+.placeholder{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.placeholder div{border:1px dashed var(--line);border-radius:8px;padding:10px;font-size:12px;color:var(--muted)}
+h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0}
+
+.skel{background:linear-gradient(90deg,var(--panel-2),var(--line),var(--panel-2));background-size:200% 100%;animation:sh 1.2s infinite linear}
+@keyframes sh{to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.skel{animation:none}}
+
+/* Mobil: Panel als ziehbares Bottom-Sheet, Globus liegt vollflächig dahinter */
+.handle{display:none}
+@media (max-width:820px){
+  :root{--panel-w:0px;--sheet-h:64vh}
+  #map{right:0}
+  .topbar{right:0;gap:8px;padding-bottom:8px}
+  .brand{width:100%}
+  .brand h1{font-size:22px}
+  .brand small{display:none}
+  .search{flex:1;min-width:0}
+  .search input{width:100%;padding:7px 12px}
+  .pill{padding:6px 10px;font-size:12px}
+  .loc-row{flex:1 1 auto;min-width:0}
+  .loc{padding:4px 10px 4px 4px}
+  .loc-txt span{font-size:10px;overflow:hidden;text-overflow:ellipsis}
+  .loc-dock{bottom:min(calc(var(--sheet-h) + 12px),calc(100% - 160px));padding:0 64px}
+  .maplibregl-ctrl-bottom-right{bottom:calc(var(--sheet-h) + 4px)}
+  .maplibregl-ctrl-bottom-left,.maplibregl-ctrl-bottom-right .maplibregl-ctrl-attrib{display:none}
+
+  .panel{top:auto;left:0;width:auto;height:var(--sheet-h);border-left:0;border-top:1px solid var(--line);border-radius:18px 18px 0 0;
+    padding-left:env(safe-area-inset-left,0px);box-shadow:0 -12px 40px rgba(0,0,0,.45);transition:height .28s cubic-bezier(.2,.8,.2,1)}
+  .panel.dragging{transition:none}
+  .handle{display:flex;justify-content:center;align-items:center;width:100%;height:26px;background:none;border:0;padding:0;cursor:grab;touch-action:none;flex:0 0 auto}
+  .handle::before{content:"";width:44px;height:5px;border-radius:3px;background:var(--muted);opacity:.6}
+  .panel-head{padding:0 16px 10px;gap:8px;touch-action:none}
+  .place{font-size:19px;margin-top:2px}
+  .list{padding:12px 16px 20px}
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .tier-head{top:-12px}
+  .card .cn{font-size:15px}
+  .sources{padding:8px 16px}
+  .detail{border-radius:18px 18px 0 0}
+  .detail-bar{padding-top:12px}
+  .back{padding:9px 14px;font-size:14px}
+}
+@media (max-width:820px) and (prefers-reduced-motion:reduce){.panel{transition:none}}
+
+/* Registerkarten im Panel */
+.tabs{display:flex;gap:14px;overflow-x:auto;scrollbar-width:none;padding:10px 20px 0;border-bottom:1px solid var(--line);flex:0 0 auto}
+.tab{background:none;border:0;border-bottom:2px solid transparent;padding:8px 2px 10px;color:var(--muted);font:600 14px var(--f-body);cursor:pointer;margin-bottom:-1px}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--pollen)}
+.tab{white-space:nowrap;flex:0 0 auto;font-size:13px}
+.tab small{display:block;font:500 10px/1.2 var(--f-body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.chip.empty{opacity:.35;cursor:not-allowed}
+.pane{flex:1;min-height:0;display:flex;flex-direction:column}
+/* Vergrößern: PC halbe Bildschirmbreite, Handy vollflächig */
+.detail-bar .grow{margin-left:auto}
+.grow{margin-left:auto;align-self:center;width:30px;height:30px;flex:0 0 auto;display:grid;place-items:center;padding:0;border-radius:8px;
+  background:var(--panel-2);border:1px solid var(--line);color:var(--muted);cursor:pointer}
+.grow:hover{color:var(--ink);border-color:var(--pollen)}
+.grow svg{width:15px;height:15px}
+.grow .g-out,.grow[aria-pressed="true"] .g-in{display:none}
+.grow[aria-pressed="true"] .g-out{display:block}
+@media (min-width:821px){ :root.wide{--panel-w:50vw} }
+
+/* Bestimmungsschlüssel */
+.key-head{padding:14px 20px 12px;border-bottom:1px solid var(--line)}
+.key-body{flex:1;overflow:auto;min-height:0;padding:0 20px 28px}
+.steps{list-style:none;margin:0;padding:0}
+.step{padding:14px 0;border-bottom:1px solid var(--line);display:grid;gap:10px;transition:opacity .2s}
+.step[aria-disabled="true"]{opacity:.4;pointer-events:none}
+.step h4{display:flex;align-items:center;gap:9px;margin:0;font:600 14px var(--f-body)}
+.step h4 b{width:22px;height:22px;flex:0 0 auto;border-radius:50%;display:grid;place-items:center;background:var(--panel-2);border:1px solid var(--line);font:500 11px var(--f-data);color:var(--muted)}
+.step.done h4 b{background:var(--pollen);color:var(--night);border-color:var(--pollen)}
+.step h4{cursor:pointer}
+.step h4::after{content:"▾";margin-left:8px;font-size:12px;color:var(--muted);transition:transform .2s}
+.step.folded h4::after{transform:rotate(-90deg)}
+.step.folded{gap:0}
+.step.folded>:not(h4){display:none}
+.step.folded .sel{color:var(--pollen)}
+@media (prefers-reduced-motion:reduce){.step h4::after{transition:none}}
+.step .sel{margin-left:auto;font:400 12px var(--f-body);color:var(--muted);text-align:right}
+.cats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.cat{display:grid;grid-template-columns:10px 1fr;column-gap:10px;row-gap:2px;align-items:center;text-align:left;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:9px 12px;cursor:pointer;color:var(--ink)}
+.cat i{width:10px;height:10px;border-radius:50%;background:var(--c)}
+.cat .n{font-weight:600;font-size:14px}
+.cat .dsc{grid-column:2;font-size:12px;color:var(--muted);line-height:1.3}
+.cat .c{grid-column:2;font:11px var(--f-data);color:var(--muted);font-variant-numeric:tabular-nums;min-height:14px}
+.cat.empty{opacity:.35;cursor:not-allowed}
+.cat[aria-pressed="true"]{border-color:var(--c);box-shadow:inset 0 0 0 1px var(--c)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip small{color:var(--muted);font:11px var(--f-data)}
+.chip:disabled{opacity:.5;cursor:progress}
+.trait{display:grid;gap:6px}
+.trait+.trait{margin-top:10px}
+.trait-label{font:500 11px/1 var(--f-body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.hint{font-size:12px;color:var(--muted)}
+.checks{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.checks label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.checks input{accent-color:var(--pollen)}
+.key-res{padding-top:4px}
+.combo-top{display:grid;gap:10px;padding:14px 0 4px}
+.combo-how summary{cursor:pointer;font-size:12px;color:var(--muted)}
+.combo-how p{margin-top:6px}
+.cmp{position:sticky;top:0;z-index:2;display:grid;grid-template-columns:72px 1fr auto;gap:12px;align-items:center;background:var(--panel);padding:10px 0;border-bottom:1px solid var(--line)}
+.cmp img{width:72px;height:72px;object-fit:cover;border-radius:10px;display:block;cursor:zoom-in}
+.cmp img.big{width:100%;height:auto;max-height:50vh;object-fit:contain;grid-column:1/-1;cursor:zoom-out}
+.cmp b{display:block;font-size:14px}
+#paneIdent .look-sec{gap:10px}
+#paneIdent .look-sec>h4{flex-wrap:wrap}
+.look-sec{padding:14px 0;border-bottom:1px solid var(--line);display:grid;gap:12px}
+.look-sec>h4{margin:0;font:700 15px/1.1 var(--f-display);letter-spacing:-.01em;display:flex;align-items:baseline;gap:8px}
+.look-sec>h4 small{font:400 12px var(--f-body);color:var(--muted)}
+.look-q{display:grid;gap:6px}
+.look-q .trait-label{display:flex;gap:6px}
+.look-q .trait-label b{color:var(--pollen);font-weight:500;text-transform:none;letter-spacing:0}
+#lSummary .note{margin:0 0 8px}
+.matchlist{display:flex;gap:4px;flex-wrap:wrap;margin:0 0 8px}
+.matchlist span{font-size:11px;padding:3px 7px;border-radius:4px;background:var(--panel-2);border:1px solid var(--line);color:var(--muted)}
+.key-body .tier-head{top:0}
+.key-res-head{display:flex;align-items:center;gap:10px;padding:14px 0 6px}
+.key-res-head h3{font:700 17px/1.1 var(--f-display);margin:0}
+.key-res-head .linkbtn{margin-left:auto;font-size:12px;color:var(--muted)}
+#kSummary{margin:0 0 12px}
+@media (max-width:820px){
+  .tabs{padding:0 12px;gap:12px;overflow-x:auto;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{font-size:13px;white-space:nowrap;flex:0 0 auto}
+  .tab small{font-size:9px}
+  .panel-head{padding-top:10px}
+  .key-head{padding:10px 16px 10px;touch-action:none}
+  .key-body{padding:0 16px 24px}
+}
+
+/* Fotobestimmung (Pl@ntNet): Vollbild-Dialog auf dem Handy, Karte in der Mitte am Desktop */
+/* Kleiner Kamera-Knopf links unten; Beschriftung klappt bei Hover/Fokus aus */
+.idf-fab{position:fixed;z-index:5;left:max(16px,env(safe-area-inset-left,0px));bottom:calc(34px + env(safe-area-inset-bottom,0px));
+  display:inline-flex;align-items:center;height:34px;padding:0 9px;gap:0;border-radius:999px;cursor:pointer;
+  background:rgba(16,24,22,.85);border:1px solid var(--line);color:var(--muted);font-size:12px;
+  transition:gap .2s,color .2s,border-color .2s}
+.idf-fab svg{width:16px;height:16px;flex:0 0 auto}
+.idf-fab span{max-width:0;overflow:hidden;white-space:nowrap;transition:max-width .25s ease}
+.idf-fab:hover,.idf-fab:focus-visible{color:var(--ink);border-color:var(--pollen);gap:6px}
+.idf-fab:hover span,.idf-fab:focus-visible span{max-width:140px}
+@media (prefers-reduced-motion:reduce){.idf-fab,.idf-fab span{transition:none}}
+.idf{position:fixed;inset:0;z-index:20;background:rgba(5,8,7,.72);display:flex;align-items:center;justify-content:center;padding:24px}
+.idf-card{width:min(560px,100%);max-height:100%;background:var(--panel);border:1px solid var(--line);border-radius:16px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.idf-bar{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.idf-bar h2{font:700 20px/1.1 var(--f-display);margin:0 auto 0 0;letter-spacing:-.01em}
+.idf-body{flex:1;overflow:auto;min-height:0;padding:16px;display:grid;gap:14px;align-content:start}
+.idf-foot{padding:10px 16px;border-top:1px solid var(--line);font-size:11px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.idf-foot a,.idf-body a{color:var(--ink)}
+.linkbtn{background:none;border:0;padding:0;color:var(--ink);text-decoration:underline;cursor:pointer;font-size:inherit}
+.cam-box{position:relative;background:#000;border-radius:12px;overflow:hidden;aspect-ratio:4/3;display:grid;place-items:center}
+.cam-box video{width:100%;height:100%;object-fit:contain;display:block}
+.cam-hint{position:absolute;inset:0;display:grid;place-content:center;gap:10px;padding:20px;text-align:center;font-size:14px;color:var(--muted);background:var(--panel-2)}
+.cam-hint b{color:var(--ink);font:600 16px var(--f-body)}
+.shutter{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);width:68px;height:68px;border-radius:50%;border:4px solid #fff;background:rgba(255,255,255,.25);cursor:pointer;padding:0}
+.shutter:active{background:rgba(255,255,255,.6)}
+.shutter:disabled{opacity:.4}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn.file{position:relative;overflow:hidden}
+.btn.file input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.big{padding:12px 16px;font-size:15px;width:100%}
+.shots{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.shots li{display:grid;grid-template-columns:64px 1fr auto;gap:10px;align-items:center;background:var(--panel-2);border-radius:10px;padding:6px}
+.shots img{width:64px;height:64px;object-fit:cover;border-radius:6px;display:block}
+.shots select{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px;color:var(--ink);font:inherit;font-size:14px;min-width:0}
+.shots .x{background:none;border:1px solid var(--line);border-radius:8px;width:36px;height:36px;cursor:pointer;color:var(--muted)}
+.note{font-size:12px;color:var(--muted);margin:0;line-height:1.5}
+.alert{border:1px solid var(--animalia);background:rgba(217,138,95,.1);border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.5}
+.alert b{display:block;margin-bottom:2px}
+.alert ol,.alert ul{margin:6px 0 0;padding-left:18px}
+.keyform{display:grid;gap:10px}
+.keyform input{background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font:14px var(--f-data);width:100%}
+.keyform code,.alert code{font:12px var(--f-data);background:var(--panel-2);padding:2px 5px;border-radius:4px;overflow-wrap:anywhere}
+.res{display:grid;gap:10px}
+.hit{display:grid;grid-template-columns:84px 1fr;gap:12px;background:var(--panel-2);border-radius:12px;padding:10px;align-items:start}
+.hit img,.hit .noimg{width:84px;height:84px;object-fit:cover;border-radius:8px;background:var(--line);display:block}
+.hit .cn{font-weight:600;font-size:15px;line-height:1.25}
+.hit .sn{font:italic 14px/1.25 var(--f-sci);color:var(--muted)}
+.hit .fam{font-size:11px;color:var(--muted);margin-top:2px}
+.hit .cr{font-size:10px;color:var(--muted);margin-top:4px;overflow-wrap:anywhere}
+.score{display:flex;align-items:center;gap:8px;margin:6px 0 8px;font:500 12px var(--f-data);font-variant-numeric:tabular-nums}
+.score .bar{flex:1;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.score .bar i{display:block;height:100%;background:var(--pollen)}
+.hit .actions .btn{padding:7px 10px;font-size:13px}
+@media (max-width:820px){
+  .idf{padding:0;background:var(--panel)}
+  .idf-card{width:100%;height:100%;border:0;border-radius:0;box-shadow:none;
+    padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+  .cam-box{aspect-ratio:3/4;max-height:56vh}
+  .idf-fab{bottom:min(calc(var(--sheet-h) + 12px),calc(100% - 160px))}
+  .topbar .search{flex:1 1 100%}   /* Suche eigene Zeile, darunter die Ebenen */
+}
+</style>
+</head>
+<body>
+
+<div id="map" aria-label="Globus"></div>
+
+<header class="topbar">
+  <div class="brand"><h1>Pure <span>Nature</span></h1><small>Arten der Welt, live</small></div>
+  <form class="search" id="searchForm" role="search" autocomplete="off">
+    <input id="searchInput" type="search" placeholder="Ort suchen, z. B. Borneo" aria-label="Ort suchen">
+    <ul id="searchResults" hidden></ul>
+  </form>
+  <div class="toggles">
+    <button class="pill" id="tgSat" aria-pressed="false" title="Satellitenbild (Sentinel-2 cloudless)">Satellit</button>
+  </div>
+  <div class="loc-row">
+    <div class="loc" id="loc">
+      <button class="pin" id="pinBtn" aria-pressed="false" title="Ort festsetzen: Die Suche bleibt hier, auch wenn du die Karte verschiebst">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z"/><circle cx="12" cy="10" r="2.2"/></svg>
+      </button>
+      <div class="loc-txt"><b id="locName">–</b><span id="readout">–</span></div>
+      <button class="loc-btn" id="locMove" title="Nach oben unter die Suche schieben" aria-label="Ortsanzeige verschieben">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M7 8l5-5 5 5M7 16l5 5 5-5"/></svg>
+      </button>
+      <button class="loc-btn" id="locFold" aria-expanded="true" title="Einklappen" aria-label="Ortsanzeige einklappen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+
+<div class="loc-dock" id="locDock"></div>
+<button class="pin-more" id="pinMore" hidden title="Mehr Fotos auf der Karte: je Gruppe 2 weitere" aria-label="Mehr Fotos auf der Karte">+ Fotos</button>
+
+<button class="idf-fab" id="tgIdentify" title="Pflanze per Foto bestimmen (Pl@ntNet)" aria-label="Pflanze per Foto bestimmen">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+  <span>Pflanze bestimmen</span></button>
+
+<aside class="panel" id="panel" aria-label="Arten im Kartenausschnitt">
+  <button class="handle" id="handle" aria-label="Artenliste größer oder kleiner ziehen"></button>
+  <nav class="tabs" role="tablist" aria-label="Ansicht">
+    <button class="tab" role="tab" id="tabBtnExplore" aria-controls="paneExplore" aria-selected="true"><small>Arten</small>Entdecken</button>
+    <button class="tab" role="tab" id="tabBtnIdent" aria-controls="paneIdent" aria-selected="false"><small>Tiere &amp; Pflanzen</small>Erkennen</button>
+    <button class="tab" role="tab" id="tabBtnCombo" aria-controls="paneCombo" aria-selected="false"><small>Arten entdecken</small>Kombi</button>
+    <button class="tab" role="tab" id="tabBtnKey" aria-controls="paneKey" aria-selected="false"><small>Bestimmen</small>biologisch</button>
+    <button class="tab" role="tab" id="tabBtnLook" aria-controls="paneLook" aria-selected="false"><small>Bestimmen</small>nach Aussehen</button>
+    <button class="grow" id="growBtn" aria-pressed="false" title="Liste vergrößern" aria-label="Liste vergrößern">
+      <svg class="g-in" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+      <svg class="g-out" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg>
+    </button>
+  </nav>
+  <div class="pane" id="paneExplore" role="tabpanel" aria-labelledby="tabBtnExplore">
+  <div class="panel-head" id="panelHead">
+    <div class="here" hidden>   <!-- Ort steht nur noch in der Ortsanzeige auf der Karte -->
+      <div class="eyebrow" id="scope">Kartenausschnitt</div>
+      <p class="place" id="place">Die ganze Welt</p>
+      <div class="where" id="where"></div>
+    </div>
+    <button class="filter-toggle" id="filterToggle" aria-expanded="true" aria-controls="filters">
+      <span class="dot" id="ftDot"></span><span class="lbl" id="ftLabel">Alle Gruppen</span>
+      <span class="total" id="total"></span><span class="chev" aria-hidden="true">▾</span>
+    </button>
+    <div class="filters" id="filters">
+      <div class="groups" id="groups" role="group" aria-label="Artengruppe"></div>
+      <div class="opts">
+        <label><input type="checkbox" id="research" checked> nur bestätigte Bestimmungen</label>
+      </div>
+    </div>
+  </div>
+  <div class="list" id="list"><div id="tiers"></div></div>
+  <details class="sources">
+    <summary>Datenquellen &amp; Lizenzen</summary>
+    <ul>
+      <li><a href="https://www.inaturalist.org" target="_blank" rel="noopener">iNaturalist</a> – Arten &amp; Beobachtungen; Fotos mit eigener CC-Lizenz je Bild, API frei für nicht-kommerzielle Nutzung</li>
+      <li><a href="https://www.gbif.org" target="_blank" rel="noopener">GBIF</a> – weltweite Fundmeldungen (CC0 / CC BY / CC BY-NC)</li>
+      <li><a href="https://de.wikipedia.org" target="_blank" rel="noopener">Wikipedia</a> – Artbeschreibungen (CC BY-SA 4.0)</li>
+      <li><a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> / <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> – Karte (ODbL)</li>
+      <li><a href="https://s2maps.eu" target="_blank" rel="noopener">Sentinel-2 cloudless</a> by EOX – Satellitenbild (CC BY-NC-SA 4.0, enthält modifizierte Copernicus-Daten)</li>
+      <li><a href="https://nominatim.org" target="_blank" rel="noopener">Nominatim</a> – Ortssuche (OSM, ODbL)</li>
+      <li><a href="https://maplibre.org" target="_blank" rel="noopener">MapLibre GL JS</a> – Globus (BSD-3-Clause)</li>
+      <li><a href="https://my.plantnet.org/" target="_blank" rel="noopener">Pl@ntNet</a> – Pflanzenbestimmung per Foto. The image-based plant species identification service used, is based on the Pl@ntNet recognition API, regularly updated and accessible through the site https://my.plantnet.org/</li>
+    </ul>
+  </details>
+  </div>
+
+  <!-- Erkennen: Pflanzen per Foto (Pl@ntNet), Tiere per Foto + Merkmale -->
+  <div class="pane" id="paneIdent" role="tabpanel" aria-labelledby="tabBtnIdent" hidden>
+    <div class="key-head" id="identHead">
+      <div class="eyebrow">Tiere &amp; Pflanzen erkennen</div>
+      <p class="place">Mach ein Foto</p>
+    </div>
+    <div class="key-body" id="identBody">
+      <section class="look-sec">
+        <h4>Pflanze<small>Foto genügt – Pl@ntNet erkennt die Art</small></h4>
+        <button class="btn primary big" id="identPlant">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-3px;margin-right:6px"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Pflanze fotografieren</button>
+        <p class="note">Blüte, Blatt, Frucht oder Rinde – mehrere Fotos verschiedener Teile machen es sicherer.</p>
+      </section>
+      <section class="look-sec">
+        <h4>Tier<small>Foto + ein paar Merkmale</small></h4>
+        <p class="note">Eine freie automatische Tier-Erkennung gibt es nicht ohne Benutzerkonto. Darum: Foto machen, dann nach Aussehen eingrenzen – dein Foto bleibt dabei als Vergleichsbild oben stehen. Es wird nirgends hochgeladen.</p>
+        <label class="btn primary big file" id="identAnimalBtn">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-3px;margin-right:6px"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Tier fotografieren
+          <input type="file" accept="image/*" capture="environment" id="identAnimal">
+        </label>
+        <button class="btn big" id="identNoPhoto">Ohne Foto weiter zu den Merkmalen</button>
+      </section>
+      <section class="look-sec">
+        <h4>In der Nähe<small>was hier häufig vorkommt</small></h4>
+        <p class="note">Die Fotos auf der Karte zeigen die häufigsten Tiere und Pflanzen im Umkreis – oft ist das Gesuchte schon dabei. Antippen öffnet den Steckbrief.</p>
+      </section>
+    </div>
+  </div>
+
+  <!-- Arten entdecken · Kombi: iNaturalist und GBIF konservativ gemittelt -->
+  <div class="pane" id="paneCombo" role="tabpanel" aria-labelledby="tabBtnCombo" hidden>
+    <div class="key-head" id="comboHead">
+      <div class="eyebrow">Kombiniert aus iNaturalist &amp; GBIF</div>
+      <p class="place">Was lebt hier wirklich?</p>
+      <div class="where" id="cWhere" hidden></div>
+    </div>
+    <div class="key-body" id="comboBody">
+      <div class="combo-top">
+        <div class="groups" id="cGroups" role="group" aria-label="Artengruppe"></div>
+        <details class="combo-how">
+          <summary>So wird gerechnet</summary>
+          <p class="note">Zwei unabhängige Quellen: iNaturalist (bestätigte Beobachtungen mit Foto) und GBIF (Fundmeldungen aus vielen Datenbanken, z. B. Museen, Kartierungen, Vogelzählungen). Je Quelle zählt der Anteil einer Art an ihrer Gruppe – Vögel unter Vögeln, Pflanzen unter Pflanzen. Daraus das geometrische Mittel: Oben steht nur, was <b>beide</b> Quellen häufig sehen. Arten aus nur einer Quelle bleiben sichtbar, landen aber stark abgewertet weit unten.</p>
+        </details>
+        <p class="note" id="cStat"></p>
+      </div>
+      <header class="key-res-head"><h3>Häufigkeit, kombiniert</h3><span class="total" id="cTotal"></span></header>
+      <div id="cTiers"></div>
+    </div>
+  </div>
+
+  <!-- Bestimmungsschlüssel: Kategorie → Gruppe → Merkmal → Zeit → Ort, Ergebnis live aus iNaturalist -->
+  <div class="pane" id="paneKey" role="tabpanel" aria-labelledby="tabBtnKey" hidden>
+    <div class="key-head" id="keyHead">
+      <div class="eyebrow">Bestimmungsschlüssel</div>
+      <p class="place">Was hast du gesehen?</p>
+      <div class="where" id="keyWhere" hidden></div>
+    </div>
+    <div class="key-body" id="keyBody">
+      <ol class="steps">
+        <li class="step" id="stCat">
+          <h4><b>1</b>Was ist es?<span class="sel" id="selCat"></span></h4>
+          <div class="cats" id="kCat"></div>
+        </li>
+        <li class="step" id="stSub" aria-disabled="true">
+          <h4><b>2</b>Welche Gruppe?<span class="sel" id="selSub"></span></h4>
+          <div class="chips" id="kSub"><span class="hint">Erst oben eine Kategorie wählen.</span></div>
+        </li>
+        <li class="step" id="stTrait" aria-disabled="true">
+          <h4><b>3</b>Was fällt auf?<span class="sel" id="selTrait"></span></h4>
+          <div id="kTrait"><span class="hint">Merkmale kommen aus iNaturalist, passend zur Gruppe.</span></div>
+        </li>
+        <li class="step" id="stWhen" aria-disabled="true">
+          <h4><b>4</b>Wann im Jahr?<span class="sel" id="selWhen"></span></h4>
+          <div class="chips" id="kWhen"></div>
+        </li>
+        <li class="step" id="stHour" aria-disabled="true">
+          <h4><b>5</b>Zu welcher Tageszeit?<span class="sel" id="selHour"></span></h4>
+          <div class="chips" id="kHour"></div>
+        </li>
+        <li class="step" id="stWhere" aria-disabled="true">
+          <h4><b>6</b>Wo? Umkreis um die Kartenmitte<span class="sel" id="selWhere"></span></h4>
+          <div class="chips" id="kRadius"></div>
+          <div class="checks">
+            <label><input type="checkbox" id="kResearch" checked> nur bestätigte Bestimmungen</label>
+            <label><input type="checkbox" id="kThreat"> nur gefährdete Arten</label>
+          </div>
+        </li>
+      </ol>
+      <section class="key-res" id="keyRes">
+        <header class="key-res-head">
+          <h3>Passende Arten</h3><span class="total" id="kTotal"></span>
+          <button class="linkbtn" id="kReset">Neu anfangen</button>
+        </header>
+        <p class="note" id="kSummary"></p>
+        <div id="kTiers"></div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Bestimmung nach Aussehen: alle Merkmale auf einer Seite, Ergebnis live -->
+  <div class="pane" id="paneLook" role="tabpanel" aria-labelledby="tabBtnLook" hidden>
+    <div class="key-head" id="lookHead">
+      <div class="eyebrow">Bestimmen nach Aussehen</div>
+      <p class="place">Wie sah es aus?</p>
+      <div class="where" id="lookWhere" hidden></div>
+    </div>
+    <div class="key-body" id="lookBody">
+      <div class="cmp" id="cmp" hidden>
+        <img id="cmpImg" alt="Dein Foto zum Vergleich">
+        <div><b>Dein Foto</b><span class="note">Vergleiche es mit den Arten unten.</span></div>
+        <button class="loc-btn" id="cmpClose" title="Vergleichsfoto entfernen" aria-label="Vergleichsfoto entfernen">✕</button>
+      </div>
+      <div id="lookForm"></div>
+      <section class="key-res" id="lookRes">
+        <header class="key-res-head">
+          <h3>Das könnte es sein</h3><span class="total" id="lTotal"></span>
+          <button class="linkbtn" id="lReset">Alles abwählen</button>
+        </header>
+        <div id="lSummary"><p class="note">Tippe oben an, was dir aufgefallen ist. Schon ein Merkmal reicht für den Anfang; jedes weitere grenzt ein.</p></div>
+        <div id="lTiers"></div>
+      </section>
+    </div>
+  </div>
+
+  <section class="detail" id="detail" hidden aria-live="polite">
+    <div class="detail-bar">
+      <button class="back" id="back">← Zurück zur Liste</button>
+      <button class="grow" id="growBtn2" aria-pressed="false" title="Verkleinern" aria-label="Verkleinern">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg>
+      </button>
+    </div>
+    <div class="detail-body" id="detailBody"></div>
+  </section>
+</aside>
+
+<!-- Fotobestimmung: Kamera → Pl@ntNet → Steckbrief aus iNaturalist -->
+<div class="idf" id="idf" hidden role="dialog" aria-modal="true" aria-labelledby="idfTitle">
+  <div class="idf-card">
+    <div class="idf-bar">
+      <h2 id="idfTitle">Pflanze bestimmen</h2>
+      <button class="back" id="idfClose">Schließen</button>
+    </div>
+    <div class="idf-body" id="idfBody">
+
+      <!-- Schritt 0: API-Schlüssel -->
+      <section class="keyform" id="idfKey" hidden>
+        <p class="note">Für die Bestimmung braucht diese Seite einen kostenlosen Schlüssel von Pl@ntNet (500 Bestimmungen pro Tag). Er wird nur auf diesem Gerät gespeichert.</p>
+        <label for="keyInput" class="eyebrow">Pl@ntNet-API-Schlüssel</label>
+        <input id="keyInput" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="z. B. 2b10…">
+        <div class="row">
+          <button class="btn primary" id="keySave">Schlüssel prüfen &amp; speichern</button>
+          <a class="btn" href="https://github.com/bunwichtig/naturewissen#pflanzen-per-foto-bestimmen" target="_blank" rel="noopener">Wie bekomme ich einen?</a>
+        </div>
+        <div id="keyMsg"></div>
+      </section>
+
+      <!-- Schritt 1: Fotos -->
+      <section id="idfShoot" hidden style="display:grid;gap:12px">
+        <div class="cam-box">
+          <video id="camVideo" playsinline muted autoplay hidden></video>
+          <div class="cam-hint" id="camHint">
+            <b>Kamera freigeben</b>
+            <span>Die Seite fragt dein Handy um Erlaubnis, die Kamera zu benutzen. Tippe dort auf „Erlauben“.</span>
+            <div class="row" style="justify-content:center"><button class="btn primary" id="camStart">Kamera starten</button></div>
+          </div>
+          <button class="shutter" id="camShot" hidden aria-label="Foto aufnehmen"></button>
+        </div>
+        <div id="camMsg"></div>
+        <div class="row">
+          <label class="btn file">Foto aus Galerie<input type="file" id="fileGallery" accept="image/*" multiple></label>
+          <label class="btn file" id="fileCamWrap">Kamera-App öffnen<input type="file" id="fileCam" accept="image/*" capture="environment"></label>
+          <button class="btn" id="camFlip" hidden>Kamera wechseln</button>
+        </div>
+        <p class="note">Tipp: Bis zu 5 Fotos derselben Pflanze, z. B. Blüte und Blatt einzeln und scharf. Wähle bei jedem Foto, was zu sehen ist.</p>
+        <ul class="shots" id="shots"></ul>
+        <button class="btn primary big" id="idfGo" disabled>Art bestimmen</button>
+        <p class="note">Die Fotos werden nur zur Bestimmung an Pl@ntNet (Frankreich) geschickt. Diese Seite speichert sie nicht.</p>
+      </section>
+
+      <!-- Schritt 2: Ergebnis -->
+      <section id="idfResult" hidden style="display:grid;gap:12px"></section>
+    </div>
+    <div class="idf-foot">
+      <span>Bestimmung: <a href="https://my.plantnet.org/" target="_blank" rel="noopener">Pl@ntNet</a></span>
+      <span id="quota"></span>
+      <button class="linkbtn" id="keyEdit" style="margin-left:auto">API-Schlüssel ändern</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   Pure Nature – speichert nichts, holt alles live aus freien APIs
+   ============================================================ */
+const API = {
+  inat: "https://api.inaturalist.org/v1",
+  gbif: "https://api.gbif.org/v1",
+  wikiDe: "https://de.wikipedia.org/api/rest_v1/page/summary/",
+  nominatim: "https://nominatim.openstreetmap.org"
+};
+
+/* Artengruppen (iNaturalist „iconic taxa“). Nur sichtbare Organismen – keine Bakterien/Protozoen. */
+const GROUPS = [
+  { id:"all",   label:"Alle",        taxa:"Plantae,Fungi,Mammalia,Aves,Reptilia,Amphibia,Actinopterygii,Insecta,Arachnida,Mollusca,Animalia", c:"var(--pollen)" },
+  { id:"plants",label:"Pflanzen",    taxa:"Plantae",        c:"var(--plantae)" },
+  { id:"fungi", label:"Pilze",       taxa:"Fungi",          c:"var(--fungi)" },
+  { id:"mamm",  label:"Säugetiere",  taxa:"Mammalia",       c:"var(--animalia)" },
+  { id:"birds", label:"Vögel",       taxa:"Aves",           c:"var(--animalia)" },
+  { id:"rept",  label:"Reptilien",   taxa:"Reptilia",       c:"var(--animalia)" },
+  { id:"amph",  label:"Amphibien",   taxa:"Amphibia",       c:"var(--animalia)" },
+  { id:"fish",  label:"Fische",      taxa:"Actinopterygii", c:"var(--animalia)" },
+  { id:"ins",   label:"Insekten",    taxa:"Insecta",        c:"var(--animalia)" },
+  { id:"arach", label:"Spinnentiere",taxa:"Arachnida",      c:"var(--animalia)" },
+  { id:"moll",  label:"Weichtiere",  taxa:"Mollusca",       c:"var(--animalia)" }
+];
+const KINGDOM_COLOR = { Plantae:"var(--plantae)", Fungi:"var(--fungi)" }; // sonst Tiere
+const RANK_DE = { kingdom:"Reich", phylum:"Stamm", subphylum:"Unterstamm", class:"Klasse", subclass:"Unterklasse", order:"Ordnung", suborder:"Unterordnung", superfamily:"Überfamilie", family:"Familie", subfamily:"Unterfamilie", tribe:"Tribus", genus:"Gattung", species:"Art", subspecies:"Unterart", variety:"Varietät" };
+const IUCN = { 10:["LC","Nicht gefährdet","#86b86f"], 20:["NT","Potenziell gefährdet","#c5c45a"], 30:["VU","Gefährdet","#e7ad4f"], 40:["EN","Stark gefährdet","#e0794a"], 50:["CR","Vom Aussterben bedroht","#e04a4a"], 60:["EW","In der Natur ausgestorben","#b07cc0"], 70:["EX","Ausgestorben","#9a9a9a"] };
+
+const state = { pin:null, tab:"explore", group:"all", research:true, lastQuery:null, abort:null, selectedTaxon:null };
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, m => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
+const fmt = n => new Intl.NumberFormat("de-DE").format(n ?? 0);
+const photo = (url, size) => url ? url.replace(/\/square\.|\/small\.|\/medium\./, `/${size}.`) : null;
+const groupColor = t => KINGDOM_COLOR[t?.iconic_taxon_name] || (t?.iconic_taxon_name ? "var(--animalia)" : "var(--line)");
+
+async function getJSON(url, signal){
+  const r = await fetch(url, { signal, headers:{ Accept:"application/json" } });
+  if (!r.ok) throw new Error(`${r.status} bei ${new URL(url).host}`);
+  return r.json();
+}
+
+/* ---------------- Karte / Globus ---------------- */
+/* Startansicht: Pinnow bei Schwerin, Umkreis 30 km (radiusKm() ergibt bei diesem Zoom 100) */
+const HOME = { name:"Pinnow (Mecklenburg)", center:[11.548, 53.603], km:30 };
+HOME.zoom = 1 + Math.log2(9000 / HOME.km);
+
+const SAT_TILES = "https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2020_3857/default/g/{z}/{y}/{x}.jpg";
+
+const map = new maplibregl.Map({
+  container: "map",
+  style: "https://tiles.openfreemap.org/styles/liberty",
+  center: HOME.center,
+  zoom: HOME.zoom,
+  attributionControl: { compact: true }
+});
+map.addControl(new maplibregl.NavigationControl({ visualizePitch:true }), "bottom-right");
+
+map.on("style.load", () => {
+  map.setProjection({ type: "globe" });
+  if (map.setSky) map.setSky({ "atmosphere-blend": ["interpolate",["linear"],["zoom"],0,1,5,1,7,0], "sky-color":"#0a0f0e", "horizon-color":"#1b2b26", "fog-color":"#0a0f0e" });
+
+  // Satellit (unter den Beschriftungen)
+  const firstSymbol = map.getStyle().layers.find(l => l.type === "symbol")?.id;
+  map.addSource("sat", { type:"raster", tiles:[SAT_TILES], tileSize:256, maxzoom:15,
+    attribution:'<a href="https://s2maps.eu" target="_blank">Sentinel-2 cloudless</a> by EOX (CC BY-NC-SA 4.0)' });
+  map.addLayer({ id:"sat", type:"raster", source:"sat", layout:{ visibility:"none" } }, firstSymbol);
+
+
+  // Suchkreis
+  map.addSource("area", { type:"geojson", data:{ type:"FeatureCollection", features:[] } });
+  map.addLayer({ id:"area-fill", type:"fill", source:"area", paint:{ "fill-color":"#e7ad4f", "fill-opacity":0.06 } });
+  map.addLayer({ id:"area-line", type:"line", source:"area", paint:{ "line-color":"#e7ad4f", "line-width":1.5, "line-dasharray":[2,2] } });
+
+  scheduleLoad(0);
+});
+
+map.on("move", updateReadout);
+map.on("moveend", () => scheduleLoad(700));
+map.on("click", e => { map.easeTo({ center:e.lngLat, zoom:Math.max(map.getZoom(), 6), duration:900 }); });
+
+$("#tgSat").onclick = e => toggleLayer(e.currentTarget, "sat");
+function toggleLayer(btn, id){
+  const on = btn.getAttribute("aria-pressed") !== "true";
+  btn.setAttribute("aria-pressed", on);
+  if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", on ? "visible" : "none");
+}
+
+/* Suchradius aus Zoomstufe: grob die halbe sichtbare Breite */
+function radiusKm(){
+  const z = map.getZoom();
+  return Math.round(Math.min(2500, 9000 / Math.pow(2, z - 1)));
+}
+const isGlobal = () => map.getZoom() < 3;
+
+/* Suchort: Kartenmitte – oder der festgesetzte Pin */
+function searchCenter(){ return state.pin || map.getCenter(); }
+const pinMarker = (() => { const el = document.createElement("div"); el.className = "pin-mark"; return new maplibregl.Marker({ element:el }); })();
+function setPin(lngLat){
+  state.pin = lngLat ? { lng:lngLat.lng, lat:lngLat.lat } : null;
+  if (state.pin) pinMarker.setLngLat(state.pin).addTo(map); else pinMarker.remove();
+  $("#pinBtn").setAttribute("aria-pressed", !!state.pin);
+  $("#pinBtn").title = state.pin ? "Pin lösen: Die Suche folgt wieder der Kartenmitte" : "Ort festsetzen: Die Suche bleibt hier, auch wenn du die Karte verschiebst";
+  $("#loc").classList.toggle("pinned", !!state.pin);
+  updateReadout(); scheduleLoad(0);
+}
+$("#pinBtn").onclick = () => setPin(state.pin ? null : map.getCenter());
+
+/* Ortsanzeige: Platz (unten auf der Karte / oben unter der Suche) und Einklappen, auf dem Gerät gemerkt */
+const LOC_STORE = "pn-loc";
+const locPref = (() => { try{ return JSON.parse(localStorage.getItem(LOC_STORE)) || {}; }catch{ return {}; } })();
+function applyLoc(){
+  const top = locPref.top === true, fold = locPref.fold === true;
+  (top ? $(".loc-row") : $("#locDock")).appendChild($("#loc"));
+  $("#loc").classList.toggle("folded", fold);
+  $("#locFold").setAttribute("aria-expanded", !fold);
+  $("#locFold").title = $("#locFold").ariaLabel = fold ? "Ortsanzeige aufklappen" : "Ortsanzeige einklappen";
+  $("#locMove").title = top ? "Nach unten auf die Karte schieben" : "Nach oben unter die Suche schieben";
+  try{ localStorage.setItem(LOC_STORE, JSON.stringify(locPref)); }catch{}
+}
+$("#locFold").onclick = () => { locPref.fold = !locPref.fold; applyLoc(); };
+$("#locMove").onclick = () => { locPref.top = !locPref.top; applyLoc(); };
+applyLoc();
+
+/* Umkreis des aktiven Reiters */
+function currentRadius(){
+  if (state.tab === "key" || state.tab === "look") return ks.radius;
+  if (state.tab === "combo") return Math.min(radiusKm(), 250);
+  return isGlobal() && !state.pin ? null : radiusKm();
+}
+function updateReadout(){
+  const c = searchCenter(), r = currentRadius();
+  let region = $("#scope").textContent;
+  if (["Kartenausschnitt","Globus"].includes(region)) region = "";
+  const small = isMobile();   // Handy: nur Umkreis und Bundesland, eine Zeile
+  $("#readout").textContent = [r ? `Umkreis ${fmt(r)} km` : "weltweit",
+    small ? region.split(" · ")[0] : region,
+    small ? null : `${c.lat.toFixed(2)}° ${c.lat>=0?"N":"S"}, ${c.lng.toFixed(2)}° ${c.lng>=0?"O":"W"}`,
+    state.pin ? "festgesetzt" : null].filter(Boolean).join(" · ");
+}
+
+function circle(lng, lat, km, steps = 72){
+  const coords = [], R = 6371, d = km / R, la = lat*Math.PI/180, lo = lng*Math.PI/180;
+  for (let i = 0; i <= steps; i++){
+    const b = 2*Math.PI*i/steps;
+    const la2 = Math.asin(Math.sin(la)*Math.cos(d) + Math.cos(la)*Math.sin(d)*Math.cos(b));
+    const lo2 = lo + Math.atan2(Math.sin(b)*Math.sin(d)*Math.cos(la), Math.cos(d) - Math.sin(la)*Math.sin(la2));
+    coords.push([((lo2*180/Math.PI + 540) % 360) - 180, la2*180/Math.PI]);
+  }
+  return { type:"Feature", geometry:{ type:"Polygon", coordinates:[coords] } };
+}
+
+/* ---------------- Gruppen-Chips ---------------- */
+$("#groups").innerHTML = GROUPS.map(g =>
+  `<button class="chip" style="--c:${g.c}" data-id="${g.id}" aria-pressed="${g.id===state.group}"><i></i>${g.label}</button>`).join("");
+$("#groups").onclick = e => {
+  const b = e.target.closest(".chip"); if (!b) return;
+  state.group = b.dataset.id;
+  document.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", x === b));
+  updateFilterLabel();
+  if (isMobile()) setFiltersOpen(false);   // auf dem Handy nach der Wahl wieder einklappen
+  loadSpecies();
+};
+function updateFilterLabel(){
+  const g = GROUPS.find(x => x.id === state.group);
+  $("#ftLabel").textContent = g.id === "all" ? "Alle Gruppen" : g.label;
+  $("#ftDot").style.setProperty("--c", g.c);
+}
+function setFiltersOpen(open){
+  $("#filters").hidden = !open;
+  $("#filterToggle").setAttribute("aria-expanded", open);
+}
+$("#filterToggle").onclick = () => setFiltersOpen($("#filters").hidden);
+$("#research").onchange = e => { state.research = e.target.checked; loadSpecies(); };
+/* ---------------- Artenliste in Häufigkeitsstufen (iNaturalist species_counts) ----------------
+   Die API liefert die Arten nach Anzahl der Beobachtungen im Ausschnitt sortiert.
+   Wir teilen diese Rangfolge in fünf Stufen und laden pro Stufe gezielt die passenden Seiten nach. */
+const TIERS = [
+  { id:"t1", label:"Häufig",          bars:5, to:0.05 },
+  { id:"t2", label:"Mittelhäufig",    bars:4, to:0.20 },
+  { id:"t3", label:"Weniger häufig",  bars:3, to:0.45 },
+  { id:"t4", label:"Selten",          bars:2, to:0.75 },
+  { id:"t5", label:"Sehr selten",     bars:1, to:1.00 }
+];
+const PAGE = 50, MAX_RANK = 10000 /* iNaturalist liefert höchstens 10.000 Ergebnisse */, FIRST = 2, MORE = 2;
+
+let loadTimer;
+function scheduleLoad(ms){ clearTimeout(loadTimer); loadTimer = setTimeout(() => {
+    state.tab === "key" ? runKey() : state.tab === "look" ? runLook() : state.tab === "combo" ? runCombo() : loadSpecies();
+    loadPlaceName(); }, ms); }
+
+function cardHTML({count, taxon:t, label}, suffix = "hier"){
+  const img = photo(t.default_photo?.square_url, "small");
+  return `<button class="card" ${t.id ? `data-id="${t.id}"` : `data-sci="${esc(t.name)}"`} style="--c:${groupColor(t)}">
+    ${img ? `<img src="${esc(img)}" alt="" loading="lazy">` : `<div class="noimg"></div>`}
+    <div class="meta">
+      <span class="cn">${esc(t.preferred_common_name || t.name)}</span>
+      ${t.preferred_common_name ? `<span class="sn">${esc(t.name)}</span>` : ""}
+      <span class="ct">${label ? esc(label) : `${fmt(count)} Beobachtung${count === 1 ? "" : "en"} ${suffix}`}</span>
+    </div></button>`;
+}
+const skeletons = n => Array.from({length:n}, () => `<div class="card"><div class="noimg skel"></div><div class="meta"><div class="cn skel" style="height:14px;border-radius:4px"></div></div></div>`).join("");
+const barsHTML = n => `<span class="freq" aria-hidden="true">${[1,2,3,4,5].map(i => `<i class="${i <= n ? "on" : ""}" style="height:${3 + i*2.4}px"></i>`).join("")}</span>`;
+
+function getPage(c, n){
+  if (c.static) return Promise.resolve({ total_results:c.static.length, results:c.static.slice((n - 1) * PAGE, n * PAGE) });
+  if (!c.pages.has(n)){
+    const p = new URLSearchParams(c.params); p.set("per_page", PAGE); p.set("page", n);
+    const pr = getJSON(`${API.inat}/observations/species_counts?${p}`, c.signal);
+    pr.catch(() => c.pages.delete(n));
+    c.pages.set(n, pr);
+  }
+  return c.pages.get(n);
+}
+async function fetchRange(c, start, count){
+  const out = [];
+  for (let n = Math.floor(start/PAGE) + 1; n <= Math.floor((start + count - 1)/PAGE) + 1; n++){
+    const d = await getPage(c, n);
+    const base = (n - 1) * PAGE;
+    d.results.forEach((r, i) => { const rank = base + i; if (rank >= start && rank < start + count) out.push(r); });
+  }
+  return out;
+}
+
+/* Gruppen ohne Funde im Ausschnitt sind nicht anklickbar (eine Anfrage für alle Gruppen) */
+let availKey = null, availAbort;
+async function updateGroupAvailability(params){
+  const p = new URLSearchParams(params); p.delete("iconic_taxa"); p.delete("locale"); p.delete("preferred_place_id");
+  const key = p.toString();
+  if (key === availKey) return;
+  availKey = key;
+  availAbort?.abort(); availAbort = new AbortController();
+  try{
+    const d = await getJSON(`${API.inat}/observations/iconic_taxa_species_counts?${p}`, availAbort.signal);
+    const by = Object.fromEntries((d.results || []).map(r => [r.taxon?.name, r.count]));
+    let lost = false;
+    document.querySelectorAll("#groups .chip").forEach(b => {
+      const g = GROUPS.find(x => x.id === b.dataset.id);
+      if (g.id === "all"){ b.title = ""; return; }
+      const n = by[g.taxa] || 0;
+      b.disabled = n === 0;
+      b.classList.toggle("empty", n === 0);
+      b.title = n ? `${fmt(n)} Arten hier` : "Hier keine Funde";
+      if (!n && state.group === g.id) lost = true;
+    });
+    if (lost){ // gewählte Gruppe gibt es hier nicht → zurück auf „Alle“
+      state.group = "all";
+      document.querySelectorAll("#groups .chip").forEach(x => x.setAttribute("aria-pressed", x.dataset.id === "all"));
+      updateFilterLabel();
+      loadSpecies();
+    }
+  }catch(err){
+    if (err.name === "AbortError") return;
+    availKey = null;   // bei Fehler alles anklickbar lassen
+    document.querySelectorAll("#groups .chip").forEach(b => { b.disabled = false; b.classList.remove("empty"); });
+  }
+}
+
+/* Häufigkeitsstufen-Liste, wiederverwendet in allen drei Registerkarten.
+   Pro Stufe zuerst FIRST Arten, jedes Aufklappen holt MORE weitere. */
+function makeTierList(box, prefix, { suffix = "hier", emptyHTML, onTotal = () => {}, tooMany = "" } = {}){
+  const L = { ctx:null, closed:new Set() };   // eingeklappte Stufen bleiben beim Neuladen eingeklappt
+  const gid = t => `${prefix}-grid-${t.id}`;
+  async function fill(my, t, howMany, replace){
+    const grid = document.getElementById(gid(t)), btn = box.querySelector(`.more[data-tier="${t.id}"]`);
+    const count = Math.min(howMany, t.end - (t.start + t.shown));
+    if (count <= 0) return;
+    if (!replace){ btn.disabled = true; btn.textContent = "Lädt …"; }
+    const items = await fetchRange(my, t.start + t.shown, count);
+    if (L.ctx !== my) return;
+    const html = items.map(r => cardHTML(r, suffix)).join("");
+    if (replace) grid.innerHTML = html; else grid.insertAdjacentHTML("beforeend", html);
+    if (replace && items.length && !my.static){
+      const hi = items[0].count;
+      document.getElementById(`${prefix}-range-${t.id}`).textContent = `bis ${fmt(hi)} Beobachtung${hi === 1 ? "" : "en"} je Art`;
+    }
+    t.shown += items.length;
+    const left = t.end - t.start - t.shown;
+    btn.hidden = left <= 0 || !items.length;
+    btn.disabled = false;
+    btn.textContent = `${Math.min(MORE, left)} weitere anzeigen · noch ${fmt(left)}`;
+  }
+  L.load = async (params, signal, staticList) => {
+    const my = L.ctx = { params, pages:new Map(), signal, tiers:[], static:staticList || null };
+    box.innerHTML = `<section class="tier"><div class="grid">${skeletons(4)}</div></section>`;
+    onTotal(null);
+    try{
+      const first = await getPage(my, 1);
+      if (L.ctx !== my) return;
+      const total = first.total_results;
+      onTotal(total);
+      if (!total){ box.innerHTML = emptyHTML; return; }
+      const n = Math.min(total, MAX_RANK);
+      let prev = 0;
+      my.tiers = TIERS.map(t => {
+        const endR = t.to === 1 ? n : Math.min(n, Math.max(prev + 1, Math.round(t.to * n)));
+        const tier = { ...t, start:prev, end:endR, shown:0 };
+        prev = endR; return tier;
+      }).filter(t => t.end > t.start);
+      box.innerHTML = my.tiers.map(t => `
+        <section class="tier${L.closed.has(t.id) ? " collapsed" : ""}" data-sec="${t.id}">
+          <header class="tier-head">
+            ${barsHTML(t.bars)}<h3><button class="tier-tog" data-tog="${t.id}" aria-expanded="${!L.closed.has(t.id)}" title="Stufe ein- oder ausklappen">${t.label}<span class="chev" aria-hidden="true">▾</span></button></h3>
+            <span class="tier-meta">${fmt(t.end - t.start)} Art${t.end - t.start === 1 ? "" : "en"} · Rang ${fmt(t.start + 1)}–${fmt(t.end)}</span>
+          </header>
+          <p class="tier-range" id="${prefix}-range-${t.id}"></p>
+          <div class="grid" id="${gid(t)}">${skeletons(Math.min(FIRST, t.end - t.start))}</div>
+          <button class="btn more" data-tier="${t.id}" hidden>Weitere anzeigen</button>
+        </section>`).join("") + (total > MAX_RANK ? `<p class="tier-note">${fmt(total)} Arten – iNaturalist liefert nur die ersten ${fmt(MAX_RANK)}; die Stufen beziehen sich auf diese. ${tooMany}</p>` : "");
+      for (const t of my.tiers){   // nacheinander füllen, schont das Anfragelimit
+        await fill(my, t, FIRST, true);
+        if (L.ctx !== my) return;
+      }
+    }catch(err){
+      if (err.name === "AbortError" || L.ctx !== my) return;
+      L.ctx = null;
+      box.innerHTML = `<div class="state">Arten konnten nicht geladen werden (${esc(err.message)}). Prüfe die Internetverbindung; iNaturalist erlaubt etwa eine Anfrage pro Sekunde.</div>`;
+      throw err;
+    }
+  };
+  const toggle = (id, open) => {
+    const sec = box.querySelector(`.tier[data-sec="${id}"]`); if (!sec) return;
+    open = open ?? sec.classList.contains("collapsed");
+    sec.classList.toggle("collapsed", !open);
+    sec.querySelector(".tier-tog").setAttribute("aria-expanded", open);
+    open ? L.closed.delete(id) : L.closed.add(id);
+  };
+  box.addEventListener("click", async e => {
+    const tog = e.target.closest(".tier-tog");
+    if (tog) return toggle(tog.dataset.tog);
+    const shut = e.target.closest(".tier.collapsed");
+    if (shut){ e.preventDefault(); return toggle(shut.dataset.sec, true); }   // Tippen auf den Rest klappt wieder auf
+    const card = e.target.closest(".card");
+    if (card?.dataset.id) return openDetail(+card.dataset.id);
+    if (card?.dataset.sci){   // Art nur bei GBIF: bei iNaturalist nachschlagen
+      const ct = card.querySelector(".ct"), old = ct.textContent; ct.textContent = "Suche …";
+      try{ const id = await findInatTaxon(card.dataset.sci); if (id) return openDetail(id); ct.textContent = "Kein Steckbrief bei iNaturalist"; }
+      catch{ ct.textContent = old; }
+      return;
+    }
+    const btn = e.target.closest(".more[data-tier]");
+    if (!btn || !L.ctx) return;
+    const my = L.ctx, t = my.tiers.find(x => x.id === btn.dataset.tier);
+    try{ await fill(my, t, MORE, false); }
+    catch{ if (L.ctx === my){ btn.disabled = false; btn.textContent = "Laden fehlgeschlagen – erneut versuchen"; } }
+  });
+  return L;
+}
+
+const exploreList = makeTierList($("#tiers"), "ex", {
+  emptyHTML:`<div class="state">Hier wurden noch keine Arten dieser Gruppe gemeldet. Zoom heraus oder wähle eine andere Gruppe.</div>`,
+  onTotal:n => $("#total").textContent = n == null ? "" : `${fmt(n)} Arten`,
+  tooMany:"Zoom hinein für eine vollständige Einteilung." });
+
+async function loadSpecies(){
+  const c = searchCenter(), r = radiusKm(), g = GROUPS.find(x => x.id === state.group);
+  const params = new URLSearchParams({ iconic_taxa:g.taxa, locale:"de", preferred_place_id:"7207" /* Deutschland für dt. Namen */ });
+  if (state.research) params.set("quality_grade","research");
+  const glob = isGlobal() && !state.pin;
+  if (!glob){ params.set("lat", c.lat.toFixed(4)); params.set("lng", c.lng.toFixed(4)); params.set("radius", r); }
+
+  map.getSource("area")?.setData(glob ? { type:"FeatureCollection", features:[] } : circle(c.lng, c.lat, r));
+  updateGroupAvailability(params);
+  $("#where").textContent = glob ? "weltweit" : `Umkreis ${fmt(r)} km um ${c.lat.toFixed(2)}°, ${c.lng.toFixed(2)}°`;
+
+  const key = params.toString();
+  if (key === state.lastQuery) return;
+  state.lastQuery = key;
+  state.abort?.abort(); state.abort = new AbortController();
+  $("#list").scrollTop = 0;
+  showPins(params, r);
+  try{ await exploreList.load(params, state.abort.signal); }catch{ state.lastQuery = null; }
+}
+
+/* ---------------- Ortsname (Nominatim, gedrosselt) ---------------- */
+let placeAbort;
+async function loadPlaceName(){
+  if (isGlobal() && !state.pin){ $("#place").textContent = $("#locName").textContent = "Die ganze Welt"; $("#scope").textContent = "Globus"; updateKeyWhere(); return; }
+  const z = map.getZoom(), c = searchCenter();
+  const nz = z < 5 ? 3 : z < 7 ? 5 : z < 10 ? 8 : 10;
+  placeAbort?.abort(); placeAbort = new AbortController();
+  try{
+    const d = await getJSON(`${API.nominatim}/reverse?format=jsonv2&lat=${c.lat}&lon=${c.lng}&zoom=${nz}&accept-language=de`, placeAbort.signal);
+    const a = d.address || {};
+    $("#place").textContent = $("#locName").textContent = d.name || a.state || a.country || "Unbenannte Gegend";
+    $("#scope").textContent = [a.state !== d.name ? a.state : null, a.country !== d.name ? a.country : null].filter(Boolean).join(" · ") || "Kartenausschnitt";
+  }catch(err){
+    if (err.name !== "AbortError"){ $("#place").textContent = $("#locName").textContent = "Offenes Meer oder unbenannt"; $("#scope").textContent = "Kartenausschnitt"; }
+  }
+  updateKeyWhere();
+}
+
+/* ---------------- Ortssuche ---------------- */
+let searchTimer;
+$("#searchInput").addEventListener("input", e => {
+  clearTimeout(searchTimer);
+  const q = e.target.value.trim();
+  if (q.length < 3){ $("#searchResults").hidden = true; return; }
+  searchTimer = setTimeout(async () => {
+    try{
+      const res = await getJSON(`${API.nominatim}/search?format=jsonv2&limit=6&accept-language=de&q=${encodeURIComponent(q)}`);
+      $("#searchResults").innerHTML = res.map(r => `<li><button type="button" data-bb="${r.boundingbox.join(",")}">${esc(r.display_name)}</button></li>`).join("") || `<li class="state">Nichts gefunden</li>`;
+      $("#searchResults").hidden = false;
+    }catch{ /* still */ }
+  }, 600);
+});
+$("#searchResults").onclick = e => {
+  const b = e.target.closest("button[data-bb]"); if (!b) return;
+  const [s, n, w, ea] = b.dataset.bb.split(",").map(Number);
+  map.fitBounds([[w, s], [ea, n]], { padding:60, maxZoom:11, duration:1800 });
+  if (state.pin) setPin({ lng:(w + ea) / 2, lat:(s + n) / 2 });   // festgesetzter Ort wandert zum Suchergebnis
+  $("#searchResults").hidden = true; $("#searchInput").blur();
+};
+$("#searchForm").onsubmit = e => { e.preventDefault(); $("#searchResults").querySelector("button")?.click(); };
+
+/* ---------------- Detailansicht ---------------- */
+$("#back").onclick = closeDetail;
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#detail").hidden) closeDetail(); });
+
+/* Kleiner, langsam drehender Globus mit der Funddichte der Art (iNaturalist-Raster) */
+let miniMap = null, miniSpin = 0;
+function makeMiniGlobe(taxonId){
+  dropMiniGlobe();
+  const c = searchCenter();
+  try{
+    miniMap = new maplibregl.Map({
+      container:"miniMap", interactive:false, attributionControl:false, center:[c.lng, c.lat], zoom:0.15,
+      style:{ version:8, sources:{
+          sat:{ type:"raster", tiles:[SAT_TILES], tileSize:256, maxzoom:6 },
+          obs:{ type:"raster", tiles:[`${API.inat}/grid/{z}/{x}/{y}.png?taxon_id=${taxonId}&color=%23e7ad4f${state.research ? "&quality_grade=research" : ""}`], tileSize:256 } },
+        layers:[ { id:"bg", type:"background", paint:{ "background-color":"#0a0f0e" } },
+          { id:"sat", type:"raster", source:"sat", paint:{ "raster-opacity":0.7, "raster-saturation":-0.5, "raster-brightness-max":0.7 } },
+          { id:"obs", type:"raster", source:"obs" } ] }
+    });
+    miniMap.on("style.load", () => miniMap.setProjection({ type:"globe" }));
+    if (!window.matchMedia("(prefers-reduced-motion:reduce)").matches){
+      let lng = c.lng;
+      const step = () => { if (!miniMap) return; lng = (lng + 0.12) % 360; miniMap.setCenter([lng > 180 ? lng - 360 : lng, c.lat * 0.6]); miniSpin = requestAnimationFrame(step); };
+      miniMap.once("load", () => { miniSpin = requestAnimationFrame(step); });
+    }
+  }catch{ $("#miniMap").textContent = ""; }
+}
+function dropMiniGlobe(){ cancelAnimationFrame(miniSpin); miniMap?.remove(); miniMap = null; }
+
+function closeDetail(){
+  dropMiniGlobe();
+  $("#detail").hidden = true;
+  setSpeciesOverlay(null);
+}
+
+async function openDetail(id){
+  const body = $("#detailBody");
+  $("#detail").hidden = false;
+  body.innerHTML = `<div class="hero"><div class="skel" style="aspect-ratio:3/2"></div></div><div class="d-sec"><div class="skel" style="height:26px;border-radius:6px;width:70%"></div></div>`;
+  try{
+    const { results:[t] } = await getJSON(`${API.inat}/taxa/${id}?locale=de&preferred_place_id=7207`);
+    state.selectedTaxon = t;
+    renderDetail(t);
+    // Zusatzquellen parallel
+    loadWikipedia(t); loadGbif(t); loadLocalCount(t);
+  }catch(err){
+    body.innerHTML = `<div class="state">Details konnten nicht geladen werden (${esc(err.message)}).</div>`;
+  }
+}
+
+function iucnOf(t){
+  const s = (t.conservation_statuses || []).find(x => !x.place && x.iucn) || (t.conservation_statuses || []).find(x => x.iucn);
+  return s ? { ...s, code: IUCN[s.iucn] } : null;
+}
+
+function renderDetail(t){
+  const photos = (t.taxon_photos || []).slice(0, 8).map(x => x.photo);
+  const first = photos[0] || t.default_photo;
+  const iucn = iucnOf(t);
+  const ancestors = (t.ancestors || []).filter(a => RANK_DE[a.rank] && ["kingdom","phylum","class","order","family","genus"].includes(a.rank));
+
+  $("#detailBody").innerHTML = `
+    <div class="hero"><img id="heroImg" src="${esc(photo(first?.url || first?.square_url, "large") || "")}" alt="${esc(t.preferred_common_name || t.name)}"></div>
+    <div class="credit" id="heroCredit">${esc(first?.attribution || "")}</div>
+    ${photos.length > 1 ? `<div class="thumbs" id="thumbs">${photos.map((p,i) =>
+      `<button data-i="${i}" aria-pressed="${i===0}" aria-label="Foto ${i+1}"><img src="${esc(photo(p.url || p.square_url, "square"))}" alt=""></button>`).join("")}</div>` : ""}
+
+    <div class="d-sec">
+      <div>
+        <h2 class="d-name">${esc(t.preferred_common_name || t.name)}</h2>
+        ${t.preferred_common_name ? `<p class="d-sci">${esc(t.name)}</p>` : ""}
+      </div>
+      <div class="badges">
+        <span class="badge">${esc(RANK_DE[t.rank] || t.rank)}</span>
+        ${t.iconic_taxon_name ? `<span class="badge">${esc(t.iconic_taxon_name)}</span>` : ""}
+        ${iucn?.code ? `<span class="badge iucn" style="--sc:${iucn.code[2]}" title="${esc(iucn.authority || "IUCN")}">IUCN ${iucn.code[0]} · ${iucn.code[1]}</span>` : ""}
+        ${t.extinct ? `<span class="badge">ausgestorben</span>` : ""}
+      </div>
+      <div class="facts">
+        <div class="fact"><b>${fmt(t.observations_count)}</b><span>Beobachtungen weltweit (iNat)</span></div>
+        <div class="fact"><b id="gbifCount">…</b><span>Fundmeldungen (GBIF)</span></div>
+        <div class="fact"><b id="localCount">…</b><span>im Kartenausschnitt</span></div>
+      </div>
+      <button class="miniglobe" id="showRange" aria-pressed="false" aria-label="Funddichte groß auf der Karte zeigen">
+        <span class="mg-map" id="miniMap"></span>
+        <span class="mg-txt"><b>Funddichte weltweit</b><span id="mgHint">Antippen: groß auf der Karte zeigen</span>
+          <small>Funde: iNaturalist · Satellitenbild: Sentinel-2 cloudless by EOX</small></span>
+      </button>
+    </div>
+
+    <div class="d-sec">
+      <h3 class="h">Beschreibung</h3>
+      <p class="prose" id="wiki"><span class="skel" style="display:block;height:60px;border-radius:6px"></span></p>
+    </div>
+
+    ${ancestors.length ? `<div class="d-sec">
+      <h3 class="h">Systematik</h3>
+      <ul class="tax">${ancestors.map(a => `<li><span class="r">${RANK_DE[a.rank]}</span><span class="n">${esc(a.preferred_common_name || "")}${a.preferred_common_name ? " · " : ""}<i>${esc(a.name)}</i></span></li>`).join("")}
+      <li><span class="r">${RANK_DE[t.rank] || t.rank}</span><span class="n"><i>${esc(t.name)}</i></span></li></ul>
+    </div>` : ""}
+
+    <div class="d-sec">
+      <h3 class="h">Noch zu definieren</h3>
+      <div class="placeholder">
+        <div>Lebensraum</div><div>Größe &amp; Merkmale</div>
+        <div>Jahreszeit / Phänologie</div><div>Verwechslungsarten</div>
+        <div>Laute &amp; Rufe</div><div>Nahrung &amp; Beziehungen</div>
+      </div>
+    </div>
+
+    <div class="d-sec">
+      <h3 class="h">Mehr erfahren</h3>
+      <div class="actions">
+        <a class="btn" href="https://www.inaturalist.org/taxa/${t.id}" target="_blank" rel="noopener">iNaturalist</a>
+        <a class="btn" id="gbifLink" href="https://www.gbif.org/search?q=${encodeURIComponent(t.name)}" target="_blank" rel="noopener">GBIF</a>
+        <a class="btn" id="wikiLink" href="https://de.wikipedia.org/wiki/${encodeURIComponent(t.name)}" target="_blank" rel="noopener">Wikipedia</a>
+      </div>
+    </div>`;
+
+  $("#thumbs")?.addEventListener("click", e => {
+    const b = e.target.closest("button[data-i]"); if (!b) return;
+    const p = photos[+b.dataset.i];
+    $("#heroImg").src = photo(p.url || p.square_url, "large");
+    $("#heroCredit").textContent = p.attribution || "";
+    document.querySelectorAll("#thumbs button").forEach(x => x.setAttribute("aria-pressed", x === b));
+  });
+  makeMiniGlobe(t.id);
+  $("#showRange").onclick = e => {
+    const on = e.currentTarget.getAttribute("aria-pressed") !== "true";
+    e.currentTarget.setAttribute("aria-pressed", on);
+    $("#mgHint").textContent = on ? "Wird groß angezeigt – antippen zum Ausblenden" : "Antippen: groß auf der Karte zeigen";
+    setSpeciesOverlay(on ? t.id : null);
+    if (on){
+      if (isMobile()) setSheet("peek");
+      map.easeTo({ zoom: Math.min(map.getZoom(), 2.5), duration:1200 });
+    }
+  };
+  $("#detailBody").scrollTop = 0;
+}
+
+async function loadWikipedia(t){
+  const el = () => $("#wiki");
+  const tryTitles = [t.name];
+  try{
+    for (const title of tryTitles){
+      const r = await fetch(API.wikiDe + encodeURIComponent(title.replace(/ /g, "_")));
+      if (r.ok){
+        const d = await r.json();
+        if (d.type !== "disambiguation" && d.extract && el()){
+          el().innerHTML = `${esc(d.extract)} <span style="color:var(--muted);font-size:12px">– Wikipedia, CC BY-SA 4.0</span>`;
+          $("#wikiLink").href = d.content_urls?.desktop?.page || $("#wikiLink").href;
+          return;
+        }
+      }
+    }
+  }catch{}
+  // Fallback: Zusammenfassung von iNaturalist (meist englische Wikipedia)
+  if (el()){
+    const txt = (t.wikipedia_summary || "").replace(/<[^>]+>/g, "");
+    el().textContent = txt || "Für diese Art gibt es noch keine Beschreibung. Hier könnten später eigene Inhalte stehen.";
+  }
+}
+
+async function loadGbif(t){
+  try{
+    const m = await getJSON(`${API.gbif}/species/match?name=${encodeURIComponent(t.name)}&strict=true`);
+    if (!m.usageKey){ $("#gbifCount").textContent = "–"; return; }
+    const o = await getJSON(`${API.gbif}/occurrence/search?taxonKey=${m.usageKey}&limit=0`);
+    $("#gbifCount").textContent = fmt(o.count);
+    $("#gbifLink").href = `https://www.gbif.org/species/${m.usageKey}`;
+  }catch{ const e = $("#gbifCount"); if (e) e.textContent = "–"; }
+}
+
+async function loadLocalCount(t){
+  try{
+    const c = searchCenter();
+    const p = new URLSearchParams({ taxon_id:t.id, per_page:0 });
+    const fixed = state.tab === "key" || state.tab === "look";
+    if (fixed || state.tab === "combo" || !isGlobal()){ p.set("lat", c.lat); p.set("lng", c.lng); p.set("radius", fixed ? ks.radius : Math.min(radiusKm(), state.tab === "combo" ? 250 : 1e9)); }
+    const d = await getJSON(`${API.inat}/observations?${p}`);
+    $("#localCount").textContent = fmt(d.total_results);
+  }catch{ const e = $("#localCount"); if (e) e.textContent = "–"; }
+}
+
+/* Verbreitungs-Overlay einer Art (iNaturalist Grid-Kacheln) */
+function setSpeciesOverlay(taxonId){
+  if (map.getLayer("species")) map.removeLayer("species");
+  if (map.getSource("species")) map.removeSource("species");
+  if (!taxonId) return;
+  map.addSource("species", { type:"raster", tileSize:256,
+    tiles:[`${API.inat}/grid/{z}/{x}/{y}.png?taxon_id=${taxonId}&color=%23e7ad4f${state.research ? "&quality_grade=research" : ""}`],
+    attribution:'<a href="https://www.inaturalist.org" target="_blank">iNaturalist</a>' });
+  map.addLayer({ id:"species", type:"raster", source:"species", paint:{ "raster-opacity":0.9 } });
+}
+
+/* ---------------- Mobil: ziehbares Bottom-Sheet ----------------
+   Drei Stufen: "peek" (nur Kopf, Globus frei), "mid" (Standard), "full" (Liste bildschirmfüllend). */
+const mq = window.matchMedia("(max-width:820px)");
+const isMobile = () => mq.matches;
+const SNAPS = { peek:0.24, mid:0.64, full:0.93 };
+let snap = "mid", beforeDetail = "mid";
+const panel = $("#panel");
+
+function vh(){ return window.innerHeight; }
+function setSheet(name){
+  snap = name;
+  document.documentElement.style.setProperty("--sheet-h", Math.round(SNAPS[name] * vh()) + "px");
+  // Kartenmitte über dem Sheet halten (bei "full" ist der Globus ohnehin verdeckt)
+  const pad = Math.round(Math.min(SNAPS[name], SNAPS.mid) * vh());
+  map.easeTo({ padding:{ bottom:pad, top:0, left:0, right:0 }, duration:280 });
+  $("#handle").setAttribute("aria-label", name === "full" ? "Artenliste verkleinern" : "Artenliste vergrößern");
+  syncGrow();
+}
+
+/* Vergrößert wird automatisch beim Antippen eines Lebewesens; der Knopf erscheint nur zum Verkleinern */
+function syncGrow(){
+  const on = isMobile() ? snap === "full" : document.documentElement.classList.contains("wide");
+  document.querySelectorAll(".grow").forEach(b => { b.setAttribute("aria-pressed", on); b.hidden = !on; });
+}
+function setWide(on){
+  if (isMobile()) return;
+  document.documentElement.classList.toggle("wide", on);
+  map.resize(); syncGrow();
+}
+document.querySelectorAll(".grow").forEach(b => b.onclick = () => {
+  if (isMobile()){ setSheet("mid"); return; }
+  setWide(false);
+});
+
+function applyLayout(){
+  if (isMobile()){
+    setFiltersOpen(false);
+    setSheet(snap);
+  } else {
+    document.documentElement.style.removeProperty("--sheet-h");
+    syncGrow();
+    setFiltersOpen(true);
+    map.easeTo({ padding:{ top:0, bottom:0, left:0, right:0 }, duration:0 });
+  }
+}
+mq.addEventListener("change", () => { applyLayout(); updateReadout(); });
+window.addEventListener("resize", () => { if (isMobile()) document.documentElement.style.setProperty("--sheet-h", Math.round(SNAPS[snap] * vh()) + "px"); });
+
+// Ziehen am Griff oder am Kopfbereich
+(function enableDrag(){
+  let startY = 0, startH = 0, moved = false, active = false;
+  const targets = [$("#handle"), $("#panelHead"), $("#keyHead"), $("#lookHead"), $("#comboHead"), $("#identHead")];
+  const down = e => {
+    if (!isMobile()) return;
+    if (e.target.closest("button:not(#handle), input, label, a")) return; // Bedienelemente bleiben klickbar
+    active = true; moved = false; startY = e.clientY; startH = panel.getBoundingClientRect().height;
+    panel.classList.add("dragging");
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+  };
+  const move = e => {
+    if (!active) return;
+    const dy = startY - e.clientY;
+    if (Math.abs(dy) > 4) moved = true;
+    const h = Math.max(SNAPS.peek * vh() * 0.8, Math.min(SNAPS.full * vh(), startH + dy));
+    document.documentElement.style.setProperty("--sheet-h", h + "px");
+  };
+  const up = e => {
+    if (!active) return;
+    active = false; panel.classList.remove("dragging");
+    const h = panel.getBoundingClientRect().height / vh();
+    if (!moved){ // Tippen auf den Griff: eine Stufe weiter
+      if (e.currentTarget.id === "handle") setSheet(snap === "full" ? "mid" : snap === "mid" ? "full" : "mid");
+      else setSheet(snap);
+      return;
+    }
+    const nearest = Object.entries(SNAPS).sort((a, b) => Math.abs(a[1] - h) - Math.abs(b[1] - h))[0][0];
+    setSheet(nearest);
+  };
+  targets.forEach(t => {
+    t.addEventListener("pointerdown", down);
+    t.addEventListener("pointermove", move);
+    t.addEventListener("pointerup", up);
+    t.addEventListener("pointercancel", up);
+  });
+})();
+
+// Beim Scrollen in der Liste klappt das Sheet ganz auf
+["#list", "#keyBody", "#lookBody", "#comboBody", "#identBody"].forEach(sel => $(sel).addEventListener("scroll", e => {
+  if (isMobile() && snap !== "full" && e.currentTarget.scrollTop > 30) setSheet("full");
+}, { passive:true }));
+
+// Detailansicht auf dem Handy immer bildschirmfüllend, danach zurück zur vorherigen Höhe
+const _open = openDetail, _close = closeDetail;
+openDetail = id => { if (isMobile()){ beforeDetail = snap; setSheet("full"); } else setWide(true); return _open(id); };
+closeDetail = () => { _close(); if (isMobile()) setSheet(beforeDetail === "full" ? "mid" : beforeDetail); };
+$("#back").onclick = () => closeDetail();
+
+// Auf dem Handy: Antippen des Globus verkleinert das Sheet, damit man frei navigieren kann
+map.on("dragstart", () => { if (isMobile() && snap === "full" && $("#detail").hidden) setSheet("mid"); });
+
+/* ================= Fotobestimmung mit Pl@ntNet =================
+   Ablauf: Kamera (getUserMedia, fragt das Handy um Erlaubnis) oder Foto aus der Galerie
+   → bis zu 5 Fotos mit Pflanzenteil → Pl@ntNet-API → Treffer → Steckbrief aus iNaturalist.
+   Schlüssel: entweder hier fest eintragen (gilt für alle Geräte; nur sinnvoll, wenn der
+   Schlüssel in my.plantnet.org auf deine Domain beschränkt ist) oder im Dialog eingeben
+   (wird nur im Browser dieses Geräts gespeichert). Anleitung: README.md */
+const PLANTNET_KEY = "";
+const PLANTNET = "https://my-api.plantnet.org/v2";
+const ORGANS = [["auto","Automatisch erkennen"],["flower","Blüte"],["leaf","Blatt"],["fruit","Frucht"],["bark","Rinde"]];
+const MAX_SHOTS = 5;
+const KEY_STORE = "pn-plantnet-key";
+
+const idf = { stream:null, facing:"environment", shots:[], busy:false };
+
+const store = {
+  get(){ try{ return localStorage.getItem(KEY_STORE) || ""; }catch{ return ""; } },
+  set(v){ try{ v ? localStorage.setItem(KEY_STORE, v) : localStorage.removeItem(KEY_STORE); return true; }catch{ return false; } }
+};
+let sessionKey = "";   // Fallback, falls der Browser keinen Speicher erlaubt (privater Modus)
+const apiKey = () => store.get() || sessionKey || PLANTNET_KEY;
+
+function showStep(step){
+  $("#idfKey").hidden = step !== "key";
+  $("#idfShoot").hidden = step !== "shoot";
+  $("#idfResult").hidden = step !== "result";
+  $("#idfBody").scrollTop = 0;
+}
+
+function openIdentify(){
+  $("#idf").hidden = false;
+  document.body.style.overflow = "hidden";
+  if (!apiKey()){ showKeyForm(); return; }
+  showStep(idf.lastResult ? "result" : "shoot");
+  if (!idf.lastResult) autoStartCamera();
+}
+function closeIdentify(){
+  stopCamera();
+  $("#idf").hidden = true;
+  document.body.style.overflow = "";
+}
+$("#tgIdentify").onclick = openIdentify;
+$("#idfClose").onclick = closeIdentify;
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#idf").hidden) closeIdentify(); });
+document.addEventListener("visibilitychange", () => { if (document.hidden) stopCamera(); });
+
+/* ---------- API-Schlüssel ---------- */
+function showKeyForm(){
+  stopCamera();
+  showStep("key");
+  $("#keyInput").value = store.get() || sessionKey;
+  $("#keyMsg").innerHTML = "";
+}
+$("#keyEdit").onclick = showKeyForm;
+$("#keySave").onclick = async () => {
+  const k = $("#keyInput").value.trim();
+  if (!k){ store.set(""); sessionKey = ""; $("#keyMsg").innerHTML = `<div class="alert">Bitte einen Schlüssel eintragen.</div>`; return; }
+  const btn = $("#keySave"); btn.disabled = true; btn.textContent = "Prüfe …";
+  try{
+    const r = await fetch(`${PLANTNET}/quota/daily?api-key=${encodeURIComponent(k)}`);
+    if (r.status === 401 || r.status === 403){
+      $("#keyMsg").innerHTML = `<div class="alert"><b>Pl@ntNet lehnt den Schlüssel ab.</b>Prüfe, ob du ihn vollständig kopiert hast.</div>`;
+      return;
+    }
+    if (r.ok){ const d = await r.json().catch(() => null); showQuota(remainingFrom(d)); }
+    saveKey(k);
+  }catch{
+    // Netzwerkfehler: meist fehlt die Domain-Freigabe. Schlüssel trotzdem speichern.
+    saveKey(k);
+    $("#keyMsg").innerHTML = corsHelp("Der Schlüssel ist gespeichert, aber Pl@ntNet hat die Anfrage blockiert.");
+    return;
+  }finally{ btn.disabled = false; btn.textContent = "Schlüssel prüfen & speichern"; }
+  showStep("shoot"); autoStartCamera();
+};
+function saveKey(k){ if (!store.set(k)) sessionKey = k; }
+
+function corsHelp(title){
+  const origin = location.origin === "null" ? null : location.origin;
+  return `<div class="alert"><b>${esc(title)}</b>
+    So behebst du das auf <a href="https://my.plantnet.org/" target="_blank" rel="noopener">my.plantnet.org</a> unter <i>Settings</i>:
+    <ol>
+      <li>Haken bei <i>„expose my API key“</i> setzen.</li>
+      <li>Unter <i>„Authorized domains“</i> ${origin ? `diese Adresse eintragen: <code>${esc(location.host)}</code>` : "die Domain deiner Webseite eintragen. Als lokal geöffnete Datei funktioniert die Bestimmung nicht – nutze GitHub Pages."}</li>
+      <li>Speichern, ein paar Minuten warten und neu versuchen.</li>
+    </ol>
+    Oder es gibt gerade keine Internetverbindung.</div>`;
+}
+const remainingFrom = d => d?.remainingIdentificationRequests ?? d?.quota?.identify?.remaining ?? d?.identify?.remaining ?? null;
+function showQuota(n){ $("#quota").textContent = n == null ? "" : `noch ${fmt(n)} Bestimmungen heute`; }
+
+/* ---------- Kamera ---------- */
+const hasLiveCam = () => !!(navigator.mediaDevices?.getUserMedia) && window.isSecureContext;
+
+async function autoStartCamera(){
+  renderShots();
+  if (!hasLiveCam()){
+    $("#camHint").innerHTML = `<b>Live-Kamera nicht verfügbar</b><span>${window.isSecureContext ? "Dieser Browser unterstützt keine Live-Kamera." : "Die Live-Kamera geht nur über eine https-Adresse (z. B. GitHub Pages)."} Nutze „Kamera-App öffnen“ oder „Foto aus Galerie“.</span>`;
+    return;
+  }
+  // Nur automatisch starten, wenn die Erlaubnis schon erteilt ist – sonst erst auf Tippen fragen
+  try{
+    const p = await navigator.permissions?.query({ name:"camera" });
+    if (p?.state === "granted") return startCamera();
+    if (p?.state === "denied") return showCamDenied();
+  }catch{ /* Safari kennt "camera" nicht überall – dann einfach den Knopf zeigen */ }
+}
+
+async function startCamera(){
+  stopCamera();
+  $("#camMsg").innerHTML = "";
+  $("#camStart").disabled = true; $("#camStart").textContent = "Warte auf Erlaubnis …";
+  try{
+    idf.stream = await navigator.mediaDevices.getUserMedia({
+      audio:false,
+      video:{ facingMode:{ ideal:idf.facing }, width:{ ideal:1920 }, height:{ ideal:1440 } }
+    });
+    if ($("#idf").hidden){ stopCamera(); return; }   // Dialog wurde inzwischen geschlossen
+    const v = $("#camVideo");
+    v.srcObject = idf.stream; v.hidden = false;
+    await v.play().catch(() => {});
+    $("#camHint").hidden = true;
+    $("#camShot").hidden = false;
+    updateShutter();
+    const cams = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === "videoinput");
+    $("#camFlip").hidden = cams.length < 2;
+  }catch(err){
+    if (err.name === "NotAllowedError" || err.name === "SecurityError") showCamDenied();
+    else if (err.name === "NotFoundError" || err.name === "OverconstrainedError")
+      $("#camMsg").innerHTML = `<div class="alert"><b>Keine Kamera gefunden.</b>Nutze „Foto aus Galerie“.</div>`;
+    else if (err.name === "NotReadableError")
+      $("#camMsg").innerHTML = `<div class="alert"><b>Die Kamera ist gerade belegt.</b>Schließe andere Apps, die die Kamera benutzen, und versuche es erneut.</div>`;
+    else $("#camMsg").innerHTML = `<div class="alert"><b>Kamera konnte nicht starten.</b>${esc(err.message || err.name)}</div>`;
+  }finally{
+    $("#camStart").disabled = false; $("#camStart").textContent = "Kamera starten";
+  }
+}
+function stopCamera(){
+  idf.stream?.getTracks().forEach(t => t.stop());
+  idf.stream = null;
+  const v = $("#camVideo"); if (v){ v.srcObject = null; v.hidden = true; }
+  $("#camShot").hidden = true;
+  $("#camHint").hidden = false;
+}
+function showCamDenied(){
+  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  $("#camMsg").innerHTML = `<div class="alert"><b>Der Kamerazugriff wurde nicht erlaubt.</b>
+    ${ios
+      ? `<ul><li>Safari: links in der Adressleiste auf <i>„aA“</i> bzw. das Einstellungs-Symbol tippen → <i>Website-Einstellungen</i> → <i>Kamera</i> → <i>Erlauben</i>.</li>
+         <li>Oder: iPhone-<i>Einstellungen</i> → <i>Apps</i> → <i>Safari</i> → <i>Kamera</i> → <i>Fragen</i> oder <i>Erlauben</i>.</li></ul>`
+      : `<ul><li>Chrome: links in der Adressleiste auf das Symbol neben der Adresse tippen → <i>Berechtigungen</i> → <i>Kamera</i> → <i>Zulassen</i>.</li>
+         <li>Falls Chrome selbst keine Kamera darf: Android-<i>Einstellungen</i> → <i>Apps</i> → <i>Chrome</i> → <i>Berechtigungen</i> → <i>Kamera</i>.</li></ul>`}
+    Danach die Seite neu laden. Ohne Erlaubnis geht weiterhin „Kamera-App öffnen“ oder „Foto aus Galerie“.</div>`;
+}
+$("#camStart").onclick = startCamera;
+$("#camFlip").onclick = () => { idf.facing = idf.facing === "environment" ? "user" : "environment"; startCamera(); };
+
+$("#camShot").onclick = async () => {
+  const v = $("#camVideo");
+  if (!v.videoWidth || idf.shots.length >= MAX_SHOTS) return;
+  const blob = await toJpeg(v, v.videoWidth, v.videoHeight);
+  addShot(blob);
+  // kurzes Blitz-Feedback
+  v.style.opacity = .3; setTimeout(() => v.style.opacity = "", 120);
+};
+
+/* Fotos aus Datei/Galerie: immer neu als JPEG kodieren (macht z. B. iPhone-HEIC kompatibel und verkleinert) */
+async function addFiles(files){
+  for (const f of [...files]){
+    if (idf.shots.length >= MAX_SHOTS) break;
+    if (!f.type.startsWith("image/") && !/\.(heic|heif|jpe?g|png|webp)$/i.test(f.name)) continue;
+    const url = URL.createObjectURL(f);
+    try{
+      const img = new Image(); img.src = url; await img.decode();
+      addShot(await toJpeg(img, img.naturalWidth, img.naturalHeight));
+    }catch{
+      $("#camMsg").innerHTML = `<div class="alert"><b>${esc(f.name)} konnte nicht gelesen werden.</b>Bitte ein JPG- oder PNG-Foto wählen.</div>`;
+    }finally{ URL.revokeObjectURL(url); }
+  }
+}
+$("#fileGallery").onchange = e => { addFiles(e.target.files); e.target.value = ""; };
+$("#fileCam").onchange = e => { addFiles(e.target.files); e.target.value = ""; };
+
+/* Kurze Seite auf max. 1280 px – so rechnet auch Pl@ntNet, und mobil geht der Upload schneller */
+function toJpeg(src, w, h){
+  const s = Math.min(1, 1280 / Math.min(w, h));
+  const c = document.createElement("canvas");
+  c.width = Math.round(w * s); c.height = Math.round(h * s);
+  c.getContext("2d").drawImage(src, 0, 0, c.width, c.height);
+  return new Promise((res, rej) => c.toBlob(b => b ? res(b) : rej(new Error("Foto konnte nicht umgewandelt werden")), "image/jpeg", 0.9));
+}
+
+function addShot(blob){
+  idf.shots.push({ blob, url:URL.createObjectURL(blob), organ:"auto" });
+  renderShots();
+}
+function renderShots(){
+  $("#shots").innerHTML = idf.shots.map((s, i) => `
+    <li>
+      <img src="${s.url}" alt="Foto ${i + 1}">
+      <select data-i="${i}" aria-label="Was ist auf Foto ${i + 1} zu sehen?">
+        ${ORGANS.map(([v, l]) => `<option value="${v}" ${v === s.organ ? "selected" : ""}>${l}</option>`).join("")}
+      </select>
+      <button class="x" data-del="${i}" aria-label="Foto ${i + 1} entfernen">✕</button>
+    </li>`).join("");
+  $("#idfGo").disabled = !idf.shots.length || idf.busy;
+  $("#idfGo").textContent = idf.shots.length ? `Art bestimmen · ${idf.shots.length} Foto${idf.shots.length > 1 ? "s" : ""}` : "Art bestimmen";
+  updateShutter();
+}
+function updateShutter(){
+  const full = idf.shots.length >= MAX_SHOTS;
+  $("#camShot").disabled = full;
+  $("#fileGallery").disabled = $("#fileCam").disabled = full;
+}
+$("#shots").onchange = e => { const s = e.target.closest("select"); if (s) idf.shots[+s.dataset.i].organ = s.value; };
+$("#shots").onclick = e => {
+  const b = e.target.closest("[data-del]"); if (!b) return;
+  const [s] = idf.shots.splice(+b.dataset.del, 1); URL.revokeObjectURL(s.url);
+  renderShots();
+};
+function clearShots(){ idf.shots.forEach(s => URL.revokeObjectURL(s.url)); idf.shots = []; renderShots(); }
+
+/* ---------- Bestimmung ---------- */
+$("#idfGo").onclick = async () => {
+  if (!idf.shots.length || idf.busy) return;
+  idf.busy = true; renderShots();
+  $("#idfGo").textContent = "Bestimme …";
+  const fd = new FormData();
+  idf.shots.forEach((s, i) => { fd.append("images", s.blob, `foto-${i + 1}.jpg`); fd.append("organs", s.organ); });
+  const q = new URLSearchParams({ "api-key":apiKey(), lang:"de", "nb-results":"5", "include-related-images":"true" });
+  let r, d;
+  try{
+    r = await fetch(`${PLANTNET}/identify/all?${q}`, { method:"POST", body:fd });
+    d = await r.json().catch(() => null);
+  }catch{
+    idf.busy = false; renderShots();
+    $("#camMsg").innerHTML = corsHelp("Pl@ntNet ist nicht erreichbar.");
+    return;
+  }
+  idf.busy = false; renderShots();
+  showQuota(remainingFrom(d));
+
+  if (r.status === 404){ return showResult(null, "Pl@ntNet hat auf den Fotos keine Pflanze sicher erkannt. Versuche es mit einem schärferen Foto, näher dran, am besten von Blüte oder Blatt einzeln."); }
+  if (r.status === 401 || r.status === 403){ showKeyForm(); $("#keyMsg").innerHTML = `<div class="alert"><b>Pl@ntNet lehnt den Schlüssel ab.</b>${esc(d?.message || "")} Prüfe den Schlüssel und die Domain-Freigabe.</div>`; return; }
+  if (r.status === 429){ $("#camMsg").innerHTML = `<div class="alert"><b>Tageslimit erreicht.</b>Die 500 kostenlosen Bestimmungen für heute sind verbraucht. Um Mitternacht UTC (1 Uhr bzw. im Sommer 2 Uhr deutscher Zeit) geht es wieder.</div>`; return; }
+  if (r.status === 413){ $("#camMsg").innerHTML = `<div class="alert"><b>Die Fotos sind zu groß.</b>Bitte weniger Fotos auf einmal schicken.</div>`; return; }
+  if (!r.ok || !d?.results){ $("#camMsg").innerHTML = `<div class="alert"><b>Die Bestimmung hat nicht geklappt (${r.status}).</b>${esc(d?.message || "")}</div>`; return; }
+  showResult(d);
+};
+
+function showResult(d, emptyMsg){
+  stopCamera();
+  idf.lastResult = d || { results:[] };
+  const results = d?.results || [];
+  const top = results[0]?.score ?? 0;
+  const box = $("#idfResult");
+  box.innerHTML = `
+    <div class="row">${idf.shots.map(s => `<img src="${s.url}" alt="" style="width:48px;height:48px;object-fit:cover;border-radius:6px">`).join("")}</div>
+    ${!results.length ? `<div class="alert"><b>Keine Art erkannt.</b>${esc(emptyMsg || "")}</div>` : `
+      ${top < 0.3 ? `<div class="alert"><b>Die Bestimmung ist unsicher.</b>Vergleiche die Bilder genau oder mach weitere Fotos von anderen Pflanzenteilen.</div>` : ""}
+      <h3 class="h">Wahrscheinlichste Arten</h3>
+      <div class="res">${results.map(hitHTML).join("")}</div>`}
+    <div class="row">
+      <button class="btn primary" id="idfNew">Neue Pflanze</button>
+      <button class="btn" id="idfMore">Fotos ergänzen &amp; neu bestimmen</button>
+    </div>
+    <p class="note">Automatische Bestimmungen können falsch sein. Iss oder berühre nie eine Pflanze nur aufgrund dieses Ergebnisses.</p>`;
+  showStep("result");
+  $("#idfNew").onclick = () => { idf.lastResult = null; clearShots(); $("#camMsg").innerHTML = ""; showStep("shoot"); autoStartCamera(); };
+  $("#idfMore").onclick = () => { idf.lastResult = null; $("#camMsg").innerHTML = ""; showStep("shoot"); autoStartCamera(); };
+}
+
+function hitHTML(r, i){
+  const sp = r.species || {};
+  const sci = sp.scientificNameWithoutAuthor || sp.scientificName || "";
+  const common = (sp.commonNames || [])[0];
+  const fam = sp.family?.scientificNameWithoutAuthor || sp.family?.scientificName || "";
+  const im = (r.images || [])[0];
+  const imgUrl = im?.url?.s || im?.url?.m || null;
+  const credit = im ? [im.author ? `© ${im.author}` : "", im.license].filter(Boolean).join(" · ") : "";
+  const pct = Math.round((r.score || 0) * 100);
+  return `<div class="hit">
+    ${imgUrl ? `<img src="${esc(imgUrl)}" alt="Vergleichsfoto ${esc(common || sci)}" loading="lazy">` : `<div class="noimg"></div>`}
+    <div>
+      <div class="cn">${esc(common || sci)}</div>
+      ${common ? `<div class="sn">${esc(sci)}</div>` : ""}
+      ${fam ? `<div class="fam">Familie ${esc(fam)}</div>` : ""}
+      <div class="score"><span class="bar"><i style="width:${Math.max(2, pct)}%"></i></span>${pct < 1 ? "< 1" : pct} %</div>
+      <div class="actions">
+        <button class="btn ${i === 0 ? "primary" : ""}" data-sci="${esc(sci)}">Steckbrief öffnen</button>
+        ${r.gbif?.id ? `<a class="btn" href="https://www.gbif.org/species/${encodeURIComponent(r.gbif.id)}" target="_blank" rel="noopener">GBIF</a>` : ""}
+      </div>
+      ${credit ? `<div class="cr">Vergleichsfoto: ${esc(credit)} (Pl@ntNet)</div>` : ""}
+    </div>
+  </div>`;
+}
+
+/* Pl@ntNet-Name → iNaturalist-Taxon → bestehende Detailansicht */
+$("#idfResult").addEventListener("click", async e => {
+  const b = e.target.closest("button[data-sci]"); if (!b) return;
+  const sci = b.dataset.sci, label = b.textContent;
+  b.disabled = true; b.textContent = "Suche …";
+  try{
+    const id = await findInatTaxon(sci);
+    if (!id){ b.textContent = "Nicht bei iNaturalist"; return; }
+    closeIdentify();
+    openDetail(id);
+  }catch{
+    b.disabled = false; b.textContent = "Fehler – erneut versuchen"; return;
+  }
+  b.disabled = false; b.textContent = label;
+});
+
+async function findInatTaxon(sci){
+  const p = new URLSearchParams({ q:sci, is_active:"true", locale:"de", preferred_place_id:"7207", per_page:"10" });
+  const { results = [] } = await getJSON(`${API.inat}/taxa?${p}`);
+  const norm = s => (s || "").toLowerCase().replace(/\s+/g, " ").trim();
+  const exact = results.find(t => norm(t.name) === norm(sci));
+  if (exact) return exact.id;
+  // Synonyme: iNaturalist findet die Art oft über einen anderen gültigen Namen
+  const plant = results.find(t => t.iconic_taxon_name === "Plantae" && ["species","subspecies","variety","hybrid"].includes(t.rank));
+  return plant?.id || null;
+}
+
+/* ================= Bestimmungsschlüssel (Registerkarte „Bestimmen“) =================
+   Sechs Schritte grenzen die Arten im Umkreis ein. Alles kommt live aus iNaturalist:
+   – Kategorie-Zähler: /observations/iconic_taxa_species_counts
+   – Gruppen: wissenschaftliche Namen, zur Laufzeit über /taxa in iNaturalist-IDs übersetzt
+   – Merkmale: /controlled_terms/for_taxon (Lebensstadium, Blüte, Geschlecht, Spuren …)
+   – Monat & Tageszeit: Beobachtungsdatum und -uhrzeit der Fundmeldungen
+   – Ergebnis: /observations/species_counts, Karte: /grid-Kacheln mit denselben Filtern */
+const KEY_CATS = [
+  { id:"Plantae", tid:47126, label:"Pflanze", d:"wächst fest, hat Blätter", c:"var(--plantae)", subs:[
+    ["Gänseblümchen, Löwenzahn & Disteln","Asteraceae"],["Rosen, Obstbäume & Brombeeren","Rosaceae"],["Gras & Getreide","Poaceae"],["Doldenblüten – Schirm aus vielen Blüten","Apiaceae"],
+    ["Minze, Salbei & Taubnessel","Lamiaceae"],["Butterblumen & Buschwindröschen","Ranunculaceae"],["Raps, Senf & Wiesenschaumkraut","Brassicaceae"],["Klee, Wicken & Erbsenblüten","Fabaceae"],
+    ["Orchideen","Orchidaceae"],["Eichen & Buchen","Fagaceae"],["Birken, Erlen & Haselnuss","Betulaceae"],["Tannen, Fichten & Kiefern","Pinales"],["Farne","Polypodiopsida"],["Moose","Bryophyta"]] },
+  { id:"Fungi", tid:47170, label:"Pilz & Flechte", d:"Hut, Schwamm oder Kruste", c:"var(--fungi)", subs:[
+    ["Hutpilze mit Lamellen","Agaricales"],["Hutpilze mit Schwamm darunter","Boletales"],["Bunte Täublinge & Milchlinge","Russulales"],["Baumpilze – Konsolen am Holz","Polyporales"],
+    ["Becher, Morcheln & Krusten","Ascomycota"],["Flechten auf Stein & Rinde","Lecanoromycetes"]] },
+  { id:"Mammalia", tid:40151, label:"Säugetier", d:"Fell, säugt Junge", c:"var(--animalia)", subs:[
+    ["Fuchs, Dachs, Marder & Katzen","Carnivora"],["Reh, Hirsch & Wildschwein","Artiodactyla"],["Mäuse, Eichhörnchen & Biber","Rodentia"],["Fledermäuse","Chiroptera"],
+    ["Igel, Maulwurf & Spitzmaus","Eulipotyphla"],["Hasen & Kaninchen","Lagomorpha"]] },
+  { id:"Aves", tid:3, label:"Vogel", d:"Federn & Schnabel", c:"var(--animalia)", subs:[
+    ["Kleine Singvögel – Meise, Amsel, Spatz","Passeriformes"],["Bussard, Milan & Adler","Accipitriformes"],["Falken","Falconiformes"],["Eulen & Käuze","Strigiformes"],
+    ["Enten, Gänse & Schwäne","Anseriformes"],["Spechte","Piciformes"],["Möwen & Strandvögel","Charadriiformes"],
+    ["Kraniche & Blässhühner","Gruiformes"],["Tauben","Columbiformes"],["Reiher","Pelecaniformes"]] },
+  { id:"Amphibia", tid:20978, label:"Amphibie", d:"feuchte Haut, Wasser & Land", c:"var(--animalia)", subs:[
+    ["Frösche & Kröten","Anura"],["Molche","Caudata"]] },
+  { id:"Reptilia", tid:26036, label:"Reptil", d:"trockene Schuppen", c:"var(--animalia)", subs:[
+    ["Schlangen","Serpentes"],["Eidechsen","Lacertidae"],["Blindschleiche","Anguidae"],["Schildkröten","Testudines"]] },
+  { id:"Actinopterygii", tid:47178, label:"Fisch", d:"Flossen, lebt im Wasser", c:"var(--animalia)", subs:[
+    ["Karpfen, Plötze & Co.","Cypriniformes"],["Barsche","Perciformes"],["Forellen & Lachse","Salmoniformes"],["Hechte","Esociformes"],["Stichlinge","Gasterosteidae"]] },
+  { id:"Insecta", tid:47158, label:"Insekt", d:"6 Beine", c:"var(--animalia)", subs:[
+    ["Schmetterlinge & Motten","Lepidoptera"],["Käfer","Coleoptera"],["Bienen, Wespen & Ameisen","Hymenoptera"],["Fliegen & Mücken","Diptera"],
+    ["Libellen","Odonata"],["Heuschrecken & Grillen","Orthoptera"],["Wanzen & Zikaden","Hemiptera"],["Florfliegen","Neuroptera"]] },
+  { id:"Arachnida", tid:47119, label:"Spinnentier", d:"8 Beine", c:"var(--animalia)", subs:[
+    ["Spinnen","Araneae"],["Weberknechte – ganz lange Beine","Opiliones"],["Zecken & Milben","Acari"]] },
+  { id:"Mollusca", tid:47115, label:"Schnecke & Muschel", d:"weich, oft mit Schale", c:"var(--animalia)", subs:[
+    ["Schnecken","Gastropoda"],["Muscheln","Bivalvia"]] },
+  { id:"Animalia", tid:1, label:"Anderes Tier", d:"Krebse, Asseln, Würmer …", c:"var(--animalia)", subs:[
+    ["Krebse & Flohkrebse","Malacostraca"],["Asseln","Isopoda"],["Tausendfüßer","Diplopoda"],["Hundertfüßer","Chilopoda"],["Würmer & Egel","Annelida"]] }
+];
+// Merkmalsnamen deutsch (nach englischem Label der API; unbekannte bleiben englisch)
+const TERM_DE = { "Life Stage":"Lebensstadium", "Sex":"Geschlecht", "Plant Phenology":"Blüte & Frucht", "Flowers and Fruits":"Blüte & Frucht",
+  "Alive or Dead":"Lebend oder tot", "Evidence of Presence":"Nachweis", "Leaves":"Blätter", "Established":"Ansiedlung" };
+const VALUE_DE = { "Adult":"Erwachsen", "Teneral":"Frisch geschlüpft", "Pupa":"Puppe", "Nymph":"Nymphe", "Larva":"Larve / Raupe", "Egg":"Ei",
+  "Juvenile":"Jungtier", "Subimago":"Subimago", "Female":"Weiblich", "Male":"Männlich", "Flowering":"Blühend", "Flowers":"Blühend",
+  "Fruiting":"Mit Früchten", "Fruits or Seeds":"Mit Früchten / Samen", "Flower Budding":"Mit Blütenknospen", "Flower Buds":"Mit Blütenknospen",
+  "No Evidence of Flowering":"Ohne Blüten", "No Flowers or Fruits":"Ohne Blüten & Früchte", "Alive":"Lebend", "Dead":"Tot",
+  "Feather":"Feder", "Organism":"Das Lebewesen selbst", "Scat":"Kot", "Track":"Spur / Fährte", "Bone":"Knochen", "Molt":"Häutung",
+  "Hair":"Haare", "Leafmine":"Blattmine", "Construction":"Bau / Nest / Gespinst", "Gall":"Galle",
+  "Breaking Leaf Buds":"Austreibende Knospen", "Green Leaves":"Grüne Blätter", "Colored Leaves":"Verfärbte Blätter", "No Live Leaves":"Keine lebenden Blätter" };
+const HIDE_VALUES = new Set(["Cannot Be Determined", "Cannot be determined"]);
+const HIDE_TERMS = new Set(["Established"]);
+// Fallback, falls /controlled_terms nicht erreichbar ist (IDs der iNaturalist-Merkmale)
+const TERMS_FALLBACK = {
+  life:{ id:1, label:"Life Stage", values:[[2,"Adult"],[6,"Larva"],[4,"Pupa"],[5,"Nymph"],[7,"Egg"],[8,"Juvenile"]] },
+  sex:{ id:9, label:"Sex", values:[[10,"Female"],[11,"Male"]] },
+  phen:{ id:12, label:"Plant Phenology", values:[[13,"Flowering"],[14,"Fruiting"],[15,"Flower Budding"],[21,"No Evidence of Flowering"]] },
+  leaves:{ id:36, label:"Leaves", values:[[37,"Breaking Leaf Buds"],[38,"Green Leaves"],[39,"Colored Leaves"],[40,"No Live Leaves"]] },
+  evid:{ id:22, label:"Evidence of Presence", values:[[24,"Organism"],[26,"Track"],[25,"Scat"],[23,"Feather"],[27,"Bone"],[28,"Molt"],[30,"Hair"],[32,"Construction"],[31,"Leafmine"],[35,"Gall"]] }
+};
+const FALLBACK_BY_CAT = { Plantae:["phen","leaves"], Fungi:[], Mammalia:["evid","sex","life"], Aves:["sex","life","evid"], Amphibia:["life","sex"],
+  Reptilia:["life","sex","evid"], Actinopterygii:["life"], Insecta:["life","sex","evid"], Arachnida:["life","sex"], Mollusca:["life","evid"], Animalia:["life","evid"] };
+
+const MONTH_DE = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+const NOW_M = new Date().getMonth() + 1;
+const KEY_WHEN = [
+  { id:"any", label:"Ganzjährig", m:null },
+  { id:"now", label:`Jetzt (${MONTH_DE[NOW_M-1]})`, m:[NOW_M] },
+  { id:"spr", label:"Frühling", m:[3,4,5] },
+  { id:"sum", label:"Sommer", m:[6,7,8] },
+  { id:"aut", label:"Herbst", m:[9,10,11] },
+  { id:"win", label:"Winter", m:[12,1,2] }
+];
+const KEY_HOUR = [
+  { id:"any", label:"Egal", h:null },
+  { id:"morn", label:"Morgens", h:[5,6,7,8,9] },
+  { id:"day", label:"Tagsüber", h:[10,11,12,13,14,15,16] },
+  { id:"eve", label:"Abends", h:[17,18,19,20,21] },
+  { id:"night", label:"Nachts", h:[22,23,0,1,2,3,4] }
+];
+const KEY_RADIUS = [5, 10, 30, 50, 100];
+const KEY_PAGE = 24;
+
+const ks = { cat:null, sub:null, term:null, when:"any", hour:"any", radius:HOME.km, research:true, threat:false,
+             lastKey:null, abort:null, page:0, total:0, taxonIds:new Map(), terms:new Map(), catCountsKey:null };
+
+const catOf = () => KEY_CATS.find(c => c.id === ks.cat);
+const pressed = (b, on) => b.setAttribute("aria-pressed", on);
+
+/* --- Registerkarten --- */
+const TABS = [["explore","#tabBtnExplore","#paneExplore"],["ident","#tabBtnIdent","#paneIdent"],["combo","#tabBtnCombo","#paneCombo"],["key","#tabBtnKey","#paneKey"],["look","#tabBtnLook","#paneLook"]];
+function setTab(name){
+  if (state.tab === name) return;
+  state.tab = name;
+  TABS.forEach(([id, btn, pane]) => { $(btn).setAttribute("aria-selected", id === name); $(pane).hidden = id !== name; });
+  if ($("#detail").hidden === false) closeDetail();
+  setKeyOverlay(true); setLookOverlay(true);
+  syncRadiusChips();
+  if (name === "key"){ setAreaCircle(); ks.lastKey = null; runKey(); }
+  else if (name === "look"){ setAreaCircle(); ls.lastKey = null; runLook(); }
+  else if (name === "combo"){ cs.lastKey = null; runCombo(); }
+  else if (name === "ident"){ state.lastQuery = null; loadSpecies(); }   // Karte zeigt die häufigsten Arten wie bei „Entdecken“
+  else if (name === "explore"){ state.lastQuery = null; loadSpecies(); }   // Kreis & Liste für den Zoom-Radius neu aufbauen
+}
+TABS.forEach(([id, btn]) => $(btn).onclick = () => setTab(id));
+$(".tabs").addEventListener("keydown", e => {
+  if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+  const i = TABS.findIndex(t => t[0] === state.tab), n = TABS[(i + (e.key === "ArrowRight" ? 1 : TABS.length - 1)) % TABS.length];
+  setTab(n[0]); $(n[1]).focus();
+});
+function syncRadiusChips(){ document.querySelectorAll("[data-r]").forEach(x => x.setAttribute("aria-pressed", +x.dataset.r === ks.radius)); updateReadout(); }
+
+/* --- Aufbau der Bedienelemente --- */
+$("#kCat").innerHTML = KEY_CATS.map(c =>
+  `<button class="cat" style="--c:${c.c}" data-cat="${c.id}" aria-pressed="false"><i></i><span class="n">${c.label}</span><span class="dsc">${c.d}</span><span class="c" id="cc-${c.id}"></span></button>`).join("");
+const chipRow = (list, cur, attr) => list.map(x => `<button class="chip" data-${attr}="${x.id}" aria-pressed="${x.id === cur}">${x.label}</button>`).join("");
+$("#kWhen").innerHTML = chipRow(KEY_WHEN, ks.when, "when");
+$("#kHour").innerHTML = chipRow(KEY_HOUR, ks.hour, "hour");
+$("#kRadius").innerHTML = KEY_RADIUS.map(r => `<button class="chip" data-r="${r}" aria-pressed="${r === ks.radius}">${r} km</button>`).join("");
+
+$("#kCat").onclick = e => {
+  const b = e.target.closest(".cat"); if (!b) return;
+  const same = ks.cat === b.dataset.cat;
+  ks.cat = same ? null : b.dataset.cat;
+  ks.sub = null; ks.term = null;
+  document.querySelectorAll("#kCat .cat").forEach(x => pressed(x, x === b && !same));
+  foldStep("#stCat", !!ks.cat);
+  renderSubs(); loadTraits(); refreshSteps(); runKey();
+};
+$("#kSub").onclick = async e => {
+  const b = e.target.closest(".chip[data-sub]"); if (!b) return;
+  const sci = b.dataset.sub;
+  if (sci === "" || ks.sub?.sci === sci){ ks.sub = null; }
+  else {
+    const label = b.dataset.label;
+    b.disabled = true;
+    try{
+      const id = await resolveTaxon(sci);
+      if (!id){ b.disabled = false; b.title = "Bei iNaturalist nicht gefunden"; b.style.opacity = .4; return; }
+      ks.sub = { sci, id, label };
+    }catch{ b.disabled = false; return; }
+    b.disabled = false;
+  }
+  ks.term = null;
+  document.querySelectorAll("#kSub .chip").forEach(x => pressed(x, ks.sub ? x.dataset.sub === ks.sub.sci : x.dataset.sub === ""));
+  foldStep("#stSub", true);
+  loadTraits(); refreshSteps(); runKey();
+};
+$("#kTrait").onclick = e => {
+  const b = e.target.closest(".chip[data-term]"); if (!b) return;
+  const t = +b.dataset.term, v = +b.dataset.val;
+  ks.term = (ks.term && ks.term.t === t && ks.term.v === v) ? null : { t, v, label:b.dataset.label, tl:b.dataset.tl };
+  document.querySelectorAll("#kTrait .chip").forEach(x => pressed(x, !!ks.term && +x.dataset.term === ks.term.t && +x.dataset.val === ks.term.v));
+  if (ks.term) foldStep("#stTrait", true);
+  refreshSteps(); runKey();
+};
+$("#kWhen").onclick = e => { const b = e.target.closest(".chip"); if (!b) return; ks.when = b.dataset.when; document.querySelectorAll("#kWhen .chip").forEach(x => pressed(x, x === b)); foldStep("#stWhen", true); refreshSteps(); runKey(); };
+$("#kHour").onclick = e => { const b = e.target.closest(".chip"); if (!b) return; ks.hour = b.dataset.hour; document.querySelectorAll("#kHour .chip").forEach(x => pressed(x, x === b)); foldStep("#stHour", true); refreshSteps(); runKey(); };
+$("#kRadius").onclick = e => {
+  const b = e.target.closest(".chip"); if (!b) return;
+  ks.radius = +b.dataset.r;
+  syncRadiusChips();
+  refreshSteps(); fitToRadius(); runKey();
+};
+$("#kResearch").onchange = e => { ks.research = e.target.checked; runKey(); };
+$("#kThreat").onchange = e => { ks.threat = e.target.checked; refreshSteps(); runKey(); };
+$("#kReset").onclick = () => {
+  Object.assign(ks, { cat:null, sub:null, term:null, when:"any", hour:"any", threat:false });
+  $("#kThreat").checked = false;
+  document.querySelectorAll("#kCat .cat").forEach(x => pressed(x, false));
+  document.querySelectorAll("#kWhen .chip").forEach(x => pressed(x, x.dataset.when === "any"));
+  document.querySelectorAll("#kHour .chip").forEach(x => pressed(x, x.dataset.hour === "any"));
+  document.querySelectorAll("#keyBody .step").forEach(x => x.classList.remove("folded"));
+  renderSubs(); loadTraits(); refreshSteps(); runKey();
+  $("#keyBody").scrollTo({ top:0, behavior:"smooth" });
+};
+const keyList = makeTierList($("#kTiers"), "kt", { suffix:"passend",
+  emptyHTML:`<div class="state">Keine Art passt auf diese Auswahl. Lass ein Merkmal weg, wähle „Ganzjährig“ oder vergrößere den Umkreis.</div>`,
+  onTotal:n => $("#kTotal").textContent = n == null ? "" : `${fmt(n)} Art${n === 1 ? "" : "en"}` });
+
+function renderSubs(){
+  const c = catOf();
+  $("#kSub").innerHTML = !c ? `<span class="hint">Erst oben eine Kategorie wählen.</span>` :
+    `<button class="chip" data-sub="" aria-pressed="true">Alle</button>` +
+    c.subs.map(([label, sci]) => `<button class="chip" data-sub="${esc(sci)}" data-label="${esc(label)}" aria-pressed="false" title="${esc(sci)}">${esc(label)}</button>`).join("");
+}
+
+/* Wissenschaftlicher Name → iNaturalist-Taxon-ID (zwischengespeichert für diese Sitzung) */
+async function resolveTaxon(sci){
+  if (ks.taxonIds.has(sci)) return ks.taxonIds.get(sci);
+  const p = new URLSearchParams({ q:sci, is_active:"true", per_page:"10" });
+  const { results = [] } = await getJSON(`${API.inat}/taxa?${p}`);
+  const hit = results.find(t => t.name.toLowerCase() === sci.toLowerCase());
+  const id = hit?.id || null;
+  ks.taxonIds.set(sci, id);
+  return id;
+}
+
+/* Merkmale passend zur gewählten Gruppe */
+let traitsReq = 0;
+async function loadTraits(){
+  const c = catOf(), box = $("#kTrait"), my = ++traitsReq;
+  if (!c){ box.innerHTML = `<span class="hint">Merkmale kommen aus iNaturalist, passend zur Gruppe.</span>`; return; }
+  const tid = ks.sub?.id || c.tid;
+  box.innerHTML = `<span class="hint">Merkmale werden geladen …</span>`;
+  let terms = ks.terms.get(tid);
+  if (!terms){
+    try{
+      const d = await getJSON(`${API.inat}/controlled_terms/for_taxon?taxon_id=${tid}`);
+      terms = (d.results || []).map(t => ({ id:t.id, label:t.label, values:(t.values || []).map(v => [v.id, v.label]) }));
+    }catch{
+      terms = (FALLBACK_BY_CAT[c.id] || []).map(k => TERMS_FALLBACK[k]);
+    }
+    ks.terms.set(tid, terms);
+  }
+  if (my !== traitsReq) return;
+  terms = terms.filter(t => !HIDE_TERMS.has(t.label));
+  if (!terms.length){ box.innerHTML = `<span class="hint">Für diese Gruppe gibt es bei iNaturalist keine erfassten Merkmale. Weiter mit Schritt 4.</span>`; return; }
+  box.innerHTML = terms.map(t => {
+    const tl = TERM_DE[t.label] || t.label;
+    return `<div class="trait"><span class="trait-label">${esc(tl)}</span><div class="chips">${
+      t.values.filter(([, l]) => !HIDE_VALUES.has(l)).map(([id, l]) => {
+        const vl = VALUE_DE[l] || l;
+        const on = ks.term && ks.term.t === t.id && ks.term.v === id;
+        return `<button class="chip" data-term="${t.id}" data-val="${id}" data-label="${esc(vl)}" data-tl="${esc(tl)}" aria-pressed="${!!on}">${esc(vl)}</button>`;
+      }).join("")}</div></div>`;
+  }).join("") + `<p class="note">Ein Merkmal ist wählbar. Es zählt nur, wenn Beobachter es bei iNaturalist eingetragen haben – das grenzt stark ein.</p>`;
+}
+
+const foldStep = (id, fold) => $(id).classList.toggle("folded", fold);
+$("#keyBody .steps").addEventListener("click", e => {
+  const h = e.target.closest(".step h4"); if (!h) return;
+  const st = h.parentElement;
+  if (st.getAttribute("aria-disabled") === "true") return;
+  st.classList.toggle("folded");
+});
+
+function refreshSteps(){
+  const c = catOf(), on = !!c;
+  ["#stSub","#stTrait"].forEach(s => { $(s).setAttribute("aria-disabled", !on); if (!on) foldStep(s, false); });
+  ["#stWhen","#stHour","#stWhere"].forEach(s => $(s).setAttribute("aria-disabled", false));   // gelten auch ohne Kategorie
+  $("#stCat").classList.toggle("done", on);
+  $("#stSub").classList.toggle("done", !!ks.sub);
+  $("#stTrait").classList.toggle("done", !!ks.term);
+  $("#stWhen").classList.toggle("done", ks.when !== "any");
+  $("#stHour").classList.toggle("done", ks.hour !== "any");
+  $("#stWhere").classList.toggle("done", true);
+  $("#selCat").textContent = c?.label || "";
+  $("#selSub").textContent = ks.sub?.label || (on ? "alle" : "");
+  $("#selCat").textContent = c?.label || "alle Lebewesen";
+  $("#selTrait").textContent = ks.term ? `${ks.term.tl}: ${ks.term.label}` : "";
+  $("#selWhen").textContent = KEY_WHEN.find(x => x.id === ks.when).label;
+  $("#selHour").textContent = KEY_HOUR.find(x => x.id === ks.hour).label;
+  $("#selWhere").textContent = `${ks.radius} km`;
+}
+
+/* --- Abfrage --- */
+function keyParams(withTaxon){
+  const ctr = searchCenter(), c = catOf();
+  const p = new URLSearchParams({ lat:ctr.lat.toFixed(4), lng:ctr.lng.toFixed(4), radius:ks.radius });
+  if (ks.research) p.set("quality_grade", "research");
+  if (ks.threat) p.set("threatened", "true");
+  const w = KEY_WHEN.find(x => x.id === ks.when).m; if (w) p.set("month", w.join(","));
+  const h = KEY_HOUR.find(x => x.id === ks.hour).h; if (h) p.set("hour", h.join(","));
+  if (withTaxon && !c) p.set("iconic_taxa", GROUPS[0].taxa);   // noch nichts gewählt → alle Lebewesen
+  if (withTaxon && c){
+    if (ks.sub) p.set("taxon_id", ks.sub.id); else p.set("iconic_taxa", c.id);
+    if (ks.term){ p.set("term_id", ks.term.t); p.set("term_value_id", ks.term.v); }
+  }
+  return p;
+}
+
+function setAreaCircle(){
+  const c = searchCenter();
+  map.getSource("area")?.setData(circle(c.lng, c.lat, ks.radius));
+}
+function fitToRadius(){
+  const c = searchCenter(), dLat = ks.radius / 111.32, dLng = ks.radius / (111.32 * Math.cos(c.lat * Math.PI / 180));
+  map.fitBounds([[c.lng - dLng, c.lat - dLat], [c.lng + dLng, c.lat + dLat]], { padding:40, duration:900 });
+}
+function updateKeyWhere(){
+  const place = $("#place").textContent;
+  updateReadout();
+  $("#keyWhere").textContent = $("#lookWhere").textContent = `Umkreis ${ks.radius} km um ${place && place !== "Die ganze Welt" ? place : "die Kartenmitte"}`;
+}
+
+/* Beobachtungen der aktuellen Auswahl als Raster auf dem Globus */
+function setKeyOverlay(remove){
+  return;   // ersetzt durch Fotos auf der Karte (showPins)
+  if (map.getLayer("keyobs")) map.removeLayer("keyobs");
+  if (map.getSource("keyobs")) map.removeSource("keyobs");
+  if (remove || state.tab !== "key" || !map.isStyleLoaded()) return;
+  const p = keyParams(true); p.set("color", "#e7ad4f");
+  map.addSource("keyobs", { type:"raster", tileSize:256, tiles:[`${API.inat}/grid/{z}/{x}/{y}.png?${p}`],
+    attribution:'<a href="https://www.inaturalist.org" target="_blank">iNaturalist</a>' });
+  map.addLayer({ id:"keyobs", type:"raster", source:"keyobs", paint:{ "raster-opacity":0.85 } });
+}
+
+let keyTimer;
+function runKey(){ clearTimeout(keyTimer); keyTimer = setTimeout(doRunKey, 350); }
+async function doRunKey(){
+  if (state.tab !== "key") return;
+  setAreaCircle(); updateKeyWhere(); refreshSteps();
+  loadCatCounts();
+  const key = keyParams(true).toString() + "|" + ks.cat;
+  if (key === ks.lastKey) return;
+  ks.lastKey = key;
+  setKeyOverlay();
+  $("#keyRes").hidden = false;
+  await loadKeyPage();
+}
+
+async function loadKeyPage(){
+  ks.abort?.abort(); ks.abort = new AbortController();
+  const p = keyParams(true);
+  p.set("locale", "de"); p.set("preferred_place_id", "7207");
+  $("#kSummary").textContent = summaryText();
+  showPins(p, ks.radius);
+  try{ await keyList.load(p, ks.abort.signal); }catch{ ks.lastKey = null; }
+}
+
+function summaryText(){
+  const parts = [catOf()?.label || "Alle Lebewesen", ks.sub?.label, ks.term ? `${ks.term.tl.toLowerCase()} ${ks.term.label.toLowerCase()}` : null,
+    ks.when !== "any" ? KEY_WHEN.find(x => x.id === ks.when).label.toLowerCase() : null,
+    ks.hour !== "any" ? KEY_HOUR.find(x => x.id === ks.hour).label.toLowerCase() : null,
+    ks.threat ? "gefährdet" : null].filter(Boolean);
+  return `${parts.join(" · ")} – im Umkreis von ${ks.radius} km, sortiert nach Häufigkeit der passenden Beobachtungen. Das oberste Ergebnis ist am wahrscheinlichsten.`;
+}
+
+/* Artenzahl je Kategorie im Umkreis (eine Anfrage für alle Kacheln) */
+let catAbort;
+async function loadCatCounts(){
+  const p = keyParams(false), key = p.toString();
+  if (key === ks.catCountsKey) return;
+  ks.catCountsKey = key;
+  catAbort?.abort(); catAbort = new AbortController();
+  KEY_CATS.forEach(c => { const el = $(`#cc-${c.id}`); if (el) el.textContent = "…"; });
+  try{
+    const d = await getJSON(`${API.inat}/observations/iconic_taxa_species_counts?${p}`, catAbort.signal);
+    const by = Object.fromEntries((d.results || []).map(r => [r.taxon?.name, r.count]));
+    KEY_CATS.forEach(c => {
+      const el = $(`#cc-${c.id}`); if (el) el.textContent = by[c.id] ? `${fmt(by[c.id])} Arten hier` : "keine hier";
+      const b = document.querySelector(`#kCat [data-cat="${c.id}"]`); b.disabled = !by[c.id]; b.classList.toggle("empty", !by[c.id]);
+    });
+  }catch(err){
+    if (err.name === "AbortError") return;
+    ks.catCountsKey = null;
+    KEY_CATS.forEach(c => { const el = $(`#cc-${c.id}`); if (el) el.textContent = ""; });
+  }
+}
+refreshSteps();
+
+/* ================= Bestimmen nach Aussehen =================
+   Subjektive Merkmale (Fell, Federn, Beine, Größe, Wuchs, Blatt …) sind in dieser Seite
+   als Wissen hinterlegt: Jede Zeile ordnet einer Tier-, Pflanzen- oder Pilzgruppe ihre
+   typischen Merkmale zu. Für die passenden Gruppen fragt die Seite live bei iNaturalist,
+   welche Arten im Umkreis vorkommen (dazu API-Filter: Monat, „blüht gerade“, bestätigte Funde).
+   Kürzel: s=Oberfläche l=Beine w=Flügel z=Größe h=Lebensraum g=Wuchs b=Blatt f=Pilzform */
+const LOOK_Q = [
+  { sec:"all", id:"s", label:"Was siehst du auf der Oberfläche?", opts:[["fell","Fell / Haare"],["feder","Federn"],["schuppe","Schuppen"],["haut","glatte, feuchte Haut"],
+      ["panzer","harter Panzer, Gliederbeine"],["schale","Schneckenhaus / Schale"],["schleim","weich & schleimig"],["blatt","Blätter / Nadeln / Halme"],["pilz","Pilz / Flechte"]] },
+  { sec:"tier", id:"l", label:"Wie viele Beine?", opts:[["0","keine"],["2","2"],["4","4"],["6","6"],["8","8"],["viele","mehr als 8"]] },
+  { sec:"tier", id:"w", label:"Flügel?", opts:[["1","ja, kann fliegen"],["0","nein"]] },
+  { sec:"tier", id:"z", label:"Wie groß etwa?", opts:[["1","winzig, unter 1 cm"],["2","bis Daumen, 1–5 cm"],["3","handgroß, 5–20 cm"],["4","katzengroß, 20–60 cm"],["5","groß, bis 1,5 m"],["6","sehr groß"]] },
+  { sec:"pflanze", id:"g", label:"Wuchs", opts:[["baum","Baum"],["strauch","Strauch / Busch"],["kraut","Kraut / Blume"],["gras","Gras / Binse"],["kletter","rankt / klettert"],["wasser","schwimmt im Wasser"],["moos","Moos / Farn"]] },
+  { sec:"pflanze", id:"b", label:"Blätter", opts:[["nadel","Nadeln / Schuppen"],["breit","breite, ganze Blätter"],["geteilt","gefiedert / geteilt"],["schmal","lang & schmal"],["ohne","kaum oder keine"]] },
+  { sec:"pflanze", id:"bl", api:true, label:"Blüte & Frucht", opts:[["ja","blüht gerade"],["frucht","trägt Früchte"]] },
+  { sec:"pilz", id:"f", label:"Form", opts:[["hut","Hut & Stiel"],["konsole","Konsole am Holz"],["kugel","Kugel / Bovist"],["becher","Becher / Schale"],["kruste","Kruste / Flechte"]] },
+  { sec:"ort", id:"h", label:"Wo war es?", opts:[["wa","im Wasser"],["uf","am Ufer / im Feuchten"],["wd","im Wald"],["wi","Wiese / Feld"],["ga","Garten / Siedlung"]] },
+  { sec:"ort", id:"jetzt", api:true, label:"Wann?", opts:[["ja",`gerade eben (${MONTH_DE[NOW_M-1]})`]] }
+];
+const LOOK_SECS = [["all","Erster Eindruck",""],["tier","Bei Tieren",""],["pflanze","Bei Pflanzen",""],["pilz","Bei Pilzen",""],["ort","Ort & Zeit","Umkreis um die Kartenmitte"]];
+// [Bezeichnung, wissenschaftlicher Name, iNaturalist-Grobgruppe, Merkmale]
+const LOOK_DB = [
+  ["Hirsche & Rehe","Cervidae","Mammalia","s:fell l:4 w:0 z:5,6 h:wd,wi"],
+  ["Wildschweine","Suidae","Mammalia","s:fell l:4 w:0 z:5 h:wd,wi"],
+  ["Füchse & Wölfe","Canidae","Mammalia","s:fell l:4 w:0 z:4,5 h:wd,wi,ga"],
+  ["Marder, Dachs & Otter","Mustelidae","Mammalia","s:fell l:4 w:0 z:3,4,5 h:wd,wi,ga,uf,wa"],
+  ["Katzen","Felidae","Mammalia","s:fell l:4 w:0 z:4,5 h:ga,wd,wi"],
+  ["Waschbären","Procyonidae","Mammalia","s:fell l:4 w:0 z:4 h:ga,wd,uf"],
+  ["Hasen & Kaninchen","Leporidae","Mammalia","s:fell l:4 w:0 z:4 h:wi,ga"],
+  ["Hörnchen","Sciuridae","Mammalia","s:fell l:4 w:0 z:3,4 h:wd,ga"],
+  ["Mäuse & Ratten","Muridae","Mammalia","s:fell l:4 w:0 z:2,3 h:wd,wi,ga"],
+  ["Wühlmäuse","Cricetidae","Mammalia","s:fell l:4 w:0 z:2,3 h:wi,ga,uf"],
+  ["Biber","Castoridae","Mammalia","s:fell l:4 w:0 z:5 h:uf,wa"],
+  ["Igel","Erinaceidae","Mammalia","s:fell l:4 w:0 z:3,4 h:ga,wd"],
+  ["Maulwürfe","Talpidae","Mammalia","s:fell l:4 w:0 z:3 h:wi,ga"],
+  ["Spitzmäuse","Soricidae","Mammalia","s:fell l:4 w:0 z:2,3 h:wd,wi,ga,uf"],
+  ["Fledermäuse","Chiroptera","Mammalia","s:fell l:2,4 w:1 z:2,3 h:wd,ga,uf"],
+  ["Robben","Phocidae","Mammalia","s:fell l:0,4 w:0 z:5,6 h:wa"],
+  ["Singvögel","Passeriformes","Aves","s:feder l:2 w:1 z:2,3,4 h:wd,wi,ga,uf"],
+  ["Rabenvögel","Corvidae","Aves","s:feder l:2 w:1 z:3,4 h:wi,ga,wd"],
+  ["Greifvögel","Accipitriformes","Aves","s:feder l:2 w:1 z:4,5 h:wi,wd,uf"],
+  ["Falken","Falconidae","Aves","s:feder l:2 w:1 z:4 h:wi,ga"],
+  ["Eulen","Strigiformes","Aves","s:feder l:2 w:1 z:3,4,5 h:wd,ga,wi"],
+  ["Spechte","Picidae","Aves","s:feder l:2 w:1 z:3,4 h:wd,ga"],
+  ["Tauben","Columbidae","Aves","s:feder l:2 w:1 z:4 h:ga,wi,wd"],
+  ["Enten, Gänse & Schwäne","Anatidae","Aves","s:feder l:2 w:1 z:4,5,6 h:wa,uf,wi"],
+  ["Möwen & Seeschwalben","Laridae","Aves","s:feder l:2 w:1 z:4,5 h:wa,uf,ga"],
+  ["Schnepfen & Strandläufer","Scolopacidae","Aves","s:feder l:2 w:1 z:3,4 h:uf"],
+  ["Regenpfeifer & Kiebitze","Charadriidae","Aves","s:feder l:2 w:1 z:3,4 h:uf,wi"],
+  ["Reiher","Ardeidae","Aves","s:feder l:2 w:1 z:5 h:uf,wi"],
+  ["Kraniche","Gruidae","Aves","s:feder l:2 w:1 z:5,6 h:wi,uf"],
+  ["Störche","Ciconiidae","Aves","s:feder l:2 w:1 z:5,6 h:wi,uf"],
+  ["Rallen & Blässhühner","Rallidae","Aves","s:feder l:2 w:1 z:3,4 h:wa,uf"],
+  ["Kormorane","Phalacrocoracidae","Aves","s:feder l:2 w:1 z:5 h:wa"],
+  ["Lappentaucher","Podicipedidae","Aves","s:feder l:2 w:1 z:4 h:wa"],
+  ["Fasane & Rebhühner","Phasianidae","Aves","s:feder l:2 w:1 z:4,5 h:wi"],
+  ["Eisvögel","Alcedinidae","Aves","s:feder l:2 w:1 z:3 h:uf,wa"],
+  ["Schlangen","Serpentes","Reptilia","s:schuppe l:0 w:0 z:4,5 h:wi,wd,uf,wa"],
+  ["Blindschleichen","Anguidae","Reptilia","s:schuppe l:0 w:0 z:3,4 h:ga,wd,wi"],
+  ["Eidechsen","Lacertidae","Reptilia","s:schuppe l:4 w:0 z:3 h:wi,ga,wd"],
+  ["Fische","Actinopterygii","Actinopterygii","s:schuppe,haut l:0 w:0 z:2,3,4,5 h:wa"],
+  ["Echte Frösche","Ranidae","Amphibia","s:haut l:4 w:0 z:2,3 h:uf,wa,wi"],
+  ["Kröten","Bufonidae","Amphibia","s:haut l:4 w:0 z:2,3 h:ga,wd,uf"],
+  ["Laubfrösche","Hylidae","Amphibia","s:haut l:4 w:0 z:2 h:uf"],
+  ["Unken","Bombinatoridae","Amphibia","s:haut l:4 w:0 z:2 h:uf,wa"],
+  ["Molche","Salamandridae","Amphibia","s:haut l:4 w:0 z:2,3 h:wa,uf,wd"],
+  ["Käfer","Coleoptera","Insecta","s:panzer l:6 w:0,1 z:1,2,3 h:wd,wi,ga,uf,wa"],
+  ["Wanzen & Zikaden","Hemiptera","Insecta","s:panzer l:6 w:0,1 z:1,2 h:wd,wi,ga,uf,wa"],
+  ["Ameisen","Formicidae","Insecta","s:panzer l:6 w:0,1 z:1 h:wd,wi,ga"],
+  ["Bienen & Hummeln","Apidae","Insecta","s:panzer,fell l:6 w:1 z:1,2 h:wi,ga"],
+  ["Wespen & Hornissen","Vespidae","Insecta","s:panzer l:6 w:1 z:1,2,3 h:ga,wd,wi"],
+  ["Fliegen & Mücken","Diptera","Insecta","s:panzer,fell l:6 w:1 z:1,2 h:wd,wi,ga,uf"],
+  ["Libellen","Odonata","Insecta","s:panzer l:6 w:1 z:2,3 h:uf,wa"],
+  ["Heuschrecken","Orthoptera","Insecta","s:panzer l:6 w:0,1 z:2,3 h:wi,ga"],
+  ["Schmetterlinge & Raupen","Lepidoptera","Insecta","s:schuppe,fell,schleim l:6,viele w:0,1 z:1,2,3 h:wi,ga,wd"],
+  ["Spinnen","Araneae","Arachnida","s:panzer,fell l:8 w:0 z:1,2 h:wd,wi,ga,uf"],
+  ["Weberknechte","Opiliones","Arachnida","s:panzer l:8 w:0 z:1,2 h:wd,ga"],
+  ["Zecken & Milben","Acari","Arachnida","s:panzer l:8 w:0 z:1 h:wd,wi,ga"],
+  ["Asseln","Isopoda","Animalia","s:panzer l:viele w:0 z:1,2 h:ga,wd"],
+  ["Krebse","Decapoda","Animalia","s:panzer l:viele w:0 z:2,3 h:wa,uf"],
+  ["Tausendfüßer","Diplopoda","Animalia","s:panzer l:viele w:0 z:2,3 h:wd,ga"],
+  ["Hundertfüßer","Chilopoda","Animalia","s:panzer l:viele w:0 z:2,3 h:wd,ga"],
+  ["Schnecken","Gastropoda","Mollusca","s:schale,schleim l:0 w:0 z:1,2,3 h:ga,wd,wi,uf,wa"],
+  ["Muscheln","Bivalvia","Mollusca","s:schale l:0 w:0 z:2,3 h:wa,uf"],
+  ["Regenwürmer","Lumbricidae","Animalia","s:schleim l:0 w:0 z:2,3 h:ga,wi,wd"],
+  ["Quallen","Scyphozoa","Animalia","s:schleim l:0 w:0 z:3,4 h:wa"],
+  ["Kiefern, Fichten & Tannen","Pinaceae","Plantae","s:blatt g:baum b:nadel h:wd,ga"],
+  ["Eiben","Taxaceae","Plantae","s:blatt g:baum,strauch b:nadel h:wd,ga"],
+  ["Wacholder & Lebensbäume","Cupressaceae","Plantae","s:blatt g:baum,strauch b:nadel h:ga,wd,wi"],
+  ["Buchen & Eichen","Fagaceae","Plantae","s:blatt g:baum b:breit h:wd,ga"],
+  ["Birken, Erlen & Hasel","Betulaceae","Plantae","s:blatt g:baum,strauch b:breit h:wd,uf,ga"],
+  ["Ahorne & Rosskastanien","Sapindaceae","Plantae","s:blatt g:baum b:breit,geteilt h:wd,ga"],
+  ["Linden","Tilia","Plantae","s:blatt g:baum b:breit h:ga,wd"],
+  ["Weiden & Pappeln","Salicaceae","Plantae","s:blatt g:baum,strauch b:breit,schmal h:uf,wd,ga"],
+  ["Eschen, Flieder & Liguster","Oleaceae","Plantae","s:blatt g:baum,strauch b:geteilt,breit h:wd,ga"],
+  ["Ulmen","Ulmaceae","Plantae","s:blatt g:baum b:breit h:wd,ga"],
+  ["Rosengewächse (Rose, Apfel, Brombeere …)","Rosaceae","Plantae","s:blatt g:baum,strauch,kraut,kletter b:breit,geteilt h:wd,wi,ga"],
+  ["Holunder","Sambucus","Plantae","s:blatt g:strauch b:geteilt h:wd,ga"],
+  ["Hartriegel","Cornaceae","Plantae","s:blatt g:strauch b:breit h:wd,ga"],
+  ["Heidekraut & Heidelbeere","Ericaceae","Plantae","s:blatt g:strauch b:nadel,breit h:wd"],
+  ["Efeu","Hedera","Plantae","s:blatt g:kletter b:breit h:wd,ga"],
+  ["Winden","Convolvulaceae","Plantae","s:blatt g:kletter,kraut b:breit h:wi,ga"],
+  ["Korbblütler (Gänseblümchen, Löwenzahn …)","Asteraceae","Plantae","s:blatt g:kraut b:breit,geteilt,schmal h:wi,ga,wd,uf"],
+  ["Doldenblütler","Apiaceae","Plantae","s:blatt g:kraut b:geteilt h:wi,wd,uf,ga"],
+  ["Lippenblütler (Minze, Taubnessel …)","Lamiaceae","Plantae","s:blatt g:kraut b:breit h:wi,wd,ga,uf"],
+  ["Hahnenfußgewächse","Ranunculaceae","Plantae","s:blatt g:kraut,kletter b:geteilt,breit h:wi,wd,uf"],
+  ["Kreuzblütler","Brassicaceae","Plantae","s:blatt g:kraut b:breit,geteilt h:wi,ga"],
+  ["Hülsenfrüchtler (Klee, Wicke, Ginster …)","Fabaceae","Plantae","s:blatt g:kraut,strauch,kletter b:geteilt h:wi,ga,wd"],
+  ["Nelkengewächse","Caryophyllaceae","Plantae","s:blatt g:kraut b:schmal,breit h:wi,ga,wd"],
+  ["Orchideen","Orchidaceae","Plantae","s:blatt g:kraut b:breit,schmal h:wi,wd,uf"],
+  ["Brennnesseln","Urticaceae","Plantae","s:blatt g:kraut b:breit h:wd,ga,uf"],
+  ["Knöteriche & Ampfer","Polygonaceae","Plantae","s:blatt g:kraut,kletter b:breit h:wi,ga,uf"],
+  ["Wegeriche & Ehrenpreis","Plantaginaceae","Plantae","s:blatt g:kraut b:breit,schmal h:wi,ga"],
+  ["Veilchen","Violaceae","Plantae","s:blatt g:kraut b:breit h:wd,wi,ga"],
+  ["Storchschnäbel","Geraniaceae","Plantae","s:blatt g:kraut b:geteilt h:wi,wd,ga"],
+  ["Glockenblumen","Campanulaceae","Plantae","s:blatt g:kraut b:breit,schmal h:wi,wd"],
+  ["Raublattgewächse (Vergissmeinnicht …)","Boraginaceae","Plantae","s:blatt g:kraut b:breit,schmal h:wi,ga,uf"],
+  ["Spargelgewächse (Maiglöckchen …)","Asparagaceae","Plantae","s:blatt g:kraut b:schmal,breit h:wd,ga"],
+  ["Lauch & Narzissen","Amaryllidaceae","Plantae","s:blatt g:kraut b:schmal h:wd,ga"],
+  ["Schwertlilien","Iridaceae","Plantae","s:blatt g:kraut b:schmal h:uf,ga"],
+  ["Süßgräser","Poaceae","Plantae","s:blatt g:gras b:schmal h:wi,uf,wd,ga"],
+  ["Sauergräser & Seggen","Cyperaceae","Plantae","s:blatt g:gras b:schmal h:uf,wi,wd"],
+  ["Binsen","Juncaceae","Plantae","s:blatt g:gras b:schmal,ohne h:uf,wi"],
+  ["Rohrkolben","Typhaceae","Plantae","s:blatt g:gras b:schmal h:uf,wa"],
+  ["Seerosen","Nymphaeaceae","Plantae","s:blatt g:wasser b:breit h:wa"],
+  ["Wasserlinsen","Lemna","Plantae","s:blatt g:wasser b:ohne h:wa"],
+  ["Laichkräuter","Potamogetonaceae","Plantae","s:blatt g:wasser b:schmal,breit h:wa"],
+  ["Farne","Polypodiopsida","Plantae","s:blatt g:moos b:geteilt h:wd,uf,ga"],
+  ["Schachtelhalme","Equisetum","Plantae","s:blatt g:moos b:nadel,ohne h:uf,wi"],
+  ["Moose","Bryophyta","Plantae","s:blatt g:moos b:ohne h:wd,ga,uf"],
+  ["Blätterpilze & Boviste","Agaricales","Fungi","s:pilz f:hut,kugel h:wd,wi,ga"],
+  ["Röhrlinge","Boletales","Fungi","s:pilz f:hut,kugel h:wd"],
+  ["Täublinge & Milchlinge","Russulales","Fungi","s:pilz f:hut,kruste h:wd"],
+  ["Porlinge","Polyporales","Fungi","s:pilz f:konsole,kruste h:wd,ga"],
+  ["Borstenscheiblinge","Hymenochaetales","Fungi","s:pilz f:konsole,kruste h:wd"],
+  ["Becherlinge & Morcheln","Pezizales","Fungi","s:pilz f:becher,hut h:wd,ga"],
+  ["Flechten","Lecanoromycetes","Fungi","s:pilz f:kruste h:wd,ga,wi"]
+].map(([label, sci, icon, attrs]) => ({ label, sci, icon,
+  a:Object.fromEntries(attrs.split(" ").map(x => { const [k, v] = x.split(":"); return [k, new Set(v.split(","))]; })) }));
+const SEC_OF_SURFACE = { blatt:"pflanze", pilz:"pilz" };   // alle anderen Oberflächen → Tier
+const LOOK_DIRECT = 25;   // bis zu so vielen Gruppen einzeln abfragen, darüber grob nach Klasse/Reich
+const LOOK_HINT = `<p class="note">Tippe oben an, was dir aufgefallen ist. Schon ein Merkmal reicht für den Anfang; jedes weitere grenzt ein.</p>`;
+
+const ls = { sel:{}, lastKey:null, abort:null, matches:[] };
+
+function lookMatches(sel){
+  return LOOK_DB.filter(e => Object.entries(sel).every(([k, v]) => {
+    if (LOOK_Q.find(x => x.id === k).api) return k !== "bl" || e.icon === "Plantae";   // Blüte nur bei Pflanzen
+    return e.a[k]?.has(v);
+  }));
+}
+const activeSec = () => ls.sel.s ? (SEC_OF_SURFACE[ls.sel.s] || "tier") : null;
+
+function renderLook(){
+  const act = activeSec();
+  $("#lookForm").innerHTML = LOOK_SECS.map(([sec, title, sub]) => {
+    if (act && ["tier","pflanze","pilz"].includes(sec) && sec !== act) return "";
+    const qs = LOOK_Q.filter(q => q.sec === sec);
+    return `<section class="look-sec"><h4>${title}${sub ? `<small>${sub}</small>` : ""}</h4>${qs.map(q => {
+      const cur = ls.sel[q.id];
+      const chips = q.opts.map(([v, l]) => {
+        const on = cur === v;
+        // würde diese Wahl noch etwas finden? (Oberfläche bleibt immer wählbar – ein Wechsel räumt Unpassendes ab)
+        const n = on || q.id === "s" ? 1 : lookMatches({ ...ls.sel, [q.id]:v }).length;
+        return `<button class="chip${n ? "" : " empty"}" data-q="${q.id}" data-v="${v}" aria-pressed="${on}"${n ? "" : ` disabled title="passt nicht zu deiner bisherigen Auswahl"`}>${esc(l)}</button>`;
+      }).join("");
+      const curLabel = cur ? q.opts.find(o => o[0] === cur)[1] : "";
+      return `<div class="look-q"><span class="trait-label">${esc(q.label)}${curLabel ? `<b>${esc(curLabel)}</b>` : ""}</span><div class="chips">${chips}</div></div>`;
+    }).join("")}${sec === "ort" ? `<div class="look-q"><span class="trait-label">Umkreis</span><div class="chips">${KEY_RADIUS.map(r => `<button class="chip" data-r="${r}" aria-pressed="${r === ks.radius}">${r} km</button>`).join("")}</div></div>` : ""}</section>`;
+  }).join("");
+}
+
+$("#lookForm").onclick = e => {
+  const r = e.target.closest(".chip[data-r]");
+  if (r){ ks.radius = +r.dataset.r; syncRadiusChips(); fitToRadius(); runLook(); return; }
+  const b = e.target.closest(".chip[data-q]"); if (!b || b.disabled) return;
+  const q = b.dataset.q, v = b.dataset.v;
+  if (ls.sel[q] === v) delete ls.sel[q]; else ls.sel[q] = v;
+  if (q === "s"){   // andere Oberfläche → Merkmale der ausgeblendeten Bereiche entfernen
+    const act = activeSec();
+    LOOK_Q.forEach(x => { if (act && ["tier","pflanze","pilz"].includes(x.sec) && x.sec !== act) delete ls.sel[x.id]; });
+    if (!lookMatches(ls.sel).length) ["z","l","w","h"].forEach(k => { if (k in ls.sel && !lookMatches(ls.sel).length) delete ls.sel[k]; });
+  }
+  const y = $("#lookBody").scrollTop;
+  renderLook(); $("#lookBody").scrollTop = y;
+  runLook();
+};
+$("#lReset").onclick = () => { ls.sel = {}; renderLook(); runLook(); $("#lookBody").scrollTo({ top:0, behavior:"smooth" }); };
+const lookList = makeTierList($("#lTiers"), "lk", {
+  emptyHTML:`<div class="state">Im Umkreis wurde dazu nichts gemeldet. Lass ein Merkmal weg oder vergrößere den Umkreis.</div>`,
+  onTotal:n => $("#lTotal").textContent = n == null ? "" : `${fmt(n)} Art${n === 1 ? "" : "en"}` });
+
+/* Viele Namen → IDs, höchstens 3 Anfragen gleichzeitig; IDs ändern sich nicht und werden auf dem Gerät gemerkt */
+const ID_STORE = "pn-taxon-ids";
+try{ Object.entries(JSON.parse(localStorage.getItem(ID_STORE) || "{}")).forEach(([k, v]) => ks.taxonIds.set(k, v)); }catch{}
+async function resolveMany(names){
+  const todo = names.filter(n => !ks.taxonIds.has(n));
+  let i = 0;
+  const worker = async () => { while (i < todo.length){ const n = todo[i++]; try{ await resolveTaxon(n); }catch{} } };
+  await Promise.all([worker(), worker(), worker()]);
+  try{ localStorage.setItem(ID_STORE, JSON.stringify(Object.fromEntries([...ks.taxonIds].filter(([, v]) => v)))); }catch{}
+  return names.map(n => ks.taxonIds.get(n)).filter(Boolean);
+}
+
+async function lookParams(){
+  const ctr = searchCenter(), m = ls.matches;
+  const p = new URLSearchParams({ lat:ctr.lat.toFixed(4), lng:ctr.lng.toFixed(4), radius:ks.radius, quality_grade:"research" });
+  if (m.length <= LOOK_DIRECT){
+    const ids = await resolveMany(m.map(e => e.sci));
+    if (!ids.length) return null;
+    p.set("taxon_id", ids.join(","));
+  } else {
+    p.set("iconic_taxa", [...new Set(m.map(e => e.icon))].join(","));
+  }
+  if (ls.sel.jetzt) p.set("month", NOW_M);
+  if (ls.sel.bl){ p.set("term_id", 12); p.set("term_value_id", ls.sel.bl === "ja" ? 13 : 14); }
+  return p;
+}
+
+function setLookOverlay(remove, p){
+  return;   // ersetzt durch Fotos auf der Karte (showPins)
+  if (map.getLayer("lookobs")) map.removeLayer("lookobs");
+  if (map.getSource("lookobs")) map.removeSource("lookobs");
+  if (remove || state.tab !== "look" || !p || !map.isStyleLoaded()) return;
+  const q = new URLSearchParams(p); q.set("color", "#e7ad4f");
+  map.addSource("lookobs", { type:"raster", tileSize:256, tiles:[`${API.inat}/grid/{z}/{x}/{y}.png?${q}`],
+    attribution:'<a href="https://www.inaturalist.org" target="_blank">iNaturalist</a>' });
+  map.addLayer({ id:"lookobs", type:"raster", source:"lookobs", paint:{ "raster-opacity":0.85 } });
+}
+
+let lookTimer;
+function runLook(){ clearTimeout(lookTimer); lookTimer = setTimeout(doRunLook, 400); }
+async function doRunLook(){
+  if (state.tab !== "look") return;
+  setAreaCircle(); updateKeyWhere();
+  const ctr = searchCenter();
+  const key = JSON.stringify(ls.sel) + `|${ctr.lat.toFixed(4)},${ctr.lng.toFixed(4)},${ks.radius}`;
+  if (key === ls.lastKey) return;
+  ls.lastKey = key;
+  const anyLook = Object.keys(ls.sel).some(k => !LOOK_Q.find(q => q.id === k).api);
+  ls.matches = anyLook ? lookMatches(ls.sel) : [];
+  if (!anyLook){
+    ls.abort?.abort(); setLookOverlay(true);
+    pins.key = null; clearPins(); $("#pinMore").hidden = true;
+    lookList.ctx = null; $("#lTotal").textContent = ""; $("#lTiers").innerHTML = ""; $("#lSummary").innerHTML = LOOK_HINT;
+    return;
+  }
+  await loadLookPage();
+}
+
+async function loadLookPage(){
+  ls.abort?.abort(); ls.abort = new AbortController();
+  const signal = ls.abort.signal, m = ls.matches;
+  const names = m.slice(0, 14).map(e => `<span>${esc(e.label)}</span>`).join("") + (m.length > 14 ? `<span>+ ${m.length - 14} weitere</span>` : "");
+  $("#lSummary").innerHTML = `<p class="note">Passt zu ${m.length} Gruppe${m.length === 1 ? "" : "n"}:</p><div class="matchlist">${names}</div><p class="note">${
+    m.length > LOOK_DIRECT ? "Noch sehr allgemein – ein, zwei weitere Merkmale machen das Ergebnis deutlich genauer." : "Oben stehen die Arten, die hier am häufigsten gemeldet werden – also am wahrscheinlichsten sind."}</p>`;
+  $("#lTiers").innerHTML = `<section class="tier"><div class="grid">${skeletons(4)}</div></section>`;
+  try{
+    const p = await lookParams();
+    if (signal.aborted) return;
+    if (!p){ $("#lTiers").innerHTML = `<div class="state">Die passenden Gruppen sind bei iNaturalist gerade nicht erreichbar.</div>`; ls.lastKey = null; return; }
+    setLookOverlay(false, p);
+    p.set("locale", "de"); p.set("preferred_place_id", "7207");
+    showPins(p, ks.radius);
+    await lookList.load(p, signal);
+  }catch(err){
+    if (err.name === "AbortError") return;
+    ls.lastKey = null;
+  }
+}
+renderLook();
+
+/* ================= Fotos der Lebewesen auf der Karte =================
+   Runde Fotos an echten Fundorten (iNaturalist), aufgeteilt nach Zonen:
+   – Grundauswahl bis 100 km: die 5 häufigsten, 3 Tiere + 2 Pflanzen; darüber je 2 pro Gruppe.
+   – Zonen: Der Umkreis wird in ein Raster geteilt. Hat eine Zone (z. B. ein See) Arten, die dort
+     deutlich häufiger sind als im ganzen Umkreis, bekommt sie ein eigenes Foto dieser Art.
+   – Kein Überdecken: Fotos, die sich berühren würden, rücken auf einem Ring zur Seite. */
+const PIN_ANIMALS = ["Mammalia","Aves","Reptilia","Amphibia","Actinopterygii","Insecta","Arachnida","Mollusca","Animalia"];
+const PIN_GROUPS = ["Plantae","Fungi", ...PIN_ANIMALS];
+const PIN_PX = 54;            // Mindestabstand der Mittelpunkte in Pixeln (Foto 46 px + Luft)
+const ZONE_GRID = 5;          // 5 × 5 Zonen über den Umkreis
+const ZONE_MAX = 4;           // höchstens so viele Zonen-Fotos zusätzlich, abwechselnd Tier / Pflanze
+const pins = { markers:[], key:null, abort:null, pool:null, sample:null, extra:0, params:null, radius:0 };
+const iconOf = t => t?.iconic_taxon_name || "Animalia";
+
+function clearPins(){ pins.markers.forEach(m => m.remove()); pins.markers = []; }
+
+function pickPins(pool, radius, extra){
+  const by = g => pool.filter(r => iconOf(r.taxon) === g);
+  let out = [];
+  if (radius <= 100){
+    const animals = pool.filter(r => PIN_ANIMALS.includes(iconOf(r.taxon))), plants = by("Plantae");
+    out = [...animals.slice(0, 6), ...plants.slice(0, 3)];   // 9 häufigste: 2/3 Tiere, 1/3 Pflanzen
+    if (out.length < 9) out = [...out, ...pool.filter(r => !out.includes(r))].slice(0, 9);
+  }
+  const per = radius <= 100 ? extra * 2 : 2 + extra * 2;
+  if (per){ const top = [...out]; PIN_GROUPS.forEach(g => by(g).filter(r => !top.includes(r)).slice(0, per).forEach(r => out.push(r))); }
+  return out.map(r => r.taxon);
+}
+
+/* Zonen: Arten, die in einer Rasterzelle auffällig häufiger sind als im ganzen Umkreis */
+function zoneOf(o, c, radius){
+  const [lng, lat] = o.geojson.coordinates;
+  const dy = (lat - c.lat) * 111.32, dx = (lng - c.lng) * 111.32 * Math.cos(c.lat * Math.PI / 180);
+  const size = 2 * radius / ZONE_GRID;
+  return `${Math.floor((dx + radius) / size)}:${Math.floor((dy + radius) / size)}`;
+}
+function zonePicks(sample, c, radius, taken){
+  const all = new Map(), zones = new Map();
+  sample.forEach(o => {
+    if (!o.taxon || !o.geojson) return;
+    const id = o.taxon.id, z = zoneOf(o, c, radius);
+    all.set(id, (all.get(id) || 0) + 1);
+    if (!zones.has(z)) zones.set(z, { n:0, sp:new Map() });
+    const Z = zones.get(z); Z.n++; Z.sp.set(id, [(Z.sp.get(id)?.[0] || 0) + 1, o]);
+  });
+  const N = sample.length, cands = [];
+  zones.forEach((Z, z) => {
+    if (Z.n < 4) return;   // zu wenig Daten für eine Aussage
+    const best = {};   // je Zone die typischste Pflanze und das typischste Tier
+    Z.sp.forEach(([k, o], id) => {
+      if (k < 2 || taken.has(id)) return;
+      const lift = (k / Z.n) / (all.get(id) / N);   // wie viel häufiger als im ganzen Umkreis
+      const score = lift * Math.sqrt(k), kind = iconOf(o.taxon) === "Plantae" ? "p" : "a";
+      if (lift >= 1.8 && (!best[kind] || score > best[kind].score)) best[kind] = { score, o, id, kind };
+    });
+    Object.values(best).forEach(b => cands.push(b));
+  });
+  // abwechselnd Tier und Pflanze, jeweils die auffälligste zuerst; keine Art doppelt
+  const a = cands.filter(c => c.kind === "a").sort((x, y) => y.score - x.score), pl = cands.filter(c => c.kind === "p").sort((x, y) => y.score - x.score);
+  const out = [], used = new Set();
+  while (out.length < ZONE_MAX && (a.length || pl.length)){
+    for (const arr of [a, pl]){
+      while (arr.length && used.has(arr[0].id)) arr.shift();
+      if (arr.length && out.length < ZONE_MAX){ const c = arr.shift(); used.add(c.id); out.push(c); }
+    }
+  }
+  return out;
+}
+
+function pinEl(t, obsPhoto, zone){
+  const el = document.createElement("button");
+  el.className = "ppin" + (zone ? " zone" : ""); el.style.setProperty("--c", groupColor(t));
+  el.title = (t.preferred_common_name || t.name) + (zone ? " – typisch für diese Stelle" : "");
+  el.setAttribute("aria-label", `${t.preferred_common_name || t.name} – Steckbrief öffnen`);
+  const src = photo(obsPhoto || t.default_photo?.square_url, "square");
+  el.innerHTML = src ? `<img src="${esc(src)}" alt="" loading="lazy">` : `<span>${esc((t.preferred_common_name || t.name)[0])}</span>`;
+  el.addEventListener("click", e => { e.stopPropagation(); openDetail(t.id); });
+  return el;
+}
+function addPin(t, o, zone){
+  const m = new maplibregl.Marker({ element:pinEl(t, o.photos?.[0]?.url, zone), anchor:"center" }).setLngLat(o.geojson.coordinates).addTo(map);
+  pins.markers.push(m);
+}
+
+/* Überdecken vermeiden: der Reihe nach (wichtigste zuerst) einen freien Platz auf Ringen um den Fundort suchen */
+const RING = [[0,0]];
+[1, 2, 3].forEach(r => { const n = 6 * r; for (let i = 0; i < n; i++){ const a = 2 * Math.PI * i / n + r; RING.push([Math.cos(a) * PIN_PX * r, Math.sin(a) * PIN_PX * r]); } });
+function declutter(){
+  const placed = [];
+  pins.markers.forEach(m => {
+    const p = map.project(m.getLngLat());
+    const spot = RING.find(([ox, oy]) => placed.every(q => Math.hypot(p.x + ox - q[0], p.y + oy - q[1]) >= PIN_PX));
+    m.getElement().style.visibility = spot ? "" : "hidden";
+    if (!spot) return;
+    m.setOffset(spot);
+    placed.push([p.x + spot[0], p.y + spot[1]]);
+  });
+}
+let declutterRaf = 0;
+map.on("zoom", () => { cancelAnimationFrame(declutterRaf); declutterRaf = requestAnimationFrame(declutter); });
+map.on("moveend", declutter);
+
+async function locateMissing(list, base, signal){
+  let i = 0;
+  const work = async () => {
+    while (i < list.length){
+      const t = list[i++];
+      const p = new URLSearchParams({ taxon_id:t.id, lat:base.get("lat"), lng:base.get("lng"), radius:base.get("radius"), photos:"true", per_page:"1" });
+      if (base.get("quality_grade")) p.set("quality_grade", base.get("quality_grade"));
+      try{
+        const d = await getJSON(`${API.inat}/observations?${p}`, signal);
+        const o = d.results?.[0];
+        if (o?.geojson && !signal.aborted){ addPin(t, o); declutter(); }
+      }catch(err){ if (err.name === "AbortError") return; }
+    }
+  };
+  await Promise.all([work(), work(), work()]);
+}
+
+async function updatePins(params, radius){
+  const base = new URLSearchParams(params);
+  ["locale","preferred_place_id","per_page","page"].forEach(k => base.delete(k));
+  if (!base.get("lat")){ pins.key = null; clearPins(); $("#pinMore").hidden = true; return; }   // Globus-Ansicht: keine Fotos
+  const poolKey = base.toString(), key = poolKey + "|" + radius + "|" + pins.extra;
+  if (key === pins.key) return;
+  pins.key = key; pins.params = params; pins.radius = radius;
+  pins.abort?.abort(); pins.abort = new AbortController();
+  const signal = pins.abort.signal;
+  try{
+    if (pins.pool?.key !== poolKey){
+      const q = new URLSearchParams(base); q.set("per_page", "200"); q.set("locale", "de"); q.set("preferred_place_id", "7207");
+      const s = new URLSearchParams(base); s.set("photos", "true"); s.set("per_page", "200"); s.set("locale", "de"); s.set("preferred_place_id", "7207");
+      const [d, o] = await Promise.all([
+        getJSON(`${API.inat}/observations/species_counts?${q}`, signal),
+        getJSON(`${API.inat}/observations?${s}`, signal).catch(err => { if (err.name === "AbortError") throw err; return { results:[] }; })
+      ]);
+      pins.pool = { key:poolKey, list:d.results || [] };
+      pins.sample = (o.results || []).filter(x => x.geojson && x.taxon);
+    }
+    clearPins();
+    const c = { lat:+base.get("lat"), lng:+base.get("lng") };
+    const main = pickPins(pins.pool.list, radius, pins.extra);
+    const taken = new Set(main.map(t => t.id));
+    // Grundauswahl: Fundort aus der Stichprobe, sonst einzeln nachschlagen
+    const missing = [];
+    main.forEach(t => { const o = pins.sample.find(x => x.taxon.id === t.id); o ? addPin(t, o) : missing.push(t); });
+    // Zonen-Fotos: andere Arten an Stellen, wo sie typisch sind (Wasser, Wald, Stadt …)
+    zonePicks(pins.sample, c, radius, taken).forEach(z => addPin(z.o.taxon, z.o, true));
+    declutter();
+    $("#pinMore").hidden = !main.length;
+    await locateMissing(missing, base, signal);
+  }catch(err){ if (err.name !== "AbortError") pins.key = null; }
+}
+function showPins(params, radius){
+  const base = new URLSearchParams(params); ["locale","preferred_place_id","per_page","page"].forEach(k => base.delete(k));
+  if (pins.pool?.key !== base.toString()) pins.extra = 0;   // neuer Ort oder Filter → Grundauswahl
+  updatePins(params, radius);
+}
+$("#pinMore").onclick = () => { if (!pins.params) return; pins.extra++; updatePins(pins.params, pins.radius); };
+
+/* ================= Arten entdecken · Kombi =================
+   Zwei unabhängige Datenquellen, konservativ gemittelt:
+   – iNaturalist: bestätigte Beobachtungen im Umkreis (Bürgerwissenschaft, mit Fotos)
+   – GBIF: alle Fundmeldungen im Umkreis aus vielen Datenbanken (Museen, Kartierungen, Vogelzählungen …)
+   Je Quelle zählt der Anteil einer Art an ihrer eigenen Gruppe (Vögel unter Vögeln, Pflanzen unter
+   Pflanzen) – so verzerren riesige Vogelzähl-Datensätze nicht alles. Kombiniert wird mit dem
+   geometrischen Mittel: Eine Art ist nur dann weit oben, wenn BEIDE Quellen sie häufig sehen.
+   Arten, die nur eine Quelle kennt, bleiben drin, aber stark abgewertet. */
+const GBIF_GROUP_KEY = { plants:6, fungi:5, mamm:359, birds:212, rept:358, amph:131, fish:204, ins:216, arach:367, moll:52 };
+const GBIF_NAME_STORE = "pn-gbif-names";
+const gbifNames = (() => { try{ return new Map(Object.entries(JSON.parse(localStorage.getItem(GBIF_NAME_STORE) || "{}"))); }catch{ return new Map(); } })();
+const COMBO_GBIF_TOP = 1000, COMBO_INAT_PAGES = 3;   // bis zu 1.000 GBIF- und 1.500 iNaturalist-Arten
+const cs = { group:"all", lastKey:null, abort:null };
+
+$("#cGroups").innerHTML = GROUPS.map(g =>
+  `<button class="chip" style="--c:${g.c}" data-id="${g.id}" aria-pressed="${g.id === cs.group}"><i></i>${g.label}</button>`).join("");
+$("#cGroups").onclick = e => {
+  const b = e.target.closest(".chip"); if (!b || b.disabled) return;
+  cs.group = b.dataset.id;
+  document.querySelectorAll("#cGroups .chip").forEach(x => x.setAttribute("aria-pressed", x === b));
+  runCombo();
+};
+
+function iconicFromGbif(s){
+  if (s.kingdom === "Plantae") return "Plantae";
+  if (s.kingdom === "Fungi") return "Fungi";
+  const cl = { Mammalia:"Mammalia", Aves:"Aves", Reptilia:"Reptilia", Squamata:"Reptilia", Testudines:"Reptilia", Amphibia:"Amphibia",
+    Actinopterygii:"Actinopterygii", Insecta:"Insecta", Arachnida:"Arachnida" }[s.class];
+  if (cl) return cl;
+  return s.phylum === "Mollusca" ? "Mollusca" : "Animalia";
+}
+/* GBIF-Artnummern → Namen (einmal je Art, danach auf dem Gerät gemerkt) */
+async function gbifResolve(keys, signal, progress = () => {}){
+  const todo = keys.filter(k => !gbifNames.has(String(k)));
+  let i = 0, done = 0;
+  const work = async () => {
+    while (i < todo.length){
+      const k = todo[i++];
+      if (++done % 25 === 0) progress(done, todo.length);
+      try{
+        const s = await getJSON(`${API.gbif}/species/${k}`, signal);
+        gbifNames.set(String(k), [s.canonicalName || s.species || "", iconicFromGbif(s)]);
+      }catch(err){ if (err.name === "AbortError") throw err; }
+    }
+  };
+  await Promise.all(Array.from({ length:6 }, work));
+  try{ localStorage.setItem(GBIF_NAME_STORE, JSON.stringify(Object.fromEntries(gbifNames))); }catch{}
+}
+
+const comboList = makeTierList($("#cTiers"), "cb", {
+  emptyHTML:`<div class="state">Keine Art wird hier von beiden Quellen gemeldet. Zoom heraus oder wähle eine andere Gruppe.</div>`,
+  onTotal:n => $("#cTotal").textContent = n == null ? "" : `${fmt(n)} Arten` });
+
+let comboTimer;
+function runCombo(){ clearTimeout(comboTimer); comboTimer = setTimeout(doRunCombo, 300); }
+async function doRunCombo(){
+  if (state.tab !== "combo") return;
+  const c = searchCenter(), r = Math.min(radiusKm(), 250), g = GROUPS.find(x => x.id === cs.group);
+  map.getSource("area")?.setData(circle(c.lng, c.lat, r));
+  $("#cWhere").textContent = `Umkreis ${fmt(r)} km um ${$("#place").textContent || "die Kartenmitte"}`;
+  const key = `${c.lat.toFixed(3)},${c.lng.toFixed(3)},${r},${cs.group}`;
+  if (key === cs.lastKey) return;
+  cs.lastKey = key;
+  cs.abort?.abort(); cs.abort = new AbortController();
+  const signal = cs.abort.signal;
+  const ip = new URLSearchParams({ iconic_taxa:g.taxa, quality_grade:"research", lat:c.lat.toFixed(4), lng:c.lng.toFixed(4), radius:r,
+    locale:"de", preferred_place_id:"7207", per_page:500 });
+  showPins(ip, r);
+  const gp = new URLSearchParams({ geoDistance:`${c.lat.toFixed(4)},${c.lng.toFixed(4)},${r}km`, facet:"speciesKey", facetLimit:COMBO_GBIF_TOP,
+    limit:0, occurrenceStatus:"PRESENT", hasGeospatialIssue:"false" });
+  if (GBIF_GROUP_KEY[g.id]) gp.set("taxonKey", GBIF_GROUP_KEY[g.id]);
+  $("#cTiers").innerHTML = `<section class="tier"><div class="grid">${skeletons(4)}</div></section>`;
+  $("#cTotal").textContent = ""; $("#cStat").textContent = "Lade iNaturalist und GBIF …";
+  try{
+    const [inat1, gbif] = await Promise.all([
+      getJSON(`${API.inat}/observations/species_counts?${ip}`, signal),
+      getJSON(`${API.gbif}/occurrence/search?${gp}`, signal)
+    ]);
+    // iNaturalist: weitere Seiten nacheinander (schont das Anfragelimit)
+    const inat = [...(inat1.results || [])];
+    for (let pg = 2; pg <= COMBO_INAT_PAGES && inat.length < inat1.total_results; pg++){
+      $("#cStat").textContent = `Lade weitere iNaturalist-Arten … ${fmt(inat.length)} von ${fmt(inat1.total_results)}`;
+      const q = new URLSearchParams(ip); q.set("page", pg);
+      const d = await getJSON(`${API.inat}/observations/species_counts?${q}`, signal);
+      inat.push(...(d.results || []));
+    }
+    const counts = gbif.facets?.[0]?.counts || [];
+    $("#cStat").textContent = "Gleiche die Artnamen ab …";
+    await gbifResolve(counts.map(x => x.name), signal, (n, all) => $("#cStat").textContent = `Gleiche die Artnamen ab … ${fmt(n)} von ${fmt(all)} (nur beim ersten Mal)`);
+    if (signal.aborted) return;
+    // GBIF: Name → [Anzahl, Gruppe]
+    const gMap = new Map();
+    counts.forEach(x => { const n = gbifNames.get(String(x.name)); if (n?.[0]) gMap.set(n[0].toLowerCase(), [x.count, n[1]]); });
+    // Anteile je Gruppe und Quelle
+    const iTot = {}, gTot = {}, iMin = {}, gMin = {};
+    inat.forEach(x => { const k = iconOf(x.taxon); iTot[k] = (iTot[k] || 0) + x.count; });
+    gMap.forEach(([n, k]) => { gTot[k] = (gTot[k] || 0) + n; });
+    inat.forEach(x => { const k = iconOf(x.taxon), sh = x.count / iTot[k]; iMin[k] = Math.min(iMin[k] ?? 1, sh); });
+    gMap.forEach(([n, k]) => { const sh = n / gTot[k]; gMin[k] = Math.min(gMin[k] ?? 1, sh); });
+    /* Fehlt eine Art in einer Quelle, zählt dort die Hälfte des kleinsten gemessenen Anteils –
+       die Art bleibt sichtbar, landet aber konservativ weit unten. */
+    const floorI = k => (iMin[k] ?? 1e-4) / 2, floorG = k => (gMin[k] ?? 1e-4) / 2;
+    let both = 0, onlyI = 0, onlyG = 0;
+    const list = [], seen = new Set();
+    inat.forEach(x => {
+      const nm = x.taxon.name.toLowerCase(), gm = gMap.get(nm), k = iconOf(x.taxon);
+      seen.add(nm);
+      const sI = x.count / iTot[k];
+      const sG = gm ? gm[0] / gTot[gm[1]] : floorG(k);
+      gm ? both++ : onlyI++;
+      list.push({ taxon:x.taxon, count:x.count, score:Math.sqrt(sI * sG),   // geometrisches Mittel
+        label: gm ? `${fmt(x.count)} iNat · ${fmt(gm[0])} GBIF` : `${fmt(x.count)} iNat · nicht bei GBIF` });
+    });
+    gMap.forEach(([n, k], nm) => {
+      if (seen.has(nm)) return;
+      onlyG++;
+      const name = nm.charAt(0).toUpperCase() + nm.slice(1);
+      list.push({ taxon:{ id:null, name, iconic_taxon_name:k }, count:n, score:Math.sqrt(floorI(k) * (n / gTot[k])),
+        label:`nicht bei iNat · ${fmt(n)} GBIF` });
+    });
+    list.sort((a, b) => b.score - a.score);
+    $("#cStat").textContent = `${fmt(list.length)} Arten: ${fmt(both)} in beiden Quellen, ${fmt(onlyI + onlyG)} nur in einer – diese stark abgewertet.`;
+    await comboList.load(null, signal, list);
+  }catch(err){
+    if (err.name === "AbortError") return;
+    cs.lastKey = null;
+    $("#cStat").textContent = "";
+    $("#cTiers").innerHTML = `<div class="state">Daten konnten nicht geladen werden (${esc(err.message)}).</div>`;
+  }
+}
+
+/* ================= Erkennen ================= */
+$("#identPlant").onclick = () => openIdentify();
+let cmpUrl = null;
+function setCompare(file){
+  if (cmpUrl) URL.revokeObjectURL(cmpUrl);
+  cmpUrl = file ? URL.createObjectURL(file) : null;   // bleibt nur im Browser, wird nicht hochgeladen
+  $("#cmp").hidden = !cmpUrl;
+  if (cmpUrl) $("#cmpImg").src = cmpUrl;
+}
+function toLook(){ setTab("look"); $("#lookBody").scrollTop = 0; if (isMobile()) setSheet("full"); }
+$("#identAnimal").onchange = e => { const f = e.target.files?.[0]; if (!f) return; setCompare(f); e.target.value = ""; toLook(); };
+$("#identNoPhoto").onclick = () => toLook();
+$("#cmpClose").onclick = () => setCompare(null);
+$("#cmpImg").onclick = e => e.currentTarget.classList.toggle("big");
+
+updateFilterLabel();
+applyLayout();
+updateReadout();
+</script>
+</body>
+</html>

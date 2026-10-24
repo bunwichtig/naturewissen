@@ -1,158 +1,64 @@
 # Pure Nature
 
-Eine Wissensdatenbank über die Arten der Welt, die selbst **keine Daten speichert**. Alles wird live aus freien APIs geladen.
+Zeigt auf einem Globus, welche Tiere, Pflanzen und Pilze an einem Ort leben, und hilft beim Bestimmen. Die Seite speichert selbst **keine Funddaten**: Alles kommt live aus freien, legalen Quellen.
 
-Ein drehbarer 3D-Globus zeigt beim Zoomen, welche Pflanzen, Tiere und Pilze im sichtbaren Ausschnitt vorkommen. Ein Klick auf eine Art öffnet Fotos, Systematik, Gefährdungsstatus, eine Wikipedia-Beschreibung und die weltweite Verbreitung. Pflanzen lassen sich außerdem **per Handy-Foto bestimmen**.
+**Seite:** <https://bunwichtig.github.io/naturewissen/> · **Quellen & Lizenzen:** [quellen.html](https://bunwichtig.github.io/naturewissen/quellen.html) · Alte Version (bis Oktober 2026): [alt/](https://bunwichtig.github.io/naturewissen/alt/)
 
-## Starten
+## Aufbau
 
-`index.html` herunterladen und im Browser öffnen. Es gibt keinen Build-Schritt und keine Abhängigkeiten.
+Zwei Bereiche, die auf denselben Ort, dieselbe Artenliste und denselben Steckbrief bauen:
 
-Für das Handy und für die Fotobestimmung braucht die Seite eine `https://`-Adresse. Am einfachsten geht das mit GitHub Pages (siehe unten). Als lokal geöffnete Datei funktionieren Globus und Artenliste, aber nicht die Bestimmung per Foto.
+- **Entdecken – Was lebt hier?** Arten im Umkreis nach Häufigkeit (iNaturalist), filterbar nach Gruppe. Schalter „genauer rechnen“ nimmt die Fundmeldungen von GBIF dazu.
+- **Bestimmen – Was habe ich gesehen?**
+  - *Mit Foto:* Pflanzen automatisch über Pl@ntNet. Für Tiere und Pilze gibt es keinen frei nutzbaren Foto-Erkenner; das eigene Foto bleibt dann als Vergleich stehen.
+  - *Nach Merkmalen:* Oberfläche, Beine, Flügel, Größe, Wuchs, Blätter, Pilzform, Ort und Zeit. Grundlage ist die Merkmalstabelle mit 241 Gruppen; jede Zeile hat einen Beleg (Wikipedia-Artikel), nachzulesen auf der Quellen-Seite.
+- **Steckbrief:** Fotos mit Urheber und Lizenz, Gefährdung, Zahlen, Jahreszeit (Funde je Monat), Beschreibung aus Wikipedia, Verwechslungsarten, Systematik, Verbreitung auf der Karte.
+- **Karte:** Globus (MapLibre, OpenFreeMap), Satellitenbild (EOX), Waben mit der Funddichte (GBIF), Fotos der häufigsten Lebewesen an ihren Fundorten.
 
-## Funktionen
+Der **Umkreis folgt dem Zoom** und gilt für alle Bereiche gleich (5 bis 250 km). Start: Pinnow bei Schwerin, 30 km.
 
-- 3D-Globus mit Zoom, Ortssuche, Satellitenbild und Fotos der Lebewesen an ihren Fundorten
-- Arten im Umkreis der Kartenmitte; der Radius passt sich dem Zoom an
-- Gruppen: Pflanzen, Pilze, Säugetiere, Vögel, Reptilien, Amphibien, Fische, Insekten, Spinnentiere, Weichtiere
-- Detailansicht: Fotogalerie mit Lizenz, IUCN-Status, Systematik, Wikipedia-Text, Zahlen von iNaturalist und GBIF, Verbreitungskarte
-- **Pflanze bestimmen**: Foto mit der Handykamera aufnehmen oder aus der Galerie wählen → Pl@ntNet schlägt die wahrscheinlichsten Arten vor → „Steckbrief öffnen“ zeigt die Art in der Detailansicht
-- Platzhalter für spätere Felder: Lebensraum, Merkmale, Phänologie, Verwechslungsarten, Laute, Nahrung
+## Regeln, die die Seite einhält
 
----
+- Nur **frei lizenzierte Fotos** (Creative Commons oder CC0) werden gezeigt, jeweils mit Urheber und Lizenz.
+- **iNaturalist:** eine Anfrage nach der anderen mit Abstand; die Artenliste kommt vor den Fotos. Gleiche Anfragen werden nicht wiederholt.
+- **Nominatim:** höchstens eine Anfrage pro Sekunde, Suche erst nach dem Absenden (keine Suche beim Tippen).
+- **Schriften und MapLibre** liegen im Repo; beim Öffnen wird nichts von Google oder einem CDN geladen.
+- Einige Inhalte sind nur **nicht-kommerziell** frei (Satellitenbild, viele Naturfotos). Pure Nature ist ein privates, nicht-kommerzielles Projekt.
 
-## Pflanzen per Foto bestimmen
+## Dateien
 
-Die Bestimmung nutzt die kostenlose [Pl@ntNet-API](https://my.plantnet.org/) (500 Bestimmungen pro Tag). Dafür sind einmalig drei Dinge nötig: die Seite online stellen, einen API-Schlüssel holen und den Schlüssel in die Seite eintragen.
+| Datei | Inhalt |
+|---|---|
+| `index.html` | Gerüst der Seite |
+| `quellen.html` | Quellen, Lizenzen, Merkmalstabelle mit Belegen |
+| `css/app.css`, `css/fonts.css` | Gestaltung, Schriften |
+| `js/main.js` | Einstieg, Panel, Handy-Blatt |
+| `js/state.js` | gemeinsamer Zustand (Ort, Umkreis, Gruppe …) |
+| `js/api.js` | alle Abfragen mit Warteschlangen und Zwischenspeicher |
+| `js/karte.js` | Globus, Ebenen, Ortssuche, Fotos auf der Karte |
+| `js/liste.js` | Artenliste in Häufigkeitsstufen |
+| `js/entdecken.js` | Bereich Entdecken inkl. „genauer rechnen“ |
+| `js/bestimmen.js` | Bereich Bestimmen: Foto und Merkmale |
+| `js/steckbrief.js` | Steckbrief einer Art |
+| `daten/merkmale.js` | Merkmalstabelle mit Belegen |
+| `vendor/`, `fonts/` | MapLibre GL 5.6.0 und Schriften mit Lizenztexten |
+| `alt/index.html` | die alte Version in einer Datei |
 
-### Schritt 1: Seite online stellen (GitHub Pages)
+Es gibt keinen Build-Schritt. Die Seite braucht eine `https://`-Adresse (GitHub Pages); als lokal geöffnete Datei laden die Module nicht.
 
-1. Auf GitHub dieses Repo öffnen: <https://github.com/bunwichtig/naturewissen>
-2. Oben auf **Settings** tippen, links auf **Pages**.
-3. Unter **Build and deployment** bei **Source** „Deploy from a branch“ wählen.
-4. Bei **Branch** `main` und Ordner `/ (root)` auswählen und **Save** drücken.
-5. Ein bis zwei Minuten warten. Dann ist die Seite erreichbar unter:
-   **<https://bunwichtig.github.io/naturewissen/>**
+## Pflanzen per Foto bestimmen: Pl@ntNet-Schlüssel
 
-Tipp fürs Handy: Die Adresse öffnen und zum Home-Bildschirm hinzufügen. Dann startet sie wie eine App.
+Die Bestimmung nutzt die kostenlose [Pl@ntNet-API](https://my.plantnet.org/) (500 Bestimmungen pro Tag).
 
-- **iPhone (Safari):** Teilen-Symbol (Quadrat mit Pfeil) → **Zum Home-Bildschirm**
-- **Android (Chrome):** Menü ⋮ → **Zum Startbildschirm hinzufügen**
-
-### Schritt 2: Pl@ntNet-API-Schlüssel besorgen (kostenlos)
-
-1. **Konto anlegen:** <https://my.plantnet.org/> öffnen und registrieren (Knopf *Sign up* bzw. *Login* → *Create an account*). Name, E-Mail-Adresse und Passwort eingeben.
-2. **E-Mail bestätigen:** Pl@ntNet schickt eine Mail mit einem Bestätigungslink. Den Link anklicken und danach einloggen.
-3. **Schlüssel erzeugen:** Im Konto die Seite **Settings** öffnen. Dort steht der private API-Schlüssel. Falls noch keiner da ist, auf *generate your private API key* klicken.
-4. **Schlüssel für Webseiten freigeben:** Auf derselben Settings-Seite
-   - den Haken bei **„expose my API key“** setzen. Ohne diesen Haken blockiert Pl@ntNet alle Anfragen aus dem Browser.
-   - bei **„Authorized domains“** diese Domain eintragen, eine pro Zeile:
-     ```
-     bunwichtig.github.io
-     ```
-     Nur die Domain, ohne `/naturewissen`. Falls es nicht klappt, zusätzlich eine Zeile `https://bunwichtig.github.io` eintragen.
-   - **Authorized IPs** leer lassen.
-   - speichern.
-5. **Schlüssel kopieren.** Er ist eine lange Zeichenkette, z. B. `2b10…`.
-
-Wichtig aus den [Nutzungsbedingungen](https://my.plantnet.org/terms_of_use): Pro Person ist nur ein kostenloses Konto erlaubt. Kostenlos sind 500 Bestimmungen pro Tag. Darüber hinaus und für kommerzielle Nutzung ist der Dienst kostenpflichtig.
-
-### Schritt 3: Schlüssel in die Seite eintragen
-
-Es gibt zwei Möglichkeiten:
-
-**A) Direkt auf dem Handy (einfach, nur für dieses Gerät)**
-Seite öffnen → **Pflanze bestimmen** → Schlüssel einfügen → **Schlüssel prüfen & speichern**.
-Der Schlüssel wird nur im Browser dieses Geräts gespeichert. Auf jedem weiteren Gerät musst du ihn noch einmal eintragen. Über „API-Schlüssel ändern“ unten im Dialog kannst du ihn wechseln.
-
-**B) Fest in der Seite (gilt für alle Geräte und Besucher)**
-In `index.html` diese Zeile suchen und den Schlüssel zwischen die Anführungszeichen setzen:
-```js
-const PLANTNET_KEY = "";
-```
-Der Schlüssel ist dann öffentlich im Repo sichtbar. Das ist vertretbar, weil er durch Schritt 2.4 nur auf `bunwichtig.github.io` funktioniert. Bedenke aber: Alle Besucher deiner Seite teilen sich dann die 500 Bestimmungen pro Tag.
-
-### Schritt 4: Foto machen und Kamera erlauben
-
-1. Auf der Seite **Pflanze bestimmen** tippen.
-2. **Kamera starten** tippen. Das Handy fragt jetzt, ob die Seite die Kamera benutzen darf → **Erlauben**.
-   Hast du schon einmal erlaubt, startet die Kamera beim nächsten Mal von selbst.
-3. Mit dem runden Auslöser bis zu 5 Fotos **derselben Pflanze** machen, am besten Blüte und Blatt einzeln, scharf und formatfüllend.
-4. Bei jedem Foto auswählen, was zu sehen ist: Blüte, Blatt, Frucht, Rinde oder „Automatisch erkennen“.
-5. **Art bestimmen** tippen. Nach ein paar Sekunden erscheinen die wahrscheinlichsten Arten mit Prozentwert.
-6. **Steckbrief öffnen** zeigt die Art mit Fotos, Beschreibung und Verbreitung auf dem Globus.
-
-Ohne Live-Kamera geht es auch über **Kamera-App öffnen** (normale Foto-App des Handys) oder **Foto aus Galerie**.
-
-#### Kamera aus Versehen verboten?
-
-- **iPhone (Safari):** Links in der Adressleiste auf **aA** bzw. das Einstellungs-Symbol tippen → **Website-Einstellungen** → **Kamera** → **Erlauben**.
-  Oder: iPhone-**Einstellungen** → **Apps** → **Safari** → **Kamera** → **Fragen** bzw. **Erlauben**.
-- **Android (Chrome):** Links in der Adressleiste auf das Symbol neben der Adresse tippen → **Berechtigungen** → **Kamera** → **Zulassen**.
-  Darf Chrome selbst nicht auf die Kamera: Android-**Einstellungen** → **Apps** → **Chrome** → **Berechtigungen** → **Kamera** → **Zulassen**.
-
-Danach die Seite neu laden.
-
-### Wenn etwas nicht klappt
+1. Auf <https://my.plantnet.org/> ein Konto anlegen und die E-Mail bestätigen.
+2. Unter **Settings** den privaten API-Schlüssel erzeugen.
+3. Auf derselben Seite den Haken bei **„expose my API key“** setzen und bei **„Authorized domains“** `bunwichtig.github.io` eintragen. Speichern.
+4. Auf der Seite **Bestimmen → Mit Foto** den Schlüssel einfügen und **Prüfen & speichern** tippen. Er wird nur auf diesem Gerät gespeichert.
 
 | Meldung | Ursache | Lösung |
 |---|---|---|
-| „Pl@ntNet ist nicht erreichbar“ / „hat die Anfrage blockiert“ | Haken *expose my API key* fehlt, oder die Domain ist nicht unter *Authorized domains* eingetragen | Schritt 2.4 prüfen, speichern, ein paar Minuten warten |
-| „Pl@ntNet lehnt den Schlüssel ab“ | Schlüssel falsch oder unvollständig kopiert | Schlüssel neu kopieren und über „API-Schlüssel ändern“ eintragen |
-| „Tageslimit erreicht“ | 500 Bestimmungen verbraucht | Das Kontingent wird um Mitternacht UTC zurückgesetzt (1 Uhr, im Sommer 2 Uhr deutscher Zeit) |
-| „Live-Kamera nicht verfügbar“ | Seite läuft nicht über `https://` | Über GitHub Pages aufrufen (Schritt 1) |
-| „Keine Art erkannt“ | Foto unscharf, zu weit weg oder keine Pflanze | Näher heran, einzelne Blüte oder Blatt fotografieren |
+| „Pl@ntNet ist nicht erreichbar“ / „hat die Anfrage blockiert“ | Haken *expose my API key* fehlt oder Domain nicht freigegeben | Schritt 3 prüfen, ein paar Minuten warten |
+| „Pl@ntNet lehnt den Schlüssel ab“ | Schlüssel unvollständig kopiert | neu kopieren, über „Schlüssel ändern“ eintragen |
+| „Tageslimit erreicht“ | 500 Bestimmungen verbraucht | um Mitternacht UTC geht es wieder |
 
-**Datenschutz:** Die Fotos gehen nur zur Bestimmung an Pl@ntNet (Server in Europa). Die Seite selbst speichert keine Fotos. Lokal gespeichert wird nur der API-Schlüssel, falls du Variante A nutzt.
-
----
-
-## Datenquellen & Lizenzen
-
-| Quelle | Wofür | Lizenz / Bedingungen |
-|---|---|---|
-| [iNaturalist API](https://api.inaturalist.org/v1/docs/) | Artenlisten, Fotos, Systematik, Verbreitung | API frei für nicht-kommerzielle Nutzung; Fotos mit eigener CC-Lizenz je Bild |
-| [GBIF API](https://techdocs.gbif.org/en/openapi/) | Fundmeldungen | CC0 / CC BY / CC BY-NC je Datensatz |
-| [Wikipedia REST API](https://de.wikipedia.org/api/rest_v1/) | Artbeschreibungen | CC BY-SA 4.0 |
-| [Pl@ntNet API](https://my.plantnet.org/) | Pflanzenbestimmung per Foto | Kostenlos bis 500 Bestimmungen/Tag, Quellenangabe auf der Seite, [Nutzungsbedingungen](https://my.plantnet.org/terms_of_use) |
-| [OpenFreeMap](https://openfreemap.org) / [OpenStreetMap](https://www.openstreetmap.org/copyright) | Kartenbasis | ODbL |
-| [Sentinel-2 cloudless](https://s2maps.eu) by EOX | Satellitenbild | CC BY-NC-SA 4.0 |
-| [Nominatim](https://nominatim.org) | Ortssuche, Ortsnamen | ODbL, max. 1 Anfrage/Sekunde |
-| [MapLibre GL JS](https://maplibre.org) | Globus-Darstellung | BSD-3-Clause |
-
-*The image-based plant species identification service used, is based on the Pl@ntNet recognition API, regularly updated and accessible through the site https://my.plantnet.org/*
-
-Für eine kommerzielle Nutzung müssten iNaturalist, Pl@ntNet und das Satellitenbild ersetzt oder gesondert geklärt werden.
-
-## Registerkarte „Bestimmen“
-
-Ein Bestimmungsschlüssel in sechs Schritten, alles live aus iNaturalist:
-
-1. **Was ist es?** – Pflanze, Pilz, Säugetier, Vogel, Amphibie, Reptil, Fisch, Insekt, Spinnentier, Weichtier oder anderes Tier (mit Artenzahl im Umkreis)
-2. **Welche Gruppe?** – z. B. Frösche & Kröten, Korbblütler, Greifvögel (Name wird zur Laufzeit in eine iNaturalist-ID übersetzt)
-3. **Was fällt auf?** – Merkmale aus `/controlled_terms/for_taxon`: Lebensstadium, Blüte & Frucht, Geschlecht, Spuren …
-4. **Wann im Jahr?** – Monat der Beobachtungen
-5. **Tageszeit** – Uhrzeit der Beobachtungen
-6. **Wo?** – Umkreis 5–100 km um die Kartenmitte, optional nur gefährdete Arten
-
-Das Ergebnis sind die passenden Arten, sortiert nach Anzahl passender Beobachtungen; die Karte zeigt, wo diese Beobachtungen liegen. Startansicht ist Pinnow (Mecklenburg) mit 30 km Umkreis.
-
-## Registerkarte „Bestimmen nach Aussehen“
-
-Alle Merkmale auf einer Seite: Oberfläche (Fell, Federn, Schuppen, glatte Haut, Panzer, Schale, schleimig, Blätter, Pilz), bei Tieren Beine, Flügel und Größe, bei Pflanzen Wuchs, Blätter und Blüte/Frucht, bei Pilzen die Form, dazu Lebensraum, „gerade eben“ und Umkreis.
-
-Die Zuordnung „Merkmal → Tier-/Pflanzengruppe“ steht als Tabelle `LOOK_DB` in `index.html` (leicht erweiterbar). Welche Arten dieser Gruppen im Umkreis vorkommen, kommt live aus iNaturalist; „blüht gerade“, „trägt Früchte“ und „gerade eben“ sind echte API-Filter. Auswahlen, die zu nichts mehr passen würden, sind ausgegraut.
-
-## Fotos auf der Karte
-
-Statt einer Dichtekarte stehen runde Fotos der Lebewesen an echten Fundorten (jüngste Beobachtung mit Foto aus iNaturalist). Bis 100 km Umkreis sind es die 9 häufigsten Arten (6 Tiere, 3 Pflanzen), bei größerem Umkreis je 2 pro Gruppe. Der kleine Knopf „+ Fotos“ ergänzt je Gruppe 2 weitere. Antippen öffnet den Steckbrief. Die Fotos folgen dem aktiven Reiter und seinen Filtern.
-
-## Registerkarte „Arten entdecken · Kombi“
-
-Kombiniert zwei unabhängige Quellen konservativ: iNaturalist (bestätigte Beobachtungen) und GBIF (Fundmeldungen aus vielen Datenbanken). Je Quelle zählt der Anteil einer Art an ihrer Gruppe (Vögel unter Vögeln …), damit große Vogelzähl-Datensätze nicht alles überlagern. Die Rangfolge ergibt das geometrische Mittel beider Anteile; Arten, die nur eine Quelle kennt, bleiben sichtbar, werden aber stark abgewertet (für die fehlende Quelle zählt die Hälfte des kleinsten gemessenen Anteils). Abgeglichen werden bis zu 1.500 iNaturalist- und 1.000 GBIF-Arten.
-
-Auf der Karte stehen zusätzlich gestrichelte Zonen-Fotos: Arten, die an einer Stelle (z. B. an einem See) deutlich häufiger sind als im ganzen Umkreis. Fotos rücken zur Seite, damit sie sich nicht überdecken.
-
-## Registerkarte „Tiere & Pflanzen · Erkennen“
-
-Pflanzen per Foto über Pl@ntNet. Tiere per Foto + Merkmale: Das Foto bleibt nur im Browser und steht als Vergleichsbild über dem Reiter „nach Aussehen“ (eine freie Tier-Erkennung ohne Benutzerkonto gibt es nicht).
+**Datenschutz:** Fotos gehen nur zur Bestimmung an Pl@ntNet. Für Tiere und Pilze verlässt das Vergleichsfoto das Gerät nicht. Auf dem Gerät gemerkt werden nur der Schlüssel und schon nachgeschlagene Artnummern.
