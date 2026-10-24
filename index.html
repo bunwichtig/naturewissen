@@ -266,11 +266,19 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
 .step h4{display:flex;align-items:center;gap:9px;margin:0;font:600 14px var(--f-body)}
 .step h4 b{width:22px;height:22px;flex:0 0 auto;border-radius:50%;display:grid;place-items:center;background:var(--panel-2);border:1px solid var(--line);font:500 11px var(--f-data);color:var(--muted)}
 .step.done h4 b{background:var(--pollen);color:var(--night);border-color:var(--pollen)}
+.step h4{cursor:pointer}
+.step h4::after{content:"▾";margin-left:8px;font-size:12px;color:var(--muted);transition:transform .2s}
+.step.folded h4::after{transform:rotate(-90deg)}
+.step.folded{gap:0}
+.step.folded>:not(h4){display:none}
+.step.folded .sel{color:var(--pollen)}
+@media (prefers-reduced-motion:reduce){.step h4::after{transition:none}}
 .step .sel{margin-left:auto;font:400 12px var(--f-body);color:var(--muted);text-align:right}
 .cats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .cat{display:grid;grid-template-columns:10px 1fr;column-gap:10px;row-gap:2px;align-items:center;text-align:left;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:9px 12px;cursor:pointer;color:var(--ink)}
 .cat i{width:10px;height:10px;border-radius:50%;background:var(--c)}
 .cat .n{font-weight:600;font-size:14px}
+.cat .dsc{grid-column:2;font-size:12px;color:var(--muted);line-height:1.3}
 .cat .c{grid-column:2;font:11px var(--f-data);color:var(--muted);font-variant-numeric:tabular-nums;min-height:14px}
 .cat.empty{opacity:.35;cursor:not-allowed}
 .cat[aria-pressed="true"]{border-color:var(--c);box-shadow:inset 0 0 0 1px var(--c)}
@@ -490,7 +498,7 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
           </div>
         </li>
       </ol>
-      <section class="key-res" id="keyRes" hidden>
+      <section class="key-res" id="keyRes">
         <header class="key-res-head">
           <h3>Passende Arten</h3><span class="total" id="kTotal"></span>
           <button class="linkbtn" id="kReset">Neu anfangen</button>
@@ -1605,35 +1613,35 @@ async function findInatTaxon(sci){
    – Monat & Tageszeit: Beobachtungsdatum und -uhrzeit der Fundmeldungen
    – Ergebnis: /observations/species_counts, Karte: /grid-Kacheln mit denselben Filtern */
 const KEY_CATS = [
-  { id:"Plantae", tid:47126, label:"Pflanze", c:"var(--plantae)", subs:[
-    ["Korbblütler","Asteraceae"],["Rosengewächse","Rosaceae"],["Süßgräser","Poaceae"],["Doldenblütler","Apiaceae"],
-    ["Lippenblütler","Lamiaceae"],["Hahnenfußgewächse","Ranunculaceae"],["Kreuzblütler","Brassicaceae"],["Hülsenfrüchtler","Fabaceae"],
-    ["Orchideen","Orchidaceae"],["Buchen & Eichen","Fagaceae"],["Birkengewächse","Betulaceae"],["Nadelbäume","Pinales"],["Farne","Polypodiopsida"],["Moose","Bryophyta"]] },
-  { id:"Fungi", tid:47170, label:"Pilz & Flechte", c:"var(--fungi)", subs:[
-    ["Blätterpilze","Agaricales"],["Röhrlinge","Boletales"],["Täublinge & Milchlinge","Russulales"],["Porlinge","Polyporales"],
-    ["Schlauchpilze","Ascomycota"],["Flechten","Lecanoromycetes"]] },
-  { id:"Mammalia", tid:40151, label:"Säugetier", c:"var(--animalia)", subs:[
-    ["Raubtiere","Carnivora"],["Paarhufer","Artiodactyla"],["Nagetiere","Rodentia"],["Fledermäuse","Chiroptera"],
-    ["Igel, Maulwürfe & Spitzmäuse","Eulipotyphla"],["Hasen & Kaninchen","Lagomorpha"]] },
-  { id:"Aves", tid:3, label:"Vogel", c:"var(--animalia)", subs:[
-    ["Singvögel","Passeriformes"],["Greifvögel","Accipitriformes"],["Falken","Falconiformes"],["Eulen","Strigiformes"],
-    ["Enten, Gänse & Schwäne","Anseriformes"],["Spechte","Piciformes"],["Watvögel & Möwen","Charadriiformes"],
-    ["Kraniche & Rallen","Gruiformes"],["Tauben","Columbiformes"],["Reiher & Ibisse","Pelecaniformes"]] },
-  { id:"Amphibia", tid:20978, label:"Amphibie", c:"var(--animalia)", subs:[
-    ["Frösche & Kröten","Anura"],["Molche & Salamander","Caudata"]] },
-  { id:"Reptilia", tid:26036, label:"Reptil", c:"var(--animalia)", subs:[
-    ["Schlangen","Serpentes"],["Eidechsen","Lacertidae"],["Schleichen","Anguidae"],["Schildkröten","Testudines"]] },
-  { id:"Actinopterygii", tid:47178, label:"Fisch", c:"var(--animalia)", subs:[
-    ["Karpfenfische","Cypriniformes"],["Barschartige","Perciformes"],["Lachsfische","Salmoniformes"],["Hechte","Esociformes"],["Stichlinge","Gasterosteidae"]] },
-  { id:"Insecta", tid:47158, label:"Insekt", c:"var(--animalia)", subs:[
-    ["Schmetterlinge","Lepidoptera"],["Käfer","Coleoptera"],["Bienen, Wespen & Ameisen","Hymenoptera"],["Fliegen & Mücken","Diptera"],
-    ["Libellen","Odonata"],["Heuschrecken","Orthoptera"],["Wanzen & Zikaden","Hemiptera"],["Netzflügler","Neuroptera"]] },
-  { id:"Arachnida", tid:47119, label:"Spinnentier", c:"var(--animalia)", subs:[
-    ["Webspinnen","Araneae"],["Weberknechte","Opiliones"],["Milben & Zecken","Acari"]] },
-  { id:"Mollusca", tid:47115, label:"Schnecke & Muschel", c:"var(--animalia)", subs:[
+  { id:"Plantae", tid:47126, label:"Pflanze", d:"wächst fest, hat Blätter", c:"var(--plantae)", subs:[
+    ["Gänseblümchen, Löwenzahn & Disteln","Asteraceae"],["Rosen, Obstbäume & Brombeeren","Rosaceae"],["Gras & Getreide","Poaceae"],["Doldenblüten – Schirm aus vielen Blüten","Apiaceae"],
+    ["Minze, Salbei & Taubnessel","Lamiaceae"],["Butterblumen & Buschwindröschen","Ranunculaceae"],["Raps, Senf & Wiesenschaumkraut","Brassicaceae"],["Klee, Wicken & Erbsenblüten","Fabaceae"],
+    ["Orchideen","Orchidaceae"],["Eichen & Buchen","Fagaceae"],["Birken, Erlen & Haselnuss","Betulaceae"],["Tannen, Fichten & Kiefern","Pinales"],["Farne","Polypodiopsida"],["Moose","Bryophyta"]] },
+  { id:"Fungi", tid:47170, label:"Pilz & Flechte", d:"Hut, Schwamm oder Kruste", c:"var(--fungi)", subs:[
+    ["Hutpilze mit Lamellen","Agaricales"],["Hutpilze mit Schwamm darunter","Boletales"],["Bunte Täublinge & Milchlinge","Russulales"],["Baumpilze – Konsolen am Holz","Polyporales"],
+    ["Becher, Morcheln & Krusten","Ascomycota"],["Flechten auf Stein & Rinde","Lecanoromycetes"]] },
+  { id:"Mammalia", tid:40151, label:"Säugetier", d:"Fell, säugt Junge", c:"var(--animalia)", subs:[
+    ["Fuchs, Dachs, Marder & Katzen","Carnivora"],["Reh, Hirsch & Wildschwein","Artiodactyla"],["Mäuse, Eichhörnchen & Biber","Rodentia"],["Fledermäuse","Chiroptera"],
+    ["Igel, Maulwurf & Spitzmaus","Eulipotyphla"],["Hasen & Kaninchen","Lagomorpha"]] },
+  { id:"Aves", tid:3, label:"Vogel", d:"Federn & Schnabel", c:"var(--animalia)", subs:[
+    ["Kleine Singvögel – Meise, Amsel, Spatz","Passeriformes"],["Bussard, Milan & Adler","Accipitriformes"],["Falken","Falconiformes"],["Eulen & Käuze","Strigiformes"],
+    ["Enten, Gänse & Schwäne","Anseriformes"],["Spechte","Piciformes"],["Möwen & Strandvögel","Charadriiformes"],
+    ["Kraniche & Blässhühner","Gruiformes"],["Tauben","Columbiformes"],["Reiher","Pelecaniformes"]] },
+  { id:"Amphibia", tid:20978, label:"Amphibie", d:"feuchte Haut, Wasser & Land", c:"var(--animalia)", subs:[
+    ["Frösche & Kröten","Anura"],["Molche","Caudata"]] },
+  { id:"Reptilia", tid:26036, label:"Reptil", d:"trockene Schuppen", c:"var(--animalia)", subs:[
+    ["Schlangen","Serpentes"],["Eidechsen","Lacertidae"],["Blindschleiche","Anguidae"],["Schildkröten","Testudines"]] },
+  { id:"Actinopterygii", tid:47178, label:"Fisch", d:"Flossen, lebt im Wasser", c:"var(--animalia)", subs:[
+    ["Karpfen, Plötze & Co.","Cypriniformes"],["Barsche","Perciformes"],["Forellen & Lachse","Salmoniformes"],["Hechte","Esociformes"],["Stichlinge","Gasterosteidae"]] },
+  { id:"Insecta", tid:47158, label:"Insekt", d:"6 Beine", c:"var(--animalia)", subs:[
+    ["Schmetterlinge & Motten","Lepidoptera"],["Käfer","Coleoptera"],["Bienen, Wespen & Ameisen","Hymenoptera"],["Fliegen & Mücken","Diptera"],
+    ["Libellen","Odonata"],["Heuschrecken & Grillen","Orthoptera"],["Wanzen & Zikaden","Hemiptera"],["Florfliegen","Neuroptera"]] },
+  { id:"Arachnida", tid:47119, label:"Spinnentier", d:"8 Beine", c:"var(--animalia)", subs:[
+    ["Spinnen","Araneae"],["Weberknechte – ganz lange Beine","Opiliones"],["Zecken & Milben","Acari"]] },
+  { id:"Mollusca", tid:47115, label:"Schnecke & Muschel", d:"weich, oft mit Schale", c:"var(--animalia)", subs:[
     ["Schnecken","Gastropoda"],["Muscheln","Bivalvia"]] },
-  { id:"Animalia", tid:1, label:"Anderes Tier", c:"var(--animalia)", subs:[
-    ["Krebstiere","Malacostraca"],["Asseln","Isopoda"],["Tausendfüßer","Diplopoda"],["Hundertfüßer","Chilopoda"],["Ringelwürmer","Annelida"]] }
+  { id:"Animalia", tid:1, label:"Anderes Tier", d:"Krebse, Asseln, Würmer …", c:"var(--animalia)", subs:[
+    ["Krebse & Flohkrebse","Malacostraca"],["Asseln","Isopoda"],["Tausendfüßer","Diplopoda"],["Hundertfüßer","Chilopoda"],["Würmer & Egel","Annelida"]] }
 ];
 // Merkmalsnamen deutsch (nach englischem Label der API; unbekannte bleiben englisch)
 const TERM_DE = { "Life Stage":"Lebensstadium", "Sex":"Geschlecht", "Plant Phenology":"Blüte & Frucht", "Flowers and Fruits":"Blüte & Frucht",
@@ -1707,7 +1715,7 @@ function syncRadiusChips(){ document.querySelectorAll("[data-r]").forEach(x => x
 
 /* --- Aufbau der Bedienelemente --- */
 $("#kCat").innerHTML = KEY_CATS.map(c =>
-  `<button class="cat" style="--c:${c.c}" data-cat="${c.id}" aria-pressed="false"><i></i><span class="n">${c.label}</span><span class="c" id="cc-${c.id}"></span></button>`).join("");
+  `<button class="cat" style="--c:${c.c}" data-cat="${c.id}" aria-pressed="false"><i></i><span class="n">${c.label}</span><span class="dsc">${c.d}</span><span class="c" id="cc-${c.id}"></span></button>`).join("");
 const chipRow = (list, cur, attr) => list.map(x => `<button class="chip" data-${attr}="${x.id}" aria-pressed="${x.id === cur}">${x.label}</button>`).join("");
 $("#kWhen").innerHTML = chipRow(KEY_WHEN, ks.when, "when");
 $("#kHour").innerHTML = chipRow(KEY_HOUR, ks.hour, "hour");
@@ -1719,8 +1727,8 @@ $("#kCat").onclick = e => {
   ks.cat = same ? null : b.dataset.cat;
   ks.sub = null; ks.term = null;
   document.querySelectorAll("#kCat .cat").forEach(x => pressed(x, x === b && !same));
+  foldStep("#stCat", !!ks.cat);
   renderSubs(); loadTraits(); refreshSteps(); runKey();
-  if (ks.cat) $("#stSub").scrollIntoView({ block:"nearest", behavior:"smooth" });
 };
 $("#kSub").onclick = async e => {
   const b = e.target.closest(".chip[data-sub]"); if (!b) return;
@@ -1738,6 +1746,7 @@ $("#kSub").onclick = async e => {
   }
   ks.term = null;
   document.querySelectorAll("#kSub .chip").forEach(x => pressed(x, ks.sub ? x.dataset.sub === ks.sub.sci : x.dataset.sub === ""));
+  foldStep("#stSub", true);
   loadTraits(); refreshSteps(); runKey();
 };
 $("#kTrait").onclick = e => {
@@ -1745,10 +1754,11 @@ $("#kTrait").onclick = e => {
   const t = +b.dataset.term, v = +b.dataset.val;
   ks.term = (ks.term && ks.term.t === t && ks.term.v === v) ? null : { t, v, label:b.dataset.label, tl:b.dataset.tl };
   document.querySelectorAll("#kTrait .chip").forEach(x => pressed(x, !!ks.term && +x.dataset.term === ks.term.t && +x.dataset.val === ks.term.v));
+  if (ks.term) foldStep("#stTrait", true);
   refreshSteps(); runKey();
 };
-$("#kWhen").onclick = e => { const b = e.target.closest(".chip"); if (!b) return; ks.when = b.dataset.when; document.querySelectorAll("#kWhen .chip").forEach(x => pressed(x, x === b)); refreshSteps(); runKey(); };
-$("#kHour").onclick = e => { const b = e.target.closest(".chip"); if (!b) return; ks.hour = b.dataset.hour; document.querySelectorAll("#kHour .chip").forEach(x => pressed(x, x === b)); refreshSteps(); runKey(); };
+$("#kWhen").onclick = e => { const b = e.target.closest(".chip"); if (!b) return; ks.when = b.dataset.when; document.querySelectorAll("#kWhen .chip").forEach(x => pressed(x, x === b)); foldStep("#stWhen", true); refreshSteps(); runKey(); };
+$("#kHour").onclick = e => { const b = e.target.closest(".chip"); if (!b) return; ks.hour = b.dataset.hour; document.querySelectorAll("#kHour .chip").forEach(x => pressed(x, x === b)); foldStep("#stHour", true); refreshSteps(); runKey(); };
 $("#kRadius").onclick = e => {
   const b = e.target.closest(".chip"); if (!b) return;
   ks.radius = +b.dataset.r;
@@ -1763,6 +1773,7 @@ $("#kReset").onclick = () => {
   document.querySelectorAll("#kCat .cat").forEach(x => pressed(x, false));
   document.querySelectorAll("#kWhen .chip").forEach(x => pressed(x, x.dataset.when === "any"));
   document.querySelectorAll("#kHour .chip").forEach(x => pressed(x, x.dataset.hour === "any"));
+  document.querySelectorAll("#keyBody .step").forEach(x => x.classList.remove("folded"));
   renderSubs(); loadTraits(); refreshSteps(); runKey();
   $("#keyBody").scrollTo({ top:0, behavior:"smooth" });
 };
@@ -1819,20 +1830,30 @@ async function loadTraits(){
   }).join("") + `<p class="note">Ein Merkmal ist wählbar. Es zählt nur, wenn Beobachter es bei iNaturalist eingetragen haben – das grenzt stark ein.</p>`;
 }
 
+const foldStep = (id, fold) => $(id).classList.toggle("folded", fold);
+$("#keyBody .steps").addEventListener("click", e => {
+  const h = e.target.closest(".step h4"); if (!h) return;
+  const st = h.parentElement;
+  if (st.getAttribute("aria-disabled") === "true") return;
+  st.classList.toggle("folded");
+});
+
 function refreshSteps(){
   const c = catOf(), on = !!c;
-  ["#stSub","#stTrait","#stWhen","#stHour","#stWhere"].forEach(s => $(s).setAttribute("aria-disabled", !on));
+  ["#stSub","#stTrait"].forEach(s => { $(s).setAttribute("aria-disabled", !on); if (!on) foldStep(s, false); });
+  ["#stWhen","#stHour","#stWhere"].forEach(s => $(s).setAttribute("aria-disabled", false));   // gelten auch ohne Kategorie
   $("#stCat").classList.toggle("done", on);
   $("#stSub").classList.toggle("done", !!ks.sub);
   $("#stTrait").classList.toggle("done", !!ks.term);
-  $("#stWhen").classList.toggle("done", on && ks.when !== "any");
-  $("#stHour").classList.toggle("done", on && ks.hour !== "any");
-  $("#stWhere").classList.toggle("done", on);
+  $("#stWhen").classList.toggle("done", ks.when !== "any");
+  $("#stHour").classList.toggle("done", ks.hour !== "any");
+  $("#stWhere").classList.toggle("done", true);
   $("#selCat").textContent = c?.label || "";
   $("#selSub").textContent = ks.sub?.label || (on ? "alle" : "");
+  $("#selCat").textContent = c?.label || "alle Lebewesen";
   $("#selTrait").textContent = ks.term ? `${ks.term.tl}: ${ks.term.label}` : "";
-  $("#selWhen").textContent = on ? KEY_WHEN.find(x => x.id === ks.when).label : "";
-  $("#selHour").textContent = on && ks.hour !== "any" ? KEY_HOUR.find(x => x.id === ks.hour).label : "";
+  $("#selWhen").textContent = KEY_WHEN.find(x => x.id === ks.when).label;
+  $("#selHour").textContent = KEY_HOUR.find(x => x.id === ks.hour).label;
   $("#selWhere").textContent = `${ks.radius} km`;
 }
 
@@ -1844,6 +1865,7 @@ function keyParams(withTaxon){
   if (ks.threat) p.set("threatened", "true");
   const w = KEY_WHEN.find(x => x.id === ks.when).m; if (w) p.set("month", w.join(","));
   const h = KEY_HOUR.find(x => x.id === ks.hour).h; if (h) p.set("hour", h.join(","));
+  if (withTaxon && !c) p.set("iconic_taxa", GROUPS[0].taxa);   // noch nichts gewählt → alle Lebewesen
   if (withTaxon && c){
     if (ks.sub) p.set("taxon_id", ks.sub.id); else p.set("iconic_taxa", c.id);
     if (ks.term){ p.set("term_id", ks.term.t); p.set("term_value_id", ks.term.v); }
@@ -1868,7 +1890,7 @@ function updateKeyWhere(){
 function setKeyOverlay(remove){
   if (map.getLayer("keyobs")) map.removeLayer("keyobs");
   if (map.getSource("keyobs")) map.removeSource("keyobs");
-  if (remove || state.tab !== "key" || !ks.cat || !map.isStyleLoaded()) return;
+  if (remove || state.tab !== "key" || !map.isStyleLoaded()) return;
   const p = keyParams(true); p.set("color", "#e7ad4f");
   map.addSource("keyobs", { type:"raster", tileSize:256, tiles:[`${API.inat}/grid/{z}/{x}/{y}.png?${p}`],
     attribution:'<a href="https://www.inaturalist.org" target="_blank">iNaturalist</a>' });
@@ -1885,7 +1907,6 @@ async function doRunKey(){
   if (key === ks.lastKey) return;
   ks.lastKey = key;
   setKeyOverlay();
-  if (!ks.cat){ $("#keyRes").hidden = true; return; }
   $("#keyRes").hidden = false;
   await loadKeyPage();
 }
@@ -1899,7 +1920,7 @@ async function loadKeyPage(){
 }
 
 function summaryText(){
-  const parts = [catOf()?.label, ks.sub?.label, ks.term ? `${ks.term.tl.toLowerCase()} ${ks.term.label.toLowerCase()}` : null,
+  const parts = [catOf()?.label || "Alle Lebewesen", ks.sub?.label, ks.term ? `${ks.term.tl.toLowerCase()} ${ks.term.label.toLowerCase()}` : null,
     ks.when !== "any" ? KEY_WHEN.find(x => x.id === ks.when).label.toLowerCase() : null,
     ks.hour !== "any" ? KEY_HOUR.find(x => x.id === ks.hour).label.toLowerCase() : null,
     ks.threat ? "gefährdet" : null].filter(Boolean);
