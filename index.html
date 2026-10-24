@@ -37,6 +37,12 @@ h1 span{color:var(--pollen)}
 .v h2{font:700 30px/1.1 var(--f-display);margin:14px 0 6px}
 .v p{margin:0;color:var(--muted);font-size:15px}
 .go{display:inline-block;margin-top:16px;font-weight:600;color:var(--pollen)}
+.db{display:flex;align-items:center;gap:14px;margin-top:16px;padding:16px 20px;border:1px dashed var(--line);border-radius:16px;text-decoration:none;color:var(--ink);background:transparent}
+.db:hover,.db:focus-visible{border-color:var(--pollen);border-style:solid}
+.db b{font:700 20px/1 var(--f-display);white-space:nowrap}
+.db span{color:var(--muted);font-size:14px;flex:1}
+.db i{font-style:normal;color:var(--pollen);font-weight:600}
+@media (max-width:560px){.db{flex-wrap:wrap}.db span{flex-basis:100%;order:3}}
 footer{margin-top:28px;font-size:13px;color:var(--muted)}
 footer a{color:var(--muted);text-underline-offset:3px}
 </style>
@@ -65,6 +71,7 @@ footer a{color:var(--muted);text-underline-offset:3px}
       <span class="go">Öffnen →</span>
     </a>
   </div>
+  <a class="db" href="datenbasis.html"><b>Datenbasis</b><span>Alle freien Quellen mit Lizenz und Nachweis – und der Bauplan zum Neuaufbau mit Claude</span><i>→</i></a>
   <footer><a href="dev/quellen.html">Quellen &amp; Lizenzen</a> · <a href="alt/">Alte Version</a></footer>
 </main>
 </body>

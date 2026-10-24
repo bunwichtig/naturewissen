@@ -8,6 +8,8 @@ Zeigt auf einem Globus, welche Tiere, Pflanzen und Pilze an einem Ort leben, und
 - **V1** (`v1/`): **Archiv** – die erste fertige Version vom 25. Oktober 2026. Wird nicht mehr verändert.
 - **V2** (`v2/`): eine eigene Fassung, ruht vorerst (Stand 25. Oktober 2026).
 
+**Datenbasis:** [datenbasis.html](https://bunwichtig.github.io/naturewissen/datenbasis.html) – alle freien Quellen mit Lizenz, Nachweis und Abfragen, dazu [bauplan.md](bauplan.md) zum Neuaufbau mit Claude (erzeugt mit `python3 werkzeuge/datenbasis.py`).
+
 **Quellen & Lizenzen:** [dev/quellen.html](https://bunwichtig.github.io/naturewissen/dev/quellen.html) · Alte Version (bis Oktober 2026): [alt/](https://bunwichtig.github.io/naturewissen/alt/)
 
 ## Aufbau
