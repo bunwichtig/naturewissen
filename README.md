@@ -8,7 +8,7 @@ Zeigt auf einem Globus, welche Tiere, Pflanzen und Pilze an einem Ort leben, und
 - **V1** (`v1/`): **Archiv** – die erste fertige Version vom 25. Oktober 2026. Wird nicht mehr verändert.
 - **V2** (`v2/`): in Vorbereitung – zeigt vorerst nur eine „Work in progress“-Seite.
 
-**Datenbasis:** [datenbasis.html](https://bunwichtig.github.io/naturewissen/datenbasis.html) – alle freien Quellen mit Lizenz, Nachweis und Abfragen, dazu [bauplan.md](bauplan.md) zum Neuaufbau mit Claude (erzeugt mit `python3 werkzeuge/datenbasis.py`).
+**Datenbasis:** [datenbasis.html](https://bunwichtig.github.io/naturewissen/datenbasis.html) – alle Versionen der Datenbasis (`datenbasis/1.html` = Stand V1, `datenbasis/2.html` = Erweiterung in Dev), jeweils mit allen freien Quellen, Lizenz, Nachweis, Abfragen, Abdeckung nach Gruppen und einem Bauplan (`bauplan-1.md`, `bauplan-2.md`; `bauplan.md` = neueste) zum Neuaufbau mit Claude. Erzeugt mit `python3 werkzeuge/datenbasis.py`.
 
 **Quellen & Lizenzen:** [dev/quellen.html](https://bunwichtig.github.io/naturewissen/dev/quellen.html) · Alte Version (bis Oktober 2026): [alt/](https://bunwichtig.github.io/naturewissen/alt/)
 
@@ -16,7 +16,7 @@ Zeigt auf einem Globus, welche Tiere, Pflanzen und Pilze an einem Ort leben, und
 
 1. **Ort suchen** (oder eigenen Standort verwenden), Umkreis wählen: 5 bis 250 km.
    Oder direkt ein **Lebewesen suchen**: Vorschläge erscheinen schon beim Tippen (iNaturalist), ein Tipp öffnet den Steckbrief.
-2. **Entdecken – Was lebt hier?** Arten im Umkreis nach Häufigkeit (iNaturalist), filterbar nach Gruppe, auch **Bäume** und **Sträucher** (Wuchsform aus der World Checklist of Vascular Plants, Kew; Arten aus iNaturalist und GBIF). Wer im Lebewesen-Suchfeld „Baum“ oder „Strauch“ tippt, bekommt das als ersten Vorschlag. „Genauer rechnen“ nimmt die Fundmeldungen von GBIF dazu; kennt GBIF deutlich mehr Arten (z. B. bei Fischen), bietet die Seite das von selbst an.
+2. **Entdecken – Was lebt hier?** Arten im Umkreis nach Häufigkeit (iNaturalist), filterbar nach Gruppe; unter Pflanzen nach **Wuchsform** (Bäume, Sträucher, Kräuter, Gräser, Kletter-, Wasserpflanzen, Zwiebel & Knolle, Farne, Moose) (Wuchsform aus der World Checklist of Vascular Plants, Kew; Arten aus iNaturalist und GBIF). Wer im Lebewesen-Suchfeld „Baum“ oder „Strauch“ tippt, bekommt das als ersten Vorschlag. „Genauer rechnen“ nimmt die Fundmeldungen von GBIF dazu; kennt GBIF deutlich mehr Arten (z. B. bei Fischen), bietet die Seite das von selbst an.
 3. **Bestimmen – Was habe ich gesehen?** Mit Foto (Pflanzen über Pl@ntNet) oder nach Merkmalen (Merkmalstabelle mit Belegen und Messdaten, siehe Quellen-Seite).
 4. **Steckbrief** als Seitenleiste: Fotos mit Urheber und Lizenz, Gefährdung, Zahlen, Jahreszeit, Beschreibung aus Wikipedia, Verwechslungsarten, Systematik. Auf Knopfdruck die **Verbreitungskarte** (Fundorte bei iNaturalist auf einem Globus, der gesuchte Ort markiert).
 

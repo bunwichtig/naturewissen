@@ -1,6 +1,6 @@
-# Pure Nature – Bauplan und Datenbasis
+# Pure Nature – Bauplan und Datenbasis 2
 
-Stand: 25. Oktober 2026 · Seite: https://bunwichtig.github.io/naturewissen/ · Repo: https://github.com/bunwichtig/naturewissen
+Stand: 25. Oktober 2026 – Erweiterung, in der Dev-Fassung · Seite: https://bunwichtig.github.io/naturewissen/ · Repo: https://github.com/bunwichtig/naturewissen
 
 > **So benutzen:** Diese Datei in einen neuen Chat mit Claude legen und dazu schreiben, was neu werden soll – z. B. „Baue Pure Nature nach diesem Bauplan neu auf. Funktionen, Datenquellen und Regeln bleiben genau so; ich möchte nur ein neues Design: …“. Alles, was Claude für Suche, Listen und Steckbrief braucht, steht hier. Die fertig aufbereiteten Tabellen liegen im Repo (Abschnitt „Dateien zum Weiterverwenden“).
 
@@ -21,21 +21,22 @@ Eine Website, die zeigt, welche Tiere, Pflanzen und Pilze an einem Ort leben, un
 
 ## Funktionen und Ablauf
 
-1. **Startseite:** zwei Suchfelder. Oben ein Ort (Nominatim, Suche erst nach Absenden, „Meinen Standort verwenden“, die letzten 5 Orte merken). Darunter ein Lebewesen (iNaturalist-Autovervollständigung, Vorschläge beim Tippen mit 300 ms Pause, Arten vor höheren Gruppen, Treffer am Namensanfang zuerst). „Baum“/„Strauch“ ergibt den Vorschlag „Alle Bäume um <Ort>“.
+1. **Startseite:** zwei Suchfelder. Oben ein Ort (Nominatim, Suche erst nach Absenden, „Meinen Standort verwenden“, die letzten 5 Orte merken). Darunter ein Lebewesen (iNaturalist-Autovervollständigung, Vorschläge beim Tippen mit 300 ms Pause, Arten vor höheren Gruppen, Treffer am Namensanfang zuerst). „Baum“, „Strauch“, „Kraut“, „Gras“, „Farn“, „Moos“, „Kletterpflanze“, „Wasserpflanze“ ergeben den Vorschlag „Alle … um <Ort>“.
 2. **Ort gewählt:** Umkreis 5 / 10 / 30 / 50 / 100 / 250 km. Zwei Bereiche: *Entdecken* und *Bestimmen*.
-3. **Entdecken – Was lebt hier?** Gruppen: Alle, Pflanzen, Bäume, Sträucher, Pilze, Vögel, Insekten, Säugetiere, Amphibien, Reptilien, Fische, Spinnentiere, Weichtiere (Gruppen ohne Funde ausgegraut). Liste nach Häufigkeit (species_counts), in fünf Stufen geteilt: oberste 5 % der Rangfolge = Häufig, bis 20 % Mittelhäufig, bis 45 % Weniger häufig, bis 75 % Selten, Rest Sehr selten; je Stufe erst 2 Arten, dann „4 weitere“. Schalter „nur bestätigte Funde“ (quality_grade=research).
+3. **Entdecken – Was lebt hier?** Gruppen: Alle, Pflanzen, Pilze, Vögel, Insekten, Säugetiere, Amphibien, Reptilien, Fische, Spinnentiere, Weichtiere (Gruppen ohne Funde ausgegraut). Unter „Pflanzen“ eine zweite Zeile **Wuchsform**: Alle Pflanzen, Bäume, Sträucher, Kräuter & Blumen, Gräser, Kletterpflanzen, Wasser & Sumpf, Zwiebel & Knolle, Farne, Moose. Liste nach Häufigkeit (species_counts), in fünf Stufen geteilt: oberste 5 % der Rangfolge = Häufig, bis 20 % Mittelhäufig, bis 45 % Weniger häufig, bis 75 % Selten, Rest Sehr selten; je Stufe erst 2 Arten, dann „4 weitere“. Schalter „nur bestätigte Funde“ (quality_grade=research).
 4. **Genauer rechnen (iNaturalist + GBIF):** je Quelle Anteil einer Art an ihrer Gruppe; kleine Gruppen zählen mindestens mit 5 % aller Funde der Quelle; Wert = Wurzel(Anteil iNat × Anteil GBIF); fehlt eine Quelle, zählt die Hälfte des kleinsten Anteils dieser Gruppe. Umkreis höchstens 250 km. Kennt GBIF mindestens 1,5-mal so viele Arten (und 5 mehr), bietet die Seite „Alle zusammen zeigen“ an.
-5. **Bäume / Sträucher:** Pflanzenarten am Ort aus iNaturalist (bis 4 Seiten à 500) und GBIF (facet=scientificName) → nur Namen aus der WCVP-Liste behalten → Arten nur bei GBIF bekommen Foto/deutschen Namen aus iNaturalist im 250-km-Umkreis.
+5. **Wuchsformen (außer Moose):** Pflanzenarten am Ort aus iNaturalist (bis 4 Seiten à 500) und GBIF (facet=scientificName) → nur Namen aus der WCVP-Liste der gewählten Wuchsform behalten → Arten nur bei GBIF bekommen Foto/deutschen Namen aus iNaturalist im 250-km-Umkreis.
 6. **Bestimmen mit Foto:** nur Pflanzen, Pl@ntNet, bis 5 Fotos mit Organ (Blatt, Blüte, Frucht, Rinde …).
 7. **Bestimmen nach Merkmalen:** Fragen aus MERKMALE; passende Gruppen aus GRUPPEN; bis 25 Gruppen direkt über taxon_id, sonst über iconic_taxa; optional „jetzt im Monat“ (month) und „blüht gerade“ (term_id=12, term_value_id=13). Ergebnis: Arten am Ort nach Häufigkeit.
 8. **Steckbrief** (Seitenleiste, Handy ganze Fläche): freie Fotos mit Urheber/Lizenz, deutscher und wissenschaftlicher Name, Gefährdung, Funde hier / bei iNaturalist / bei GBIF, Jahreszeit (Funde je Monat, im Umkreis oder weltweit bei < 12 Funden), Wikipedia-Anfang, Verwechslungsarten, Systematik. Knopf „Verbreitungsgebiet zeigen“: MapLibre-Globus mit iNaturalist-Rasterkacheln, gesuchter Ort markiert, zwei Finger zum Bewegen am Handy.
+9. **Moose:** iNaturalist-Taxa Bryophyta, Marchantiophyta, Anthocerotophyta → Nummern über /taxa nachschlagen → species_counts mit taxon_id.
 
 ## Live-Abfrage – wird beim Benutzen abgefragt
 
 ### iNaturalist
 
 - **Lizenz:** CC0 · CC BY · CC BY-NC (je Foto/Beobachtung)
-- **Liefert:** Vorschläge bei der Artsuche, Arten in der Umgebung nach Häufigkeit, Fotos, deutsche Namen, Fundzahlen, Jahreszeit, Verwechslungsarten, Blüte/Lebensstadium, Verbreitungskarte (Raster-Kacheln).
+- **Liefert:** Vorschläge bei der Artsuche, Arten in der Umgebung nach Häufigkeit, Fotos, deutsche Namen, Fundzahlen, Jahreszeit, Verwechslungsarten, Blüte/Lebensstadium, Verbreitungskarte (Raster-Kacheln). Moose (Laubmoose, Lebermoose, Hornmoose) als eigene Gruppe über die iNaturalist-Taxa Bryophyta, Marchantiophyta, Anthocerotophyta. Systematik jeder Art (alle Ebenen von Reich bis Art) im Steckbrief.
 - Kein Schlüssel nötig, kostenlos.
 - Höchstens etwa 1 Anfrage pro Sekunde (Seite: 1 gleichzeitig, mind. 0,6 s Abstand).
 - Nur Fotos mit license_code zeigen (CC), immer mit Urheber und Lizenz.
@@ -128,6 +129,19 @@ Eine Website, die zeigt, welche Tiere, Pflanzen und Pilze an einem Ort leben, un
 
 [openfreemap.org](https://openfreemap.org) · [OSM-Urheberrecht](https://www.openstreetmap.org/copyright)
 
+### GBIF Backbone Taxonomy
+
+- **Lizenz:** CC BY 4.0
+- **Liefert:** Einheitliche Systematik über alle Gruppen (Reich, Stamm, Klasse, Ordnung, Familie, Gattung, Art), aus Catalogue of Life und weiteren Checklisten. Grundlage für Namensabgleich und die GBIF-Gruppen.
+- Abfrage über die GBIF-Schnittstellen species/match und species/{key}; Ränge stehen in den Feldern kingdom … species.
+
+| Abfrage | Parameter | Wofür |
+|---|---|---|
+| `GET https://api.gbif.org/v1/species/match` | name, strict=true, kingdom | Name → Schlüssel mit allen Rängen |
+| `GET …/v1/species/{key}/parents` | – | alle übergeordneten Ebenen |
+
+[Datensatz bei GBIF](https://www.gbif.org/dataset/d7dddbf4-2cf0-4f39-9b2a-bb099caae36c) · [Catalogue of Life](https://www.catalogueoflife.org)
+
 ## Fester Datensatz – einmal aufbereitet, liegt als Datei im Repo
 
 ### EIVE 1.0 – Zeigerwerte für Europa
@@ -199,6 +213,17 @@ Eine Website, die zeigt, welche Tiere, Pflanzen und Pilze an einem Ort leben, un
 
 [Datensatz bei Dryad](https://datadryad.org/dataset/doi:10.5061/dryad.05qfttfdq)
 
+### Insekten und Spinnen im Grünland
+
+- **Lizenz:** CC0 (Dryad)
+- **Liefert:** Größe und Schicht bei Spinnen, Käfern, Wanzen und Heuschrecken – 1.230 Arten aus Grünland in Deutschland. Eingeflossen für Radnetz- und Krabbenspinnen, Weich- und Marienkäfer, Langfühlerschrecken.
+- **Zitat:** Gossner, M. M. et al. (2015): A summary of eight traits of Coleoptera, Hemiptera, Orthoptera and Araneae, occurring in grasslands in Germany. Scientific Data 2: 150013.
+- Größe aus der Körperlänge (unter 1 cm, 1–5 cm, über 5 cm).
+- Krautschicht = Wiese und Feld, Bäume = Wald, Wasser = im Wasser.
+- Nur Gruppen, bei denen mindestens die Hälfte der Beobachtungen in Deutschland abgedeckt ist; die Daten stammen aus Grünland.
+
+[Datensatz bei Dryad](https://datadryad.org/dataset/doi:10.5061/dryad.53ds2) · [Artikel](https://doi.org/10.1038/sdata.2015.13) · [verwendete Kopie (traitdata)](https://github.com/RS-eco/traitdata)
+
 ### FungalTraits 1.2
 
 - **Lizenz:** zur öffentlichen Nutzung freigegeben (keine CC-Lizenz genannt)
@@ -210,11 +235,13 @@ Eine Website, die zeigt, welche Tiere, Pflanzen und Pilze an einem Ort leben, un
 ### World Checklist of Vascular Plants (WCVP)
 
 - **Lizenz:** CC BY 4.0
-- **Liefert:** Wuchsform: Baum- und Straucharten Europas für die Gruppen „Bäume“ und „Sträucher“ (1.083 Bäume, 5.529 Sträucher).
+- **Liefert:** Wuchsform aller europäischen Gefäßpflanzen für Entdecken → Pflanzen → Wuchsform: Bäume (1.083), Sträucher (5.529), Kräuter & Blumen (18.102), Gräser (2.213), Kletterpflanzen (217), Wasser- & Sumpfpflanzen (417), Zwiebel & Knolle (2.860), Farne (388).
 - **Zitat:** Govaerts, R., Nic Lughadha, E., Black, N., Turner, R. & Paton, A. (2021): The World Checklist of Vascular Plants, a continuously updated resource for exploring global plant diversity. Scientific Data 8: 215. Royal Botanic Gardens, Kew.
 - Anerkannte Arten mit Vorkommen in Europa (heimisch oder eingeführt, nicht ausgestorben).
-- Baum: lifeform enthält „tree“; Strauch: enthält „shrub“ (auch Halb-/Zwergsträucher). „shrub or tree“ in beiden.
+- Aus „lifeform_description“: tree → Baum; shrub/subshrub → Strauch; climber/climbing/liana → Kletterpflanze; hydro…/helophyte → Wasser & Sumpf; geophyte → Zwiebel & Knolle; annual/biennial/perennial → Kraut (ohne Baum, Strauch, Kletter-, Wasserpflanze).
+- Gräser nach Familie (Poaceae, Cyperaceae, Juncaceae), Farne nach Farn-, Schachtelhalm- und Bärlappfamilien. Eine Art kann in mehreren Gruppen stehen.
 - Arten am Ort aus iNaturalist UND GBIF prüfen – häufige Bäume (Fichte, Kiefer) fehlen bei iNaturalist oft.
+- Jede Wuchsform liegt in einer eigenen Datei (daten/wuchs/) und wird erst geladen, wenn jemand sie wählt.
 
 [Artikel](https://doi.org/10.1038/s41597-021-00997-6) · [Datensatz bei GBIF](https://www.gbif.org/dataset/f382f0ce-323a-4091-bb9f-add557f3a9a2) · [verwendete Kopie (rWCVPdata)](https://github.com/matildabrown/rWCVPdata)
 
@@ -234,12 +261,43 @@ Eine Website, die zeigt, welche Tiere, Pflanzen und Pilze an einem Ort leben, un
 
 [Open Font License](https://openfontlicense.org)
 
+## Neu in Datenbasis 2
+
+- Wuchsform für alle europäischen Gefäßpflanzen statt nur Bäume und Sträucher: dazu Kräuter & Blumen, Gräser, Kletterpflanzen, Wasser & Sumpf, Zwiebel & Knolle, Farne (WCVP).
+- Moose als eigene Gruppe (iNaturalist: Laub-, Leber- und Hornmoose).
+- GBIF Backbone Taxonomy als Quelle für die Systematik über alle Ebenen von Reich bis Art.
+- Neuer Datensatz Gossner et al. 2015 (CC0): Größe und Schicht für Spinnen, Käfer, Wanzen und Heuschrecken; bestätigt die Merkmalstabelle bei fünf Gruppen.
+- Abdeckungs-Tabelle: welche Gruppe Merkmale aus welchem Datensatz hat und wo noch Lücken sind.
+
+## Abdeckung nach Gruppen
+
+Listen am Ort und Systematik (Reich, Stamm, Klasse, Ordnung, Familie, Gattung, Art) kommen für alle Gruppen live aus iNaturalist und GBIF. Die Tabelle zeigt, woher zusätzliche Merkmale kommen.
+
+| Gruppe | Merkmale aus Datensätzen | Ebene | Lücke |
+|---|---|---|---|
+| Bäume, Sträucher | WCVP (Wuchsform), EIVE (Ort) | Art | – |
+| Kräuter & Blumen, Gräser, Kletter-, Wasserpflanzen, Zwiebel & Knolle | WCVP (Wuchsform), EIVE (Ort) | Art | – |
+| Farne, Schachtelhalme, Bärlappe | WCVP (Wuchsform), EIVE (Ort) | Art | – |
+| Moose | – | Gruppe (iNaturalist) | keine Merkmaldaten |
+| Pilze, Flechten | FungalTraits (Form, Ort) | Gattung | – |
+| Säugetiere | Amniote, EltonTraits, COMBINE | Art | – |
+| Vögel | AVONET | Art | – |
+| Amphibien | Europäische Amphibien | Art | – |
+| Reptilien | Amniote (Eidechsen) | Art | Längen von Schlangen und Schildkröten |
+| Süßwasserfische | FISHMORPH | Art | Meeresfische |
+| Tagfalter | Tagfalter Europas | Art | Nachtfalter |
+| Käfer, Wanzen, Heuschrecken | Gossner et al. 2015 (Größe, Schicht) | Art | Wasserkäfer, Laufkäfer nur teilweise |
+| Spinnen | Gossner et al. 2015 (Größe, Schicht) | Art | Spring- und Wolfspinnen nur teilweise |
+| Bienen, Wespen, Fliegen, Libellen | – | – | nur Wikipedia-Belege |
+| Weichtiere (Schnecken, Muscheln) | – | – | nur Wikipedia-Belege |
+
 ## Dateien zum Weiterverwenden
 
 Diese Dateien enthalten die aufbereiteten Daten und können unverändert übernommen werden:
 
-- [`dev/daten/merkmale.js`](https://github.com/bunwichtig/naturewissen/blob/main/dev/daten/merkmale.js) – Merkmalstabelle: MERKMALE (Fragen und Antworten), GRUPPEN (263 Gruppen mit Merkmalen), BELEG (Wikipedia-Artikel je Gruppe), DATEN (aus Datensätzen berechnete Werte).
-- [`dev/daten/wuchsform.js`](https://github.com/bunwichtig/naturewissen/blob/main/dev/daten/wuchsform.js) – BAEUME und STRAEUCHER als Mengen wissenschaftlicher Namen (WCVP).
+- [`dev/daten/merkmale.js`](https://github.com/bunwichtig/naturewissen/blob/main/dev/daten/merkmale.js) – Merkmalstabelle: MERKMALE (Fragen und Antworten), GRUPPEN (263 Gruppen mit Merkmalen), BELEG (Wikipedia-Artikel je Gruppe), DATEN (aus Datensätzen berechnete Werte). Neu: Werte aus Gossner et al. 2015.
+- [`dev/daten/wuchs/index.js`](https://github.com/bunwichtig/naturewissen/blob/main/dev/daten/wuchs/index.js) – Wuchsformen: wuchsSet(code) lädt die Liste einer Wuchsform (B Baum, S Strauch, H Kraut, G Gras, K Kletterpflanze, W Wasser & Sumpf, Z Zwiebel & Knolle, F Farn).
+- [`werkzeuge/daten/gossner_arthropoden.json`](https://github.com/bunwichtig/naturewissen/blob/main/werkzeuge/daten/gossner_arthropoden.json) – Körperlänge und Schicht von 1.230 Arten (Gossner et al. 2015).
 - [`dev/js/api.js`](https://github.com/bunwichtig/naturewissen/blob/main/dev/js/api.js) – Warteschlangen je Dienst, Zwischenspeicher, Abbruch, Name → Nummer.
 - [`dev/js/state.js`](https://github.com/bunwichtig/naturewissen/blob/main/dev/js/state.js) – Gruppen mit iNaturalist- und GBIF-Schlüsseln, Umkreise, gemeinsamer Zustand.
 
@@ -250,6 +308,8 @@ Die Quellen-Seite mit allen Belegen und der Merkmalstabelle: https://bunwichtig.
 - **TRY Plant Trait Database:** Wuchsformen und weitere Pflanzenmerkmale; Download nur nach Registrierung, die gerade in Wartung war. Ersetzt durch WCVP. (https://www.try-db.org)
 - **SquamBase:** Schlangen-Längen; es lag nur Tabelle S2 (Literaturliste) vor, gebraucht wird S1.
 - **GBIF-Wabenkarte (v2/map):** Nimmt nur einen Gruppen-Schlüssel – für Fische/Reptilien ungeeignet. Die große Karte ist im neuen Konzept ohnehin entfallen. (https://www.gbif.org/developer/maps)
+- **DISPERSE (Wasserinsekten, Libellen):** Größe und Flugfähigkeit europäischer Wasser-Wirbelloser; die Lizenz der Tabelle ist im Artikel nicht genannt – erst nach Klärung verwenden. (https://doi.org/10.6084/m9.figshare.c.5000633)
+- **Europäische Reptilien (Grimm et al. 2014):** Bei Dryad unter CC0; die Merkmale liegen als Zahlencodes vor, deren Schlüssel noch fehlt – noch nicht ausgewertet. (https://datadryad.org/dataset/doi:10.5061/dryad.hb4ht)
 
 ## Fassungen
 

@@ -1,7 +1,7 @@
 // Bereich „Entdecken“: Was lebt hier?
 // Standard: Arten nach Häufigkeit bei iNaturalist. Schalter „Genauer rechnen“ nimmt GBIF dazu (früher Reiter „Kombi“).
 import { $, $$, esc, fmt, plural, local } from "./util.js";
-import { API, INAT_DE, PRIO, inat, getJSON, isAbort, findInatTaxon } from "./api.js";
+import { API, INAT_DE, PRIO, inat, getJSON, isAbort, findInatTaxon, taxonIdsOf } from "./api.js";
 import { state, set, on, GROUPS, GBIF_FISH_ORDERS, whereParams } from "./state.js";
 import { makeList } from "./liste.js";
 
@@ -10,13 +10,22 @@ export const setDetailOpener = fn => { openDetail = fn; };
 
 let list, abort, lastKey, lastTotal = null;
 
+const isPlantForm = id => GROUPS.find(x => x.id === id)?.parent === "plants";
+function markGroups(){
+  $$("#groups .chip").forEach(x => x.setAttribute("aria-pressed", x.dataset.id === state.group || (x.dataset.id === "plants" && isPlantForm(state.group))));
+  const show = state.group === "plants" || isPlantForm(state.group);
+  $("#plantForms").hidden = !show;
+  $$("#plantForms .chip").forEach(x => x.setAttribute("aria-pressed", x.dataset.id === state.group));
+}
 export function initEntdecken(){
-  $("#groups").innerHTML = GROUPS.map(g =>
-    `<button class="chip" data-id="${g.id}" aria-pressed="${g.id === state.group}">${g.label}</button>`).join("");
-  $("#groups").onclick = e => {
+  const chip = g => `<button class="chip" data-id="${g.id}" aria-pressed="false">${g.label}</button>`;
+  $("#groups").innerHTML = GROUPS.filter(g => !g.parent).map(chip).join("");
+  $("#plantForms").innerHTML = `<span class="sub-label">Wuchsform</span>` + chip({ id:"plants", label:"Alle Pflanzen" }) + GROUPS.filter(g => g.parent === "plants").map(chip).join("");
+  for (const box of [$("#groups"), $("#plantForms")]) box.onclick = e => {
     const b = e.target.closest(".chip"); if (!b || b.disabled) return;
     set({ group:b.dataset.id });
   };
+  markGroups();
   $("#research").checked = state.research;
   $("#research").onchange = e => set({ research:e.target.checked });
   $("#combo").checked = state.combo;
@@ -29,7 +38,7 @@ export function initEntdecken(){
   });
 
   on("*", (s, changed) => {
-    if (changed.includes("group")) $$("#groups .chip").forEach(x => x.setAttribute("aria-pressed", x.dataset.id === state.group));
+    if (changed.includes("group")) markGroups();
     if (state.mode !== "entdecken") return;
     if (changed.some(k => ["center","radius","group","research","combo"].includes(k))) load();
   });
@@ -55,9 +64,16 @@ function params(){
   return p;
 }
 
-export function load(){
+export async function load(){
   if (!state.placeSet) return;
   const p = params();
+  const g0 = GROUPS.find(x => x.id === state.group);
+  if (g0.inatTaxa){
+    try{
+      const ids = await taxonIdsOf(g0.inatTaxa, { prio:PRIO.high });
+      if (ids.length){ p.delete("iconic_taxa"); p.set("taxon_id", ids.join(",")); }
+    }catch{}
+  }
   const key = p.toString() + "|" + state.combo;
   if (key === lastKey) return;
   lastKey = key; lastParams = p;
@@ -78,7 +94,7 @@ export const reset = () => { lastKey = null; };
    Deshalb kommen die Pflanzenarten im Umkreis aus iNaturalist UND GBIF (Florenkartierungen, Herbarien),
    behalten werden die, die in der World Checklist of Vascular Plants (Kew) als Baum bzw. Strauch stehen.
    Arten nur bei GBIF bekommen Foto und deutschen Namen aus der Pflanzenliste der weiteren Umgebung (250 km).
-   Die Liste (daten/wuchsform.js) wird erst geladen, wenn jemand die Gruppe wählt. */
+   Die Listen (daten/wuchs/) werden erst geladen, wenn jemand die Gruppe wählt. */
 const WUCHS_PAGES = 4, WUCHS_REGION_PAGES = 4;
 const binomial = s => { const w = s.split(" "); return w[1] === "×" ? w.slice(0, 3).join(" ") : w.slice(0, 2).join(" "); };
 async function loadWuchs(g, p, signal){
@@ -90,8 +106,8 @@ async function loadWuchs(g, p, signal){
   const gp = new URLSearchParams({ geoDistance:`${state.center.lat.toFixed(4)},${state.center.lng.toFixed(4)},${km}km`, taxonKey:6,
     facet:"scientificName", facetLimit:10000, limit:0, occurrenceStatus:"PRESENT", hasGeospatialIssue:"false" });
   try{
-    const [{ BAEUME, STRAEUCHER }, first, gbif] = await Promise.all([
-      import("../daten/wuchsform.js"),
+    const [keep, first, gbif] = await Promise.all([
+      import("../daten/wuchs/index.js").then(m => m.wuchsSet(g.wuchs)),
       inat("/observations/species_counts", withPage(p, 1), { signal, prio:PRIO.high }),
       getJSON(`${API.gbif}/occurrence/search?${gp}`, { signal }).catch(err => { if (isAbort(err)) throw err; return null; })
     ]);
@@ -102,7 +118,6 @@ async function loadWuchs(g, p, signal){
       all.push(...(d.results || []));
     }
     if (signal.aborted) return;
-    const keep = g.wuchs === "baum" ? BAEUME : STRAEUCHER;
     const by = new Map();
     all.forEach(x => { if (keep.has(x.taxon.name)) by.set(x.taxon.name, { taxon:x.taxon, i:x.count, g:0 }); });
     (gbif?.facets?.[0]?.counts || []).forEach(x => {
@@ -131,7 +146,7 @@ async function loadWuchs(g, p, signal){
     })).sort((a, b) => b.score - a.score);
     const nI = [...by.values()].filter(e => e.i).length, nG = [...by.values()].filter(e => e.g && !e.i).length;
     stat.textContent = `${plural(out.length, "Art", "Arten")}: ${fmt(nI)} bei iNaturalist, ${fmt(nG)} weitere nur bei GBIF. ` +
-      `Wuchsform nach der World Checklist of Vascular Plants (Kew)` + (g.wuchs === "strauch" ? ", mit Halb- und Zwergsträuchern." : ".") +
+      `Wuchsform nach der World Checklist of Vascular Plants (Kew)` + ({ S:", mit Halb- und Zwergsträuchern.", G:": Süßgräser, Sauergräser und Binsen.", F:": Farne, Schachtelhalme und Bärlappe.", Z:": Pflanzen mit Zwiebel, Knolle oder Wurzelstock." }[g.wuchs] || ".") +
       (gbif ? "" : " GBIF war gerade nicht erreichbar.") + (state.radius > COMBO_MAX_KM ? ` GBIF-Umkreis höchstens ${COMBO_MAX_KM} km.` : "");
     await list.load(null, signal, out);
   }catch(err){
@@ -170,12 +185,13 @@ async function updateGroupAvailability(p, signal){
     const by = Object.fromEntries((d.results || []).map(r => [r.taxon?.name, r.count]));
     $$("#groups .chip").forEach(b => {
       const g = GROUPS.find(x => x.id === b.dataset.id);
-      if (g.id === "all") return;
+      if (!g || g.id === "all") return;
       const n = by[g.taxa] || 0;
       b.disabled = n === 0;
       b.title = n ? plural(n, "Art", "Arten") + " hier" : "Hier keine Funde";
     });
     if ($("#groups .chip[aria-pressed=true]")?.disabled) set({ group:"all" });
+    $$("#plantForms .chip").forEach(b => { b.disabled = !by.Plantae; });
   }catch(err){
     if (!isAbort(err)) $$("#groups .chip").forEach(b => { b.disabled = false; });
   }

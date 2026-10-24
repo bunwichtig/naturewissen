@@ -7,7 +7,13 @@ import { state, set } from "./state.js";
 // „Baum“, „Bäume“, „Strauch“ … ist keine Art, sondern eine Wuchsform: dafür ein eigener Vorschlag oben in der Liste.
 const WUCHS = [
   { re:/^b(a|ä)u?m?e?$|^b(a|ä)um/i, group:"trees", label:"Bäume", min:3 },
-  { re:/^str(a|ä)u?c?h?e?r?$|^str(a|ä)uch|^geh(ö|oe)lz|^busch|^büsch/i, group:"shrubs", label:"Sträucher", min:4 }
+  { re:/^str(a|ä)u?c?h?e?r?$|^str(a|ä)uch|^geh(ö|oe)lz|^busch|^büsch/i, group:"shrubs", label:"Sträucher", min:4 },
+  { re:/^kr(a|ä)ut(er)?$|^blumen?$/i, group:"herbs", label:"Kräuter & Blumen", min:4 },
+  { re:/^gr(a|ä)s(er)?$/i, group:"grass", label:"Gräser", min:4 },
+  { re:/^kletterpfl|^liane/i, group:"climb", label:"Kletterpflanzen", min:6 },
+  { re:/^wasserpfl|^sumpfpfl/i, group:"water", label:"Wasser- & Sumpfpflanzen", min:6 },
+  { re:/^farne?$/i, group:"ferns", label:"Farne", min:4 },
+  { re:/^moose?$/i, group:"moss", label:"Moose", min:4 }
 ];
 const wuchsFor = q => WUCHS.find(w => q.length >= w.min && w.re.test(q));
 

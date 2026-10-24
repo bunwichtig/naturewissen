@@ -153,16 +153,16 @@ REGELN = """
 - Privates, nicht-kommerzielles Projekt (manche Fotos sind nur nicht-kommerziell frei).
 """
 
-def md():
-  o = [f"# Pure Nature – Bauplan und Datenbasis\n",
-       f"Stand: {STAND} · Seite: {SITE}/ · Repo: {REPO}\n",
+def md(V):
+  o = [f"# Pure Nature – Bauplan und Datenbasis {V['nr']}\n",
+       f"Stand: {V['stand']} · Seite: {SITE}/ · Repo: {REPO}\n",
        "> **So benutzen:** Diese Datei in einen neuen Chat mit Claude legen und dazu schreiben, was neu werden soll – z. B. „Baue Pure Nature nach diesem Bauplan neu auf. Funktionen, Datenquellen und Regeln bleiben genau so; ich möchte nur ein neues Design: …“. Alles, was Claude für Suche, Listen und Steckbrief braucht, steht hier. Die fertig aufbereiteten Tabellen liegen im Repo (Abschnitt „Dateien zum Weiterverwenden“).\n",
        "## Ziel\n\nEine Website, die zeigt, welche Tiere, Pflanzen und Pilze an einem Ort leben, und beim Bestimmen hilft – nur mit freien, legalen Datenquellen und ohne eigene Datenhaltung.\n",
        "## Regeln, die nicht verhandelbar sind\n" + REGELN,
-       "## Funktionen und Ablauf\n" + FUNKTIONEN]
+       "## Funktionen und Ablauf\n" + V["funktionen"]]
   for art in ("live", "fest", "technik"):
     o.append(f"## {ART[art][0]} – {ART[art][1]}\n")
-    for q in [x for x in QUELLEN if x["art"] == art]:
+    for q in [x for x in V['quellen'] if x["art"] == art]:
       o.append(f"### {q['name']}\n\n- **Lizenz:** {q['lizenz']}\n- **Liefert:** {q['liefert']}")
       if q.get("zitat"): o.append(f"- **Zitat:** {q['zitat']}")
       for r in q.get("regeln", []): o.append(f"- {r}")
@@ -170,18 +170,26 @@ def md():
         o.append("\n| Abfrage | Parameter | Wofür |\n|---|---|---|")
         for e in q["endpunkte"]: o.append(f"| `{e[0]}` | {e[1]} | {e[2]} |")
       o.append("\n" + " · ".join(f"[{t}]({u})" for t, u in q["links"]) + "\n")
+  if V.get("neu"):
+    o.append(f"## Neu in Datenbasis {V['nr']}\n")
+    for x in V["neu"]: o.append(f"- {x}")
+    o.append("")
+  if V.get("abdeckung"):
+    o.append("## Abdeckung nach Gruppen\n\nListen am Ort und Systematik (Reich, Stamm, Klasse, Ordnung, Familie, Gattung, Art) kommen für alle Gruppen live aus iNaturalist und GBIF. Die Tabelle zeigt, woher zusätzliche Merkmale kommen.\n\n| Gruppe | Merkmale aus Datensätzen | Ebene | Lücke |\n|---|---|---|---|")
+    for r in V["abdeckung"]: o.append(f"| {r[0]} | {r[1] or '–'} | {r[2]} | {r[3] or '–'} |")
+    o.append("")
   o.append("## Dateien zum Weiterverwenden\n\nDiese Dateien enthalten die aufbereiteten Daten und können unverändert übernommen werden:\n")
-  for p, d in DATEIEN: o.append(f"- [`{p}`]({REPO}/blob/main/{p}) – {d}")
-  o.append(f"\nDie Quellen-Seite mit allen Belegen und der Merkmalstabelle: {SITE}/dev/quellen.html\n")
+  for p, d in V['dateien']: o.append(f"- [`{p}`]({REPO}/blob/main/{p}) – {d}")
+  o.append(f"\nDie Quellen-Seite mit allen Belegen und der Merkmalstabelle: {SITE}/{V['app']}/quellen.html\n")
   o.append("## Geprüft, aber nicht verwendet\n")
-  for n, d, u in GEPRUEFT: o.append(f"- **{n}:** {d}" + (f" ({u})" if u else ""))
+  for n, d, u in V['geprueft']: o.append(f"- **{n}:** {d}" + (f" ({u})" if u else ""))
   o.append("\n## Fassungen\n\n- `dev/` – Entwicklung, hier wird weitergearbeitet\n- `v1/` – Archiv, erste fertige Version\n- `v2/` – in Vorbereitung (WIP-Seite)\n- `alt/` – ursprüngliche Ein-Datei-Version\n")
   return "\n".join(o) + "\n"
 
 E = html.escape
-def page(bauplan):
+def page(V, bauplan):
   cards = []
-  for q in QUELLEN:
+  for q in V['quellen']:
     ep = "".join(f"<li><code>{E(e[0])}</code><span>{E(e[2])}</span><small>{E(e[1])}</small></li>" for e in q.get("endpunkte", []))
     rg = "".join(f"<li>{E(r)}</li>" for r in q.get("regeln", []))
     cards.append(f"""<article class="src" data-art="{q['art']}" data-text="{E((q['name']+' '+q['liefert']+' '+q['lizenz']).lower())}">
@@ -193,23 +201,23 @@ def page(bauplan):
   {f'<details><summary>Abfragen ({len(q["endpunkte"])})</summary><ul class="ep">{ep}</ul></details>' if ep else ''}
   <nav>{''.join(f'<a href="{E(u)}" target="_blank" rel="noopener">{E(t)}</a>' for t, u in q['links'])}</nav>
 </article>""")
-  n = {a: sum(1 for q in QUELLEN if q["art"] == a) for a in ART}
-  ger = "".join(f'<li><b>{E(a)}</b> – {E(b)}' + (f' <a href="{E(c)}" target="_blank" rel="noopener">Link</a>' if c else '') + '</li>' for a, b, c in GEPRUEFT)
-  dat = "".join(f'<li><a href="{REPO}/blob/main/{p}" target="_blank" rel="noopener"><code>{E(p)}</code></a> – {E(d)}</li>' for p, d in DATEIEN)
+  n = {a: sum(1 for q in V['quellen'] if q["art"] == a) for a in ART}
+  ger = "".join(f'<li><b>{E(a)}</b> – {E(b)}' + (f' <a href="{E(c)}" target="_blank" rel="noopener">Link</a>' if c else '') + '</li>' for a, b, c in V['geprueft'])
+  dat = "".join(f'<li><a href="{REPO}/blob/main/{p}" target="_blank" rel="noopener"><code>{E(p)}</code></a> – {E(d)}</li>' for p, d in V['dateien'])
   return f"""<!doctype html>
 <html lang="de">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Datenbasis – Pure Nature</title>
+<title>Datenbasis {V["nr"]} – Pure Nature</title>
 <meta name="description" content="Alle freien Datenquellen von Pure Nature mit Lizenz, Nachweis und Abfragen – und der Bauplan zum Neuaufbau.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%2386b86f'/%3E%3Cpath d='M16 6c6 4 6 16 0 20c-6-4-6-16 0-20z' fill='%230a0f0e'/%3E%3C/svg%3E">
 <style>
-@font-face{{font-family:"Figtree";font-weight:400;font-display:swap;src:url(fonts/figtree-latin-400-normal.woff2) format("woff2")}}
-@font-face{{font-family:"Figtree";font-weight:600;font-display:swap;src:url(fonts/figtree-latin-600-normal.woff2) format("woff2")}}
-@font-face{{font-family:"Bricolage Grotesque";font-weight:700;font-display:swap;src:url(fonts/bricolage-grotesque-latin-700-normal.woff2) format("woff2")}}
-@font-face{{font-family:"Newsreader";font-style:italic;font-weight:400;font-display:swap;src:url(fonts/newsreader-latin-400-italic.woff2) format("woff2")}}
-@font-face{{font-family:"JetBrains Mono";font-weight:400;font-display:swap;src:url(fonts/jetbrains-mono-latin-400-normal.woff2) format("woff2")}}
+@font-face{{font-family:"Figtree";font-weight:400;font-display:swap;src:url(../fonts/figtree-latin-400-normal.woff2) format("woff2")}}
+@font-face{{font-family:"Figtree";font-weight:600;font-display:swap;src:url(../fonts/figtree-latin-600-normal.woff2) format("woff2")}}
+@font-face{{font-family:"Bricolage Grotesque";font-weight:700;font-display:swap;src:url(../fonts/bricolage-grotesque-latin-700-normal.woff2) format("woff2")}}
+@font-face{{font-family:"Newsreader";font-style:italic;font-weight:400;font-display:swap;src:url(../fonts/newsreader-latin-400-italic.woff2) format("woff2")}}
+@font-face{{font-family:"JetBrains Mono";font-weight:400;font-display:swap;src:url(../fonts/jetbrains-mono-latin-400-normal.woff2) format("woff2")}}
 :root{{--night:#0a0f0e;--panel:#101816;--panel-2:#16211e;--line:#24332e;--ink:#e6ede4;--muted:#8b9d94;--pollen:#e7ad4f;--plantae:#86b86f;--fungi:#c79ad0;
   --f-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;--f-body:"Figtree","Segoe UI",system-ui,sans-serif;--f-sci:"Newsreader",Georgia,serif;--f-data:"JetBrains Mono",ui-monospace,Menlo,monospace;color-scheme:dark}}
 *{{box-sizing:border-box}}
@@ -263,15 +271,24 @@ h2.sec{{font:700 26px/1.1 var(--f-display);margin:40px 0 6px}}
 .ep small{{color:var(--muted);font-size:12px}}
 .src nav{{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:auto;padding-top:6px;font-size:13.5px}}
 .plain{{padding-left:18px}} .plain li{{margin:6px 0}}
+.neu li::marker{{color:var(--pollen)}}
+.tbl{{overflow-x:auto;border:1px solid var(--line);border-radius:14px}}
+table{{border-collapse:collapse;width:100%;min-width:560px;font-size:14px}}
+th,td{{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}}
+thead th{{font:400 11px/1.2 var(--f-data);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);background:var(--panel)}}
+tbody th{{font-weight:600}}
+tbody tr:last-child>*{{border-bottom:0}}
+.no{{color:var(--muted)}} .ok{{color:var(--plantae)}}
 code{{font-family:var(--f-data);font-size:.92em}}
 @media (max-width:640px){{.grid{{grid-template-columns:1fr}}.lic{{max-width:50%}}}}
 </style>
 </head>
 <body>
 <div class="wrap">
-<header class="top"><a class="brand" href="./">Pure <span>Nature</span></a><a class="back" href="./">← Fassungen</a></header>
-<h1>Datenbasis</h1>
-<p class="lead">Woher Pure Nature seine Daten hat: jede Quelle mit Lizenz, Nachweis, den genauen Abfragen und Regeln. Stand {STAND}.</p>
+<header class="top"><a class="brand" href="../datenbasis.html">Pure <span>Nature</span></a><a class="back" href="../datenbasis.html">← Alle Datenbasen</a></header>
+<h1>Datenbasis {V["nr"]}</h1>
+<p class="lead">Woher Pure Nature seine Daten hat: jede Quelle mit Lizenz, Nachweis, den genauen Abfragen und Regeln. Stand {V["stand"]}.</p>
+{V["intro"]}
 <ul class="stats">
   <li><b>{n['live']}</b><span>Live-Abfragen</span></li>
   <li><b>{n['fest']}</b><span>feste Datensätze</span></li>
@@ -283,14 +300,14 @@ code{{font-family:var(--f-data);font-size:.92em}}
   <h2 id="bauH">Neu aufbauen mit Claude</h2>
   <p>Der Bauplan enthält alles, was zum Nachbauen nötig ist: Ziel, Regeln, Ablauf von Suche, Listen, Bestimmen und Steckbrief, alle Quellen mit Abfragen und Lizenzen, dazu die fertig aufbereiteten Tabellen. Datei herunterladen, in einen neuen Chat legen und dazuschreiben, wie das neue Design aussehen soll.</p>
   <div class="btns">
-    <a class="btn primary" href="bauplan.md" download="pure-nature-bauplan.md">Bauplan herunterladen (.md)</a>
+    <a class="btn primary" href="../bauplan-{V["nr"]}.md" download="pure-nature-bauplan-{V["nr"]}.md">Bauplan herunterladen (.md)</a>
     <button class="btn" type="button" id="copy">Bauplan kopieren</button>
     <span id="copied" role="status"></span>
   </div>
   <details><summary>Bauplan ansehen</summary><pre id="plan">{E(bauplan)}</pre></details>
 </section>
 
-<h2 class="sec">Alle Quellen</h2>
+{neu_html(V)}{abd_html(V)}<h2 class="sec">Alle Quellen</h2>
 <p class="sec-lead">Live-Abfragen laufen beim Benutzen der Seite. Feste Datensätze wurden einmal aufbereitet und liegen als Tabelle im Repo.</p>
 <div class="filter">
   <input type="search" id="q" placeholder="Quelle suchen, z. B. Vögel, CC0, Karte" aria-label="Quellen durchsuchen">
@@ -305,7 +322,7 @@ code{{font-family:var(--f-data);font-size:.92em}}
 
 <h2 class="sec">Dateien zum Weiterverwenden</h2>
 <ul class="plain">{dat}</ul>
-<p class="sec-lead">Alle Belege und die Merkmalstabelle: <a href="dev/quellen.html">Quellen &amp; Lizenzen</a>.</p>
+<p class="sec-lead">Alle Belege und die Merkmalstabelle: <a href="../{V["app"]}/quellen.html">Quellen &amp; Lizenzen</a>.</p>
 
 <h2 class="sec">Geprüft, aber nicht verwendet</h2>
 <ul class="plain">{ger}</ul>
@@ -333,7 +350,174 @@ document.getElementById("q").oninput = apply;
 </html>
 """
 
-b = md()
-(ROOT / "bauplan.md").write_text(b, encoding="utf-8")
-(ROOT / "datenbasis.html").write_text(page(b), encoding="utf-8")
-print("bauplan.md", len(b), "Zeichen · datenbasis.html geschrieben")
+
+# ───────────────────────── Versionen der Datenbasis ─────────────────────────
+import copy
+
+def neu_html(V):
+  if not V.get("neu"): return ""
+  return '<h2 class="sec">Neu in dieser Version</h2><ul class="plain neu">' + "".join(f"<li>{E(x)}</li>" for x in V["neu"]) + "</ul>"
+
+def abd_html(V):
+  if not V.get("abdeckung"): return ""
+  rows = "".join(f'<tr><th scope="row">{E(r[0])}</th><td>{E(r[1]) if r[1] else "<span class=no>–</span>"}</td><td>{E(r[2])}</td><td>{E(r[3]) if r[3] else "<span class=ok>–</span>"}</td></tr>' for r in V["abdeckung"])
+  return f'''<h2 class="sec">Abdeckung nach Gruppen</h2>
+<p class="sec-lead">Listen am Ort und die ganze Systematik – Reich, Stamm, Klasse, Ordnung, Familie, Gattung, Art – kommen für <b>alle</b> Gruppen live aus iNaturalist und GBIF. Die Tabelle zeigt, woher zusätzliche Merkmale (Größe, Ort, Wuchs- oder Pilzform) stammen und wo noch Lücken sind.</p>
+<div class="tbl"><table><thead><tr><th>Gruppe</th><th>Merkmale aus Datensätzen</th><th>Ebene</th><th>Lücke</th></tr></thead><tbody>{rows}</tbody></table></div>'''
+
+ABD_BASIS = [
+  ["Bäume, Sträucher", "WCVP (Wuchsform), EIVE (Ort)", "Art", ""],
+  ["Kräuter & Blumen, Gräser", "EIVE (Ort)", "Art", "Wuchsform nicht eigens gefiltert"],
+  ["Farne, Schachtelhalme", "EIVE (Ort)", "Art", "Wuchsform nicht eigens gefiltert"],
+  ["Moose", "", "–", "keine Merkmal- oder Wuchsform-Daten"],
+  ["Pilze, Flechten", "FungalTraits (Form, Ort)", "Gattung", ""],
+  ["Säugetiere", "Amniote, EltonTraits, COMBINE", "Art", ""],
+  ["Vögel", "AVONET", "Art", ""],
+  ["Amphibien", "Europäische Amphibien", "Art", ""],
+  ["Reptilien", "Amniote (Eidechsen)", "Art", "Längen von Schlangen und Schildkröten"],
+  ["Süßwasserfische", "FISHMORPH", "Art", "Meeresfische"],
+  ["Tagfalter", "Tagfalter Europas", "Art", "Nachtfalter"],
+  ["Käfer, Wanzen, Heuschrecken", "", "–", "nur Wikipedia-Belege"],
+  ["Spinnen", "", "–", "nur Wikipedia-Belege"],
+  ["Bienen, Wespen, Fliegen, Libellen", "", "–", "nur Wikipedia-Belege"],
+  ["Weichtiere (Schnecken, Muscheln)", "", "–", "nur Wikipedia-Belege"],
+]
+
+V1 = dict(nr=1, app="v1", stand="25. Oktober 2026 – Stand von V1 (Archiv)",
+  intro='<p class="lead">Die Datenbasis, mit der die erste Version gebaut wurde. Sie bleibt unverändert.</p>',
+  quellen=QUELLEN, funktionen=FUNKTIONEN, geprueft=GEPRUEFT,
+  dateien=[(p.replace("dev/", "v1/").replace("daten/wuchs/index.js", "daten/wuchsform.js"), d) for p, d in DATEIEN],
+  abdeckung=ABD_BASIS)
+
+# Datenbasis 2: Erweiterung
+Q2 = copy.deepcopy(QUELLEN)
+def q(id_): return next(x for x in Q2 if x["id"] == id_)
+w = q("wcvp")
+w["liefert"] = "Wuchsform aller europäischen Gefäßpflanzen für Entdecken → Pflanzen → Wuchsform: Bäume (1.083), Sträucher (5.529), Kräuter & Blumen (18.102), Gräser (2.213), Kletterpflanzen (217), Wasser- & Sumpfpflanzen (417), Zwiebel & Knolle (2.860), Farne (388)."
+w["regeln"] = ["Anerkannte Arten mit Vorkommen in Europa (heimisch oder eingeführt, nicht ausgestorben).",
+  "Aus „lifeform_description“: tree → Baum; shrub/subshrub → Strauch; climber/climbing/liana → Kletterpflanze; hydro…/helophyte → Wasser & Sumpf; geophyte → Zwiebel & Knolle; annual/biennial/perennial → Kraut (ohne Baum, Strauch, Kletter-, Wasserpflanze).",
+  "Gräser nach Familie (Poaceae, Cyperaceae, Juncaceae), Farne nach Farn-, Schachtelhalm- und Bärlappfamilien. Eine Art kann in mehreren Gruppen stehen.",
+  "Arten am Ort aus iNaturalist UND GBIF prüfen – häufige Bäume (Fichte, Kiefer) fehlen bei iNaturalist oft.",
+  "Jede Wuchsform liegt in einer eigenen Datei (daten/wuchs/) und wird erst geladen, wenn jemand sie wählt."]
+inat = q("inat")
+inat["liefert"] += " Moose (Laubmoose, Lebermoose, Hornmoose) als eigene Gruppe über die iNaturalist-Taxa Bryophyta, Marchantiophyta, Anthocerotophyta. Systematik jeder Art (alle Ebenen von Reich bis Art) im Steckbrief."
+i_fest = max(i for i, x in enumerate(Q2) if x["art"] == "live") + 1
+Q2.insert(i_fest, dict(id="backbone", name="GBIF Backbone Taxonomy", art="live", lizenz="CC BY 4.0",
+  liefert="Einheitliche Systematik über alle Gruppen (Reich, Stamm, Klasse, Ordnung, Familie, Gattung, Art), aus Catalogue of Life und weiteren Checklisten. Grundlage für Namensabgleich und die GBIF-Gruppen.",
+  regeln=["Abfrage über die GBIF-Schnittstellen species/match und species/{key}; Ränge stehen in den Feldern kingdom … species."],
+  endpunkte=[("GET https://api.gbif.org/v1/species/match", "name, strict=true, kingdom", "Name → Schlüssel mit allen Rängen"),
+             ("GET …/v1/species/{key}/parents", "–", "alle übergeordneten Ebenen")],
+  links=[("Datensatz bei GBIF", "https://www.gbif.org/dataset/d7dddbf4-2cf0-4f39-9b2a-bb099caae36c"), ("Catalogue of Life", "https://www.catalogueoflife.org")]))
+i_fung = next(i for i, x in enumerate(Q2) if x["id"] == "fungal")
+Q2.insert(i_fung, dict(id="gossner", name="Insekten und Spinnen im Grünland", art="fest", lizenz="CC0 (Dryad)",
+  liefert="Größe und Schicht bei Spinnen, Käfern, Wanzen und Heuschrecken – 1.230 Arten aus Grünland in Deutschland. Eingeflossen für Radnetz- und Krabbenspinnen, Weich- und Marienkäfer, Langfühlerschrecken.",
+  zitat="Gossner, M. M. et al. (2015): A summary of eight traits of Coleoptera, Hemiptera, Orthoptera and Araneae, occurring in grasslands in Germany. Scientific Data 2: 150013.",
+  regeln=["Größe aus der Körperlänge (unter 1 cm, 1–5 cm, über 5 cm).", "Krautschicht = Wiese und Feld, Bäume = Wald, Wasser = im Wasser.",
+          "Nur Gruppen, bei denen mindestens die Hälfte der Beobachtungen in Deutschland abgedeckt ist; die Daten stammen aus Grünland."],
+  links=[("Datensatz bei Dryad", "https://datadryad.org/dataset/doi:10.5061/dryad.53ds2"), ("Artikel", "https://doi.org/10.1038/sdata.2015.13"), ("verwendete Kopie (traitdata)", "https://github.com/RS-eco/traitdata")]))
+
+F2 = FUNKTIONEN.replace("Gruppen: Alle, Pflanzen, Bäume, Sträucher, Pilze,", "Gruppen: Alle, Pflanzen, Pilze,").replace(
+  "(Gruppen ohne Funde ausgegraut).", "(Gruppen ohne Funde ausgegraut). Unter „Pflanzen“ eine zweite Zeile **Wuchsform**: Alle Pflanzen, Bäume, Sträucher, Kräuter & Blumen, Gräser, Kletterpflanzen, Wasser & Sumpf, Zwiebel & Knolle, Farne, Moose.").replace(
+  "5. **Bäume / Sträucher:**", "5. **Wuchsformen (außer Moose):**").replace("→ nur Namen aus der WCVP-Liste behalten", "→ nur Namen aus der WCVP-Liste der gewählten Wuchsform behalten").replace(
+  "„Baum“/„Strauch“ ergibt den Vorschlag „Alle Bäume um <Ort>“.", "„Baum“, „Strauch“, „Kraut“, „Gras“, „Farn“, „Moos“, „Kletterpflanze“, „Wasserpflanze“ ergeben den Vorschlag „Alle … um <Ort>“.") + \
+  "9. **Moose:** iNaturalist-Taxa Bryophyta, Marchantiophyta, Anthocerotophyta → Nummern über /taxa nachschlagen → species_counts mit taxon_id.\n"
+
+V2 = dict(nr=2, app="dev", stand="25. Oktober 2026 – Erweiterung, in der Dev-Fassung",
+  intro='<p class="lead">Die erweiterte Datenbasis: alle Wuchsformen der Pflanzen, Moose, Systematik über alle Ebenen, mehr Merkmale für Insekten und Spinnen. Sie steckt in der Dev-Fassung.</p>',
+  quellen=Q2, funktionen=F2,
+  neu=["Wuchsform für alle europäischen Gefäßpflanzen statt nur Bäume und Sträucher: dazu Kräuter & Blumen, Gräser, Kletterpflanzen, Wasser & Sumpf, Zwiebel & Knolle, Farne (WCVP).",
+       "Moose als eigene Gruppe (iNaturalist: Laub-, Leber- und Hornmoose).",
+       "GBIF Backbone Taxonomy als Quelle für die Systematik über alle Ebenen von Reich bis Art.",
+       "Neuer Datensatz Gossner et al. 2015 (CC0): Größe und Schicht für Spinnen, Käfer, Wanzen und Heuschrecken; bestätigt die Merkmalstabelle bei fünf Gruppen.",
+       "Abdeckungs-Tabelle: welche Gruppe Merkmale aus welchem Datensatz hat und wo noch Lücken sind."],
+  geprueft=GEPRUEFT + [
+    ("DISPERSE (Wasserinsekten, Libellen)", "Größe und Flugfähigkeit europäischer Wasser-Wirbelloser; die Lizenz der Tabelle ist im Artikel nicht genannt – erst nach Klärung verwenden.", "https://doi.org/10.6084/m9.figshare.c.5000633"),
+    ("Europäische Reptilien (Grimm et al. 2014)", "Bei Dryad unter CC0; die Merkmale liegen als Zahlencodes vor, deren Schlüssel noch fehlt – noch nicht ausgewertet.", "https://datadryad.org/dataset/doi:10.5061/dryad.hb4ht")],
+  dateien=[("dev/daten/merkmale.js", DATEIEN[0][1] + " Neu: Werte aus Gossner et al. 2015."),
+           ("dev/daten/wuchs/index.js", "Wuchsformen: wuchsSet(code) lädt die Liste einer Wuchsform (B Baum, S Strauch, H Kraut, G Gras, K Kletterpflanze, W Wasser & Sumpf, Z Zwiebel & Knolle, F Farn)."),
+           ("werkzeuge/daten/gossner_arthropoden.json", "Körperlänge und Schicht von 1.230 Arten (Gossner et al. 2015)."),
+           ] + DATEIEN[2:],
+  abdeckung=[
+    ["Bäume, Sträucher", "WCVP (Wuchsform), EIVE (Ort)", "Art", ""],
+    ["Kräuter & Blumen, Gräser, Kletter-, Wasserpflanzen, Zwiebel & Knolle", "WCVP (Wuchsform), EIVE (Ort)", "Art", ""],
+    ["Farne, Schachtelhalme, Bärlappe", "WCVP (Wuchsform), EIVE (Ort)", "Art", ""],
+    ["Moose", "", "Gruppe (iNaturalist)", "keine Merkmaldaten"],
+    ["Pilze, Flechten", "FungalTraits (Form, Ort)", "Gattung", ""],
+    ["Säugetiere", "Amniote, EltonTraits, COMBINE", "Art", ""],
+    ["Vögel", "AVONET", "Art", ""],
+    ["Amphibien", "Europäische Amphibien", "Art", ""],
+    ["Reptilien", "Amniote (Eidechsen)", "Art", "Längen von Schlangen und Schildkröten"],
+    ["Süßwasserfische", "FISHMORPH", "Art", "Meeresfische"],
+    ["Tagfalter", "Tagfalter Europas", "Art", "Nachtfalter"],
+    ["Käfer, Wanzen, Heuschrecken", "Gossner et al. 2015 (Größe, Schicht)", "Art", "Wasserkäfer, Laufkäfer nur teilweise"],
+    ["Spinnen", "Gossner et al. 2015 (Größe, Schicht)", "Art", "Spring- und Wolfspinnen nur teilweise"],
+    ["Bienen, Wespen, Fliegen, Libellen", "", "–", "nur Wikipedia-Belege"],
+    ["Weichtiere (Schnecken, Muscheln)", "", "–", "nur Wikipedia-Belege"],
+  ])
+
+VERSIONS = [V1, V2]
+
+def hub():
+  cards = "".join(f'''<a class="ver" href="datenbasis/{V['nr']}.html">
+  <span class="tag{' new' if V is VERSIONS[-1] else ''}">{'aktuell · Dev' if V is VERSIONS[-1] else 'V1 · Archiv'}</span>
+  <h2>Datenbasis {V['nr']}</h2>
+  <p>{E(re.sub('<[^>]+>', '', V['intro']))}</p>
+  <ul><li><b>{sum(1 for q in V['quellen'] if q['art']=='live')}</b> Live-Abfragen</li><li><b>{sum(1 for q in V['quellen'] if q['art']=='fest')}</b> Datensätze</li><li><b>{len(V.get('neu', []))}</b> Neuerungen</li></ul>
+  <span class="go">Öffnen →</span></a>''' for V in reversed(VERSIONS))
+  return f'''<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Datenbasis – Pure Nature</title>
+<meta name="description" content="Alle Versionen der Datenbasis von Pure Nature – freie Quellen mit Lizenz, Nachweis und Bauplan.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%2386b86f'/%3E%3Cpath d='M16 6c6 4 6 16 0 20c-6-4-6-16 0-20z' fill='%230a0f0e'/%3E%3C/svg%3E">
+<style>
+@font-face{{font-family:"Figtree";font-weight:400;font-display:swap;src:url(fonts/figtree-latin-400-normal.woff2) format("woff2")}}
+@font-face{{font-family:"Figtree";font-weight:600;font-display:swap;src:url(fonts/figtree-latin-600-normal.woff2) format("woff2")}}
+@font-face{{font-family:"Bricolage Grotesque";font-weight:700;font-display:swap;src:url(fonts/bricolage-grotesque-latin-700-normal.woff2) format("woff2")}}
+@font-face{{font-family:"JetBrains Mono";font-weight:400;font-display:swap;src:url(fonts/jetbrains-mono-latin-400-normal.woff2) format("woff2")}}
+:root{{--night:#0a0f0e;--panel:#101816;--panel-2:#16211e;--line:#24332e;--ink:#e6ede4;--muted:#8b9d94;--pollen:#e7ad4f;--plantae:#86b86f;color-scheme:dark}}
+*{{box-sizing:border-box}}
+html{{background:var(--night)}}
+body{{margin:0;min-height:100vh;background:var(--night);color:var(--ink);font:16px/1.5 "Figtree","Segoe UI",system-ui,sans-serif;padding:0 max(16px,env(safe-area-inset-left,0px)) 48px}}
+.wrap{{max-width:860px;margin:0 auto}}
+.top{{display:flex;align-items:center;padding:18px 0;border-bottom:1px solid var(--line)}}
+.brand{{font:700 22px/1 "Bricolage Grotesque",system-ui,sans-serif;text-decoration:none;color:var(--ink)}}
+.brand span{{color:var(--pollen)}}
+.back{{margin-left:auto;font-size:13px;color:var(--muted);text-underline-offset:3px}}
+h1{{font:700 clamp(36px,7vw,56px)/1 "Bricolage Grotesque",system-ui,sans-serif;letter-spacing:-.03em;margin:36px 0 10px}}
+.lead{{color:var(--muted);margin:0 0 28px;max-width:58ch}}
+.list{{display:grid;gap:16px}}
+.ver{{display:block;text-decoration:none;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px;transition:border-color .15s,transform .15s}}
+.ver:hover,.ver:focus-visible{{border-color:var(--pollen);transform:translateY(-2px)}}
+.ver:focus-visible{{outline:2px solid var(--pollen);outline-offset:3px}}
+.tag{{font:400 12px/1 "JetBrains Mono",ui-monospace,monospace;color:var(--night);background:var(--muted);border-radius:999px;padding:5px 9px;display:inline-block}}
+.tag.new{{background:var(--pollen)}}
+.ver h2{{font:700 28px/1.1 "Bricolage Grotesque",system-ui,sans-serif;margin:14px 0 6px}}
+.ver p{{margin:0 0 12px;color:var(--muted)}}
+.ver ul{{display:flex;flex-wrap:wrap;gap:8px;list-style:none;margin:0 0 12px;padding:0}}
+.ver li{{font-size:13px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:5px 10px}}
+.ver li b{{color:var(--ink)}}
+.go{{font-weight:600;color:var(--pollen)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top"><a class="brand" href="./">Pure <span>Nature</span></a><a class="back" href="./">← Fassungen</a></header>
+<h1>Datenbasis</h1>
+<p class="lead">Jede Version der Datenbasis mit allen freien Quellen, Lizenzen, Nachweisen, Abfragen – und einem Bauplan zum Neuaufbau mit Claude. Die neueste steht oben.</p>
+<div class="list">{cards}</div>
+</div>
+</body>
+</html>
+'''
+
+(ROOT / "datenbasis").mkdir(exist_ok=True)
+for V in VERSIONS:
+  b = md(V)
+  (ROOT / f"bauplan-{V['nr']}.md").write_text(b, encoding="utf-8")
+  (ROOT / "datenbasis" / f"{V['nr']}.html").write_text(page(V, b), encoding="utf-8")
+(ROOT / "bauplan.md").write_text(md(VERSIONS[-1]), encoding="utf-8")
+(ROOT / "datenbasis.html").write_text(hub(), encoding="utf-8")
+print("geschrieben:", [f"datenbasis/{V['nr']}.html" for V in VERSIONS], "datenbasis.html, bauplan*.md")

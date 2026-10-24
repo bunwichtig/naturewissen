@@ -1,0 +1,589 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Datenbasis 1 – Pure Nature</title>
+<meta name="description" content="Alle freien Datenquellen von Pure Nature mit Lizenz, Nachweis und Abfragen – und der Bauplan zum Neuaufbau.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%2386b86f'/%3E%3Cpath d='M16 6c6 4 6 16 0 20c-6-4-6-16 0-20z' fill='%230a0f0e'/%3E%3C/svg%3E">
+<style>
+@font-face{font-family:"Figtree";font-weight:400;font-display:swap;src:url(../fonts/figtree-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Figtree";font-weight:600;font-display:swap;src:url(../fonts/figtree-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"Bricolage Grotesque";font-weight:700;font-display:swap;src:url(../fonts/bricolage-grotesque-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:"Newsreader";font-style:italic;font-weight:400;font-display:swap;src:url(../fonts/newsreader-latin-400-italic.woff2) format("woff2")}
+@font-face{font-family:"JetBrains Mono";font-weight:400;font-display:swap;src:url(../fonts/jetbrains-mono-latin-400-normal.woff2) format("woff2")}
+:root{--night:#0a0f0e;--panel:#101816;--panel-2:#16211e;--line:#24332e;--ink:#e6ede4;--muted:#8b9d94;--pollen:#e7ad4f;--plantae:#86b86f;--fungi:#c79ad0;
+  --f-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;--f-body:"Figtree","Segoe UI",system-ui,sans-serif;--f-sci:"Newsreader",Georgia,serif;--f-data:"JetBrains Mono",ui-monospace,Menlo,monospace;color-scheme:dark}
+*{box-sizing:border-box}
+html{background:var(--night)}
+body{margin:0;background:var(--night);color:var(--ink);font:15px/1.55 var(--f-body);padding:0 max(16px,env(safe-area-inset-left,0px)) 64px}
+.wrap{max-width:1080px;margin:0 auto}
+a{color:var(--ink);text-decoration-color:var(--pollen);text-underline-offset:3px}
+:focus-visible{outline:2px solid var(--pollen);outline-offset:2px}
+.top{display:flex;align-items:center;gap:12px;padding:18px 0;border-bottom:1px solid var(--line)}
+.brand{font:700 22px/1 var(--f-display);text-decoration:none;letter-spacing:-.02em}
+.brand span{color:var(--pollen)}
+.top .back{margin-left:auto;font-size:13px;color:var(--muted)}
+h1{font:700 clamp(32px,6vw,52px)/1.05 var(--f-display);letter-spacing:-.03em;margin:36px 0 10px}
+.lead{color:var(--muted);max-width:60ch;margin:0 0 24px}
+.stats{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 28px;padding:0;list-style:none}
+.stats li{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px;min-width:120px}
+.stats b{display:block;font:700 26px/1 var(--f-display);color:var(--pollen)}
+.stats span{font-size:13px;color:var(--muted)}
+.bau{background:linear-gradient(135deg,var(--panel-2),var(--panel));border:1px solid var(--pollen);border-radius:18px;padding:22px;margin:0 0 36px}
+.bau h2{font:700 24px/1.1 var(--f-display);margin:0 0 8px}
+.bau p{margin:0 0 14px;color:var(--muted);max-width:68ch}
+.btns{display:flex;flex-wrap:wrap;gap:10px}
+.btn{font:600 14px/1 var(--f-body);border-radius:999px;padding:11px 16px;border:1px solid var(--line);background:var(--panel-2);color:var(--ink);cursor:pointer;text-decoration:none}
+.btn.primary{background:var(--pollen);color:var(--night);border-color:var(--pollen)}
+.btn:hover{border-color:var(--pollen)}
+#copied{font-size:13px;color:var(--plantae);align-self:center}
+.bau details{margin-top:14px}
+.bau summary{cursor:pointer;color:var(--muted);font-size:14px}
+.bau pre{white-space:pre-wrap;font:12.5px/1.5 var(--f-data);background:var(--night);border:1px solid var(--line);border-radius:12px;padding:14px;max-height:420px;overflow:auto;margin:10px 0 0}
+h2.sec{font:700 26px/1.1 var(--f-display);margin:40px 0 6px}
+.sec-lead{color:var(--muted);margin:0 0 16px}
+.filter{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px}
+.filter input{flex:1 1 220px;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:9px 14px;color:var(--ink);font:inherit}
+.chip{font:500 13px/1 var(--f-body);border:1px solid var(--line);background:var(--panel);color:var(--muted);border-radius:999px;padding:9px 13px;cursor:pointer}
+.chip[aria-pressed=true]{background:var(--ink);color:var(--night);border-color:var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.src{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:8px}
+.src header{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.src h3{font:700 18px/1.2 var(--f-display);margin:0}
+.lic{font:400 11px/1.3 var(--f-data);color:var(--night);background:var(--plantae);border-radius:8px;padding:4px 7px;text-align:right;max-width:55%}
+.src[data-art=technik] .lic{background:var(--muted)}
+.art{margin:0;font:400 11px/1 var(--f-data);text-transform:uppercase;letter-spacing:.08em;color:var(--pollen)}
+.src p{margin:0}
+.zitat{font:italic 15px/1.45 var(--f-sci);color:var(--muted)}
+.src details{border-top:1px solid var(--line);padding-top:8px}
+.src summary{cursor:pointer;font-size:13px;color:var(--muted)}
+.src ul{margin:8px 0 0;padding-left:18px;font-size:13.5px}
+.ep{list-style:none;padding:0!important;display:grid;gap:8px}
+.ep li{display:grid;gap:2px}
+.ep code{font:12px/1.4 var(--f-data);color:var(--pollen);word-break:break-all}
+.ep small{color:var(--muted);font-size:12px}
+.src nav{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:auto;padding-top:6px;font-size:13.5px}
+.plain{padding-left:18px} .plain li{margin:6px 0}
+.neu li::marker{color:var(--pollen)}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:14px}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:14px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+thead th{font:400 11px/1.2 var(--f-data);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);background:var(--panel)}
+tbody th{font-weight:600}
+tbody tr:last-child>*{border-bottom:0}
+.no{color:var(--muted)} .ok{color:var(--plantae)}
+code{font-family:var(--f-data);font-size:.92em}
+@media (max-width:640px){.grid{grid-template-columns:1fr}.lic{max-width:50%}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top"><a class="brand" href="../datenbasis.html">Pure <span>Nature</span></a><a class="back" href="../datenbasis.html">← Alle Datenbasen</a></header>
+<h1>Datenbasis 1</h1>
+<p class="lead">Woher Pure Nature seine Daten hat: jede Quelle mit Lizenz, Nachweis, den genauen Abfragen und Regeln. Stand 25. Oktober 2026 – Stand von V1 (Archiv).</p>
+<p class="lead">Die Datenbasis, mit der die erste Version gebaut wurde. Sie bleibt unverändert.</p>
+<ul class="stats">
+  <li><b>6</b><span>Live-Abfragen</span></li>
+  <li><b>10</b><span>feste Datensätze</span></li>
+  <li><b>2</b><span>Technik-Bausteine</span></li>
+  <li><b>0 €</b><span>Kosten</span></li>
+</ul>
+
+<section class="bau" aria-labelledby="bauH">
+  <h2 id="bauH">Neu aufbauen mit Claude</h2>
+  <p>Der Bauplan enthält alles, was zum Nachbauen nötig ist: Ziel, Regeln, Ablauf von Suche, Listen, Bestimmen und Steckbrief, alle Quellen mit Abfragen und Lizenzen, dazu die fertig aufbereiteten Tabellen. Datei herunterladen, in einen neuen Chat legen und dazuschreiben, wie das neue Design aussehen soll.</p>
+  <div class="btns">
+    <a class="btn primary" href="../bauplan-1.md" download="pure-nature-bauplan-1.md">Bauplan herunterladen (.md)</a>
+    <button class="btn" type="button" id="copy">Bauplan kopieren</button>
+    <span id="copied" role="status"></span>
+  </div>
+  <details><summary>Bauplan ansehen</summary><pre id="plan"># Pure Nature – Bauplan und Datenbasis 1
+
+Stand: 25. Oktober 2026 – Stand von V1 (Archiv) · Seite: https://bunwichtig.github.io/naturewissen/ · Repo: https://github.com/bunwichtig/naturewissen
+
+&gt; **So benutzen:** Diese Datei in einen neuen Chat mit Claude legen und dazu schreiben, was neu werden soll – z. B. „Baue Pure Nature nach diesem Bauplan neu auf. Funktionen, Datenquellen und Regeln bleiben genau so; ich möchte nur ein neues Design: …“. Alles, was Claude für Suche, Listen und Steckbrief braucht, steht hier. Die fertig aufbereiteten Tabellen liegen im Repo (Abschnitt „Dateien zum Weiterverwenden“).
+
+## Ziel
+
+Eine Website, die zeigt, welche Tiere, Pflanzen und Pilze an einem Ort leben, und beim Bestimmen hilft – nur mit freien, legalen Datenquellen und ohne eigene Datenhaltung.
+
+## Regeln, die nicht verhandelbar sind
+
+- **Alles frei und legal.** Nur Dienste ohne Kosten und Daten mit freier Lizenz; Lizenz und Herkunft stehen auf einer Quellen-Seite, die von überall verlinkt ist.
+- **Keine eigene Datenhaltung:** Funde werden live abgefragt. Feste Datensätze nur als aufbereitete Tabellen im Repo, mit Quelle.
+- **Fotos nur mit Creative-Commons-Lizenz** (license_code vorhanden), immer mit Urheber und Lizenz.
+- **Abfrage-Regeln einhalten:** iNaturalist ~1/s, Nominatim 1/s und keine Suche beim Tippen, gleiche Anfragen merken, Wichtiges vor Unwichtigem.
+- **Nichts von Google oder CDNs:** Schriften und MapLibre liegen im Repo.
+- **Statische Seite ohne Build-Schritt** (ES-Module), läuft auf GitHub Pages.
+- **Handy zuerst**, Deutsch, einfache Sprache.
+- Privates, nicht-kommerzielles Projekt (manche Fotos sind nur nicht-kommerziell frei).
+
+## Funktionen und Ablauf
+
+1. **Startseite:** zwei Suchfelder. Oben ein Ort (Nominatim, Suche erst nach Absenden, „Meinen Standort verwenden“, die letzten 5 Orte merken). Darunter ein Lebewesen (iNaturalist-Autovervollständigung, Vorschläge beim Tippen mit 300 ms Pause, Arten vor höheren Gruppen, Treffer am Namensanfang zuerst). „Baum“/„Strauch“ ergibt den Vorschlag „Alle Bäume um &lt;Ort&gt;“.
+2. **Ort gewählt:** Umkreis 5 / 10 / 30 / 50 / 100 / 250 km. Zwei Bereiche: *Entdecken* und *Bestimmen*.
+3. **Entdecken – Was lebt hier?** Gruppen: Alle, Pflanzen, Bäume, Sträucher, Pilze, Vögel, Insekten, Säugetiere, Amphibien, Reptilien, Fische, Spinnentiere, Weichtiere (Gruppen ohne Funde ausgegraut). Liste nach Häufigkeit (species_counts), in fünf Stufen geteilt: oberste 5 % der Rangfolge = Häufig, bis 20 % Mittelhäufig, bis 45 % Weniger häufig, bis 75 % Selten, Rest Sehr selten; je Stufe erst 2 Arten, dann „4 weitere“. Schalter „nur bestätigte Funde“ (quality_grade=research).
+4. **Genauer rechnen (iNaturalist + GBIF):** je Quelle Anteil einer Art an ihrer Gruppe; kleine Gruppen zählen mindestens mit 5 % aller Funde der Quelle; Wert = Wurzel(Anteil iNat × Anteil GBIF); fehlt eine Quelle, zählt die Hälfte des kleinsten Anteils dieser Gruppe. Umkreis höchstens 250 km. Kennt GBIF mindestens 1,5-mal so viele Arten (und 5 mehr), bietet die Seite „Alle zusammen zeigen“ an.
+5. **Bäume / Sträucher:** Pflanzenarten am Ort aus iNaturalist (bis 4 Seiten à 500) und GBIF (facet=scientificName) → nur Namen aus der WCVP-Liste behalten → Arten nur bei GBIF bekommen Foto/deutschen Namen aus iNaturalist im 250-km-Umkreis.
+6. **Bestimmen mit Foto:** nur Pflanzen, Pl@ntNet, bis 5 Fotos mit Organ (Blatt, Blüte, Frucht, Rinde …).
+7. **Bestimmen nach Merkmalen:** Fragen aus MERKMALE; passende Gruppen aus GRUPPEN; bis 25 Gruppen direkt über taxon_id, sonst über iconic_taxa; optional „jetzt im Monat“ (month) und „blüht gerade“ (term_id=12, term_value_id=13). Ergebnis: Arten am Ort nach Häufigkeit.
+8. **Steckbrief** (Seitenleiste, Handy ganze Fläche): freie Fotos mit Urheber/Lizenz, deutscher und wissenschaftlicher Name, Gefährdung, Funde hier / bei iNaturalist / bei GBIF, Jahreszeit (Funde je Monat, im Umkreis oder weltweit bei &lt; 12 Funden), Wikipedia-Anfang, Verwechslungsarten, Systematik. Knopf „Verbreitungsgebiet zeigen“: MapLibre-Globus mit iNaturalist-Rasterkacheln, gesuchter Ort markiert, zwei Finger zum Bewegen am Handy.
+
+## Live-Abfrage – wird beim Benutzen abgefragt
+
+### iNaturalist
+
+- **Lizenz:** CC0 · CC BY · CC BY-NC (je Foto/Beobachtung)
+- **Liefert:** Vorschläge bei der Artsuche, Arten in der Umgebung nach Häufigkeit, Fotos, deutsche Namen, Fundzahlen, Jahreszeit, Verwechslungsarten, Blüte/Lebensstadium, Verbreitungskarte (Raster-Kacheln).
+- Kein Schlüssel nötig, kostenlos.
+- Höchstens etwa 1 Anfrage pro Sekunde (Seite: 1 gleichzeitig, mind. 0,6 s Abstand).
+- Nur Fotos mit license_code zeigen (CC), immer mit Urheber und Lizenz.
+- Deutsche Namen: locale=de, preferred_place_id=7207 (Deutschland).
+
+| Abfrage | Parameter | Wofür |
+|---|---|---|
+| `GET https://api.inaturalist.org/v1/taxa/autocomplete` | q, per_page=12, is_active=true, locale, preferred_place_id | Vorschlagsliste der Artsuche |
+| `GET …/v1/observations/species_counts` | iconic_taxa | taxon_id, lat, lng, radius (km), quality_grade=research, per_page (≤500), page, month, term_id=12&amp;term_value_id=13 (blüht) | Arten am Ort nach Zahl der Beobachtungen |
+| `GET …/v1/observations/iconic_taxa_species_counts` | lat, lng, radius | Artenzahl je Großgruppe (Gruppen ohne Funde ausgrauen) |
+| `GET …/v1/observations` | taxon_id, lat, lng, radius, per_page=0 | Zahl der Funde einer Art am Ort |
+| `GET …/v1/observations/histogram` | taxon_id, date_field=observed, interval=month_of_year, verifiable=true (+ Ort) | Funde je Monat |
+| `GET …/v1/identifications/similar_species` | taxon_id, locale | Verwechslungsarten |
+| `GET …/v1/taxa/{id}` | locale, preferred_place_id | Steckbrief: Fotos, Namen, Gefährdung, Systematik |
+| `GET …/v1/taxa` | q (wissenschaftlicher Name), is_active=true | Name → iNaturalist-Nummer |
+| `Kacheln …/v1/grid/{z}/{x}/{y}.png` | taxon_id, color=#d9622b, quality_grade | Verbreitungskarte |
+
+[Nutzungsbedingungen](https://www.inaturalist.org/pages/terms) · [API-Regeln](https://www.inaturalist.org/pages/api+recommended+practices) · [API-Dokumentation](https://api.inaturalist.org/v1/docs/)
+
+### GBIF
+
+- **Lizenz:** CC0 · CC BY · CC BY-NC (je Datensatz)
+- **Liefert:** Fundmeldungen aus Museen, Herbarien, Kartierungen und Zählungen: „genauer rechnen“, Hinweis „GBIF kennt hier mehr Arten“, Bäume/Sträucher, Fundzahl im Steckbrief.
+- Kein Schlüssel nötig.
+- Quelle GBIF mit Link nennen.
+- Fische und Reptilien sind im GBIF-Backbone keine eigene Klasse: Fische über ihre Ordnungen (548,1313,1153,587,550,590,495,588,549,708,773,538,498,547,1103,772,1068,537,496,1069,1165,1167,1067,499,1162,1311,1305,889), Reptilien über Squamata 11592253 + Testudines 11418114.
+- Gruppen-Schlüssel: Pflanzen 6, Pilze 5, Vögel 212, Insekten 216, Säugetiere 359, Amphibien 131, Spinnentiere 367, Weichtiere 52.
+
+| Abfrage | Parameter | Wofür |
+|---|---|---|
+| `GET https://api.gbif.org/v1/occurrence/search` | geoDistance=lat,lng,KMkm, taxonKey (mehrfach möglich), limit=0, facet=speciesKey|scientificName, facetLimit, occurrenceStatus=PRESENT, hasGeospatialIssue=false | Arten am Ort mit Fundzahl (Facetten) |
+| `GET …/v1/species/{key}` | – | Schlüssel → Name und Gruppe |
+| `GET …/v1/species/match` | name, strict=true, kingdom | Name → GBIF-Schlüssel |
+
+[Nutzungsbedingungen](https://www.gbif.org/terms) · [Vereinbarung für Datennutzer](https://www.gbif.org/terms/data-user) · [API-Dokumentation](https://www.gbif.org/developer/summary)
+
+### Wikipedia (deutsch)
+
+- **Lizenz:** CC BY-SA 4.0
+- **Liefert:** Die ersten Sätze des Artikels im Steckbrief; Belege für die Merkmalstabelle.
+- Artikel über den wissenschaftlichen Namen suchen (Weiterleitungen folgen).
+- Unter dem Text: „Text: Wikipedia, Artikel …, CC BY-SA 4.0“ mit Link.
+
+| Abfrage | Parameter | Wofür |
+|---|---|---|
+| `GET https://de.wikipedia.org/w/api.php` | action=query, format=json, origin=*, redirects=1, titles=NAME, prop=extracts|info|pageprops, exsentences=5, explaintext=1, inprop=url, ppprop=disambiguation | Artikelanfang |
+
+[Lizenzbestimmungen](https://de.wikipedia.org/wiki/Wikipedia:Lizenzbestimmungen) · [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.de)
+
+### Nominatim &amp; OpenStreetMap
+
+- **Lizenz:** ODbL
+- **Liefert:** Ortssuche und Ortsname zum eigenen Standort.
+- Höchstens 1 Anfrage pro Sekunde.
+- Keine Suche beim Tippen – erst nach dem Absenden.
+- Ergebnisse merken, nicht doppelt fragen.
+
+| Abfrage | Parameter | Wofür |
+|---|---|---|
+| `GET https://nominatim.openstreetmap.org/search` | format=jsonv2, limit=6, accept-language=de, q | Ortssuche |
+| `GET …/reverse` | format=jsonv2, lat, lon, zoom=12, accept-language=de | Name zum Standort |
+
+[Nutzungsregeln](https://operations.osmfoundation.org/policies/nominatim/) · [OSM-Urheberrecht](https://www.openstreetmap.org/copyright)
+
+### Pl@ntNet
+
+- **Lizenz:** kostenlos mit eigenem Schlüssel (500 Bestimmungen/Tag)
+- **Liefert:** Pflanzen per Foto bestimmen.
+- Jede Person trägt ihren eigenen Schlüssel ein (nur auf dem Gerät gespeichert).
+- Auf my.plantnet.org: „expose my API key“ und die Domain freigeben.
+- Fotos gehen nur zur Bestimmung an Pl@ntNet.
+
+| Abfrage | Parameter | Wofür |
+|---|---|---|
+| `POST https://my-api.plantnet.org/v2/identify/all` | api-key, lang=de, nb-results=5, include-related-images=true; Formular: images, organs | Bestimmung |
+| `GET …/v2/quota/daily` | api-key | Schlüssel prüfen, Rest-Kontingent |
+
+[Nutzungsbedingungen](https://my.plantnet.org/terms_of_use) · [Schlüssel holen](https://my.plantnet.org/)
+
+### OpenFreeMap
+
+- **Lizenz:** kostenlos · Daten OpenStreetMap / OpenMapTiles
+- **Liefert:** Kartenbild der Verbreitungskarte.
+- Ohne Schlüssel, ohne Aufruf-Grenze.
+- Namensnennung OpenMapTiles und OpenStreetMap bleibt in der Karte sichtbar.
+
+| Abfrage | Parameter | Wofür |
+|---|---|---|
+| `Stil https://tiles.openfreemap.org/styles/liberty` | – | Kartenstil für MapLibre |
+
+[openfreemap.org](https://openfreemap.org) · [OSM-Urheberrecht](https://www.openstreetmap.org/copyright)
+
+## Fester Datensatz – einmal aufbereitet, liegt als Datei im Repo
+
+### EIVE 1.0 – Zeigerwerte für Europa
+
+- **Lizenz:** CC BY 4.0
+- **Liefert:** Ort bei Pflanzen in der Merkmalstabelle aus Feuchte, Licht und Nährstoffen (14.835 Arten).
+- **Zitat:** Dengler, J., Jansen, F. et al. (2023): Ecological Indicator Values for Europe (EIVE) 1.0. Vegetation Classification and Survey.
+- Feuchte ab 8,5 = im Wasser, ab 6,5 = Ufer. Licht bis 4,5 = Wald. Licht ab 6,5 bei mittlerer Feuchte = Wiese/Feld. Nährstoffe ab 7,5 bei Licht und mittlerer Feuchte = Garten/Siedlung.
+
+[Datensatz bei Zenodo](https://zenodo.org/records/7534792)
+
+### AVONET – Merkmale aller Vögel
+
+- **Lizenz:** CC BY 4.0
+- **Liefert:** Größe und Ort bei Vögeln (10.661 Arten).
+- **Zitat:** Tobias, J. A. et al. (2022): AVONET: morphological, ecological and geographical data for all birds. Ecology Letters 25: 581–597.
+- Länge in cm ≈ 5,3 × Kubikwurzel(Gewicht in g).
+- Hauptlebensraum → Wald / Wiese / Ufer / Wasser / Siedlung.
+
+[Datensatz bei Figshare](https://figshare.com/s/b990722d72a26b5bfead) · [Artikel](https://doi.org/10.1111/ele.13898)
+
+### FISHMORPH – Süßwasserfische
+
+- **Lizenz:** CC BY 4.0
+- **Liefert:** Größe bei Süßwasserfischen (9.456 Arten).
+- **Zitat:** Brosse, S. et al. (2021): FISHMORPH: A global database on morphological traits of freshwater fishes. Global Ecology and Biogeography 30: 2330–2336.
+- Übliche Größe = 60 % der Höchstlänge. Meeresfische fehlen.
+
+[Datensatz bei RODARE](https://rodare.hzdr.de/record/1316) · [Artikel](https://doi.org/10.1111/geb.13395)
+
+### Amniote Life-History Database
+
+- **Lizenz:** ohne Urheberrechtsbeschränkung (Nennung erbeten)
+- **Liefert:** Größe bei Säugetieren und Eidechsen (Kopf-Rumpf-Länge).
+- **Zitat:** Myhrvold, N. P. et al. (2015): An amniote life-history database to perform comparative analyses with birds, mammals, and reptiles. Ecology 96: 3109.
+
+[Datenarchiv mit Nutzungsangabe](https://esapubs.org/archive/ecol/E096/269/metadata.php)
+
+### EltonTraits 1.0
+
+- **Lizenz:** ohne Urheberrechtsbeschränkung (Nennung erbeten)
+- **Liefert:** Bei Säugetieren: lebt im Meer / in Bäumen.
+- **Zitat:** Wilman, H. et al. (2014): EltonTraits 1.0: Species-level foraging attributes of the world&#x27;s birds and mammals. Ecology 95: 2027.
+
+[Datenarchiv mit Nutzungsangabe](https://esapubs.org/archive/ecol/E095/178/metadata.php)
+
+### Europäische Amphibien
+
+- **Lizenz:** CC BY 4.0
+- **Liefert:** Größe und Lebensraum bei Fröschen, Kröten, Unken, Molchen.
+- **Zitat:** Trochet, A. et al. (2014): A database of life-history traits of European amphibians. Biodiversity Data Journal 2: e4123.
+
+[Artikel mit Daten](https://doi.org/10.3897/BDJ.2.e4123)
+
+### Tagfalter Europas
+
+- **Lizenz:** CC0
+- **Liefert:** Größe (Spannweite) und Ort (Eiablage Licht/Schatten, Rast an Bauwerken) bei Tagfaltern.
+- **Zitat:** Middleton-Welling, J. et al. (2020): A new comprehensive trait database of European and Maghreb butterflies, Papilionoidea. Scientific Data 7: 351.
+
+[Datensatz bei Dryad](https://datadryad.org/dataset/doi:10.5061/dryad.6m905qfx6) · [Artikel](https://doi.org/10.1038/s41597-020-00697-7)
+
+### COMBINE – Säugetiere
+
+- **Lizenz:** CC0
+- **Liefert:** Bei Säugetieren: lebt im Wasser / in Bäumen.
+- **Zitat:** Soria, C. D. et al. (2021): COMBINE: a coalesced mammal database of intrinsic and extrinsic traits. Ecology 102: e03344.
+- In der verwendeten Dryad-Kopie fehlen bei vielen Zahlen die Dezimaltrennzeichen – nur die Lebensraum-Angaben verwenden, keine Längen.
+
+[Datensatz bei Dryad](https://datadryad.org/dataset/doi:10.5061/dryad.05qfttfdq)
+
+### FungalTraits 1.2
+
+- **Lizenz:** zur öffentlichen Nutzung freigegeben (keine CC-Lizenz genannt)
+- **Liefert:** Fruchtkörperform und Ort bei Pilzen, über 10.000 Gattungen.
+- **Zitat:** Põlme, S. et al. (2020): FungalTraits: a user-friendly traits database of fungi and fungus-like stramenopiles. Fungal Diversity 105: 1–16.
+
+[Artikel](https://doi.org/10.1007/s13225-020-00466-2) · [verwendete Kopie](https://github.com/bokulich-lab/q2-fungal-traits)
+
+### World Checklist of Vascular Plants (WCVP)
+
+- **Lizenz:** CC BY 4.0
+- **Liefert:** Wuchsform: Baum- und Straucharten Europas für die Gruppen „Bäume“ und „Sträucher“ (1.083 Bäume, 5.529 Sträucher).
+- **Zitat:** Govaerts, R., Nic Lughadha, E., Black, N., Turner, R. &amp; Paton, A. (2021): The World Checklist of Vascular Plants, a continuously updated resource for exploring global plant diversity. Scientific Data 8: 215. Royal Botanic Gardens, Kew.
+- Anerkannte Arten mit Vorkommen in Europa (heimisch oder eingeführt, nicht ausgestorben).
+- Baum: lifeform enthält „tree“; Strauch: enthält „shrub“ (auch Halb-/Zwergsträucher). „shrub or tree“ in beiden.
+- Arten am Ort aus iNaturalist UND GBIF prüfen – häufige Bäume (Fichte, Kiefer) fehlen bei iNaturalist oft.
+
+[Artikel](https://doi.org/10.1038/s41597-021-00997-6) · [Datensatz bei GBIF](https://www.gbif.org/dataset/f382f0ce-323a-4091-bb9f-add557f3a9a2) · [verwendete Kopie (rWCVPdata)](https://github.com/matildabrown/rWCVPdata)
+
+## Technik – Bausteine der Seite
+
+### MapLibre GL JS 5.6.0
+
+- **Lizenz:** BSD-3-Clause
+- **Liefert:** Globus-Karte für die Verbreitung. Liegt als Datei im Repo (vendor/), kein CDN.
+
+[Lizenz](https://github.com/maplibre/maplibre-gl-js/blob/main/LICENSE.txt) · [maplibre.org](https://maplibre.org)
+
+### Schriften
+
+- **Lizenz:** SIL Open Font License
+- **Liefert:** Bricolage Grotesque, Figtree, Newsreader, JetBrains Mono – als Dateien im Repo (fonts/), nichts von Google.
+
+[Open Font License](https://openfontlicense.org)
+
+## Abdeckung nach Gruppen
+
+Listen am Ort und Systematik (Reich, Stamm, Klasse, Ordnung, Familie, Gattung, Art) kommen für alle Gruppen live aus iNaturalist und GBIF. Die Tabelle zeigt, woher zusätzliche Merkmale kommen.
+
+| Gruppe | Merkmale aus Datensätzen | Ebene | Lücke |
+|---|---|---|---|
+| Bäume, Sträucher | WCVP (Wuchsform), EIVE (Ort) | Art | – |
+| Kräuter &amp; Blumen, Gräser | EIVE (Ort) | Art | Wuchsform nicht eigens gefiltert |
+| Farne, Schachtelhalme | EIVE (Ort) | Art | Wuchsform nicht eigens gefiltert |
+| Moose | – | – | keine Merkmal- oder Wuchsform-Daten |
+| Pilze, Flechten | FungalTraits (Form, Ort) | Gattung | – |
+| Säugetiere | Amniote, EltonTraits, COMBINE | Art | – |
+| Vögel | AVONET | Art | – |
+| Amphibien | Europäische Amphibien | Art | – |
+| Reptilien | Amniote (Eidechsen) | Art | Längen von Schlangen und Schildkröten |
+| Süßwasserfische | FISHMORPH | Art | Meeresfische |
+| Tagfalter | Tagfalter Europas | Art | Nachtfalter |
+| Käfer, Wanzen, Heuschrecken | – | – | nur Wikipedia-Belege |
+| Spinnen | – | – | nur Wikipedia-Belege |
+| Bienen, Wespen, Fliegen, Libellen | – | – | nur Wikipedia-Belege |
+| Weichtiere (Schnecken, Muscheln) | – | – | nur Wikipedia-Belege |
+
+## Dateien zum Weiterverwenden
+
+Diese Dateien enthalten die aufbereiteten Daten und können unverändert übernommen werden:
+
+- [`v1/daten/merkmale.js`](https://github.com/bunwichtig/naturewissen/blob/main/v1/daten/merkmale.js) – Merkmalstabelle: MERKMALE (Fragen und Antworten), GRUPPEN (263 Gruppen mit Merkmalen), BELEG (Wikipedia-Artikel je Gruppe), DATEN (aus Datensätzen berechnete Werte).
+- [`v1/daten/wuchsform.js`](https://github.com/bunwichtig/naturewissen/blob/main/v1/daten/wuchsform.js) – BAEUME und STRAEUCHER als Mengen wissenschaftlicher Namen (WCVP).
+- [`v1/js/api.js`](https://github.com/bunwichtig/naturewissen/blob/main/v1/js/api.js) – Warteschlangen je Dienst, Zwischenspeicher, Abbruch, Name → Nummer.
+- [`v1/js/state.js`](https://github.com/bunwichtig/naturewissen/blob/main/v1/js/state.js) – Gruppen mit iNaturalist- und GBIF-Schlüsseln, Umkreise, gemeinsamer Zustand.
+
+Die Quellen-Seite mit allen Belegen und der Merkmalstabelle: https://bunwichtig.github.io/naturewissen/v1/quellen.html
+
+## Geprüft, aber nicht verwendet
+
+- **TRY Plant Trait Database:** Wuchsformen und weitere Pflanzenmerkmale; Download nur nach Registrierung, die gerade in Wartung war. Ersetzt durch WCVP. (https://www.try-db.org)
+- **SquamBase:** Schlangen-Längen; es lag nur Tabelle S2 (Literaturliste) vor, gebraucht wird S1.
+- **GBIF-Wabenkarte (v2/map):** Nimmt nur einen Gruppen-Schlüssel – für Fische/Reptilien ungeeignet. Die große Karte ist im neuen Konzept ohnehin entfallen. (https://www.gbif.org/developer/maps)
+
+## Fassungen
+
+- `dev/` – Entwicklung, hier wird weitergearbeitet
+- `v1/` – Archiv, erste fertige Version
+- `v2/` – in Vorbereitung (WIP-Seite)
+- `alt/` – ursprüngliche Ein-Datei-Version
+
+</pre></details>
+</section>
+
+<h2 class="sec">Abdeckung nach Gruppen</h2>
+<p class="sec-lead">Listen am Ort und die ganze Systematik – Reich, Stamm, Klasse, Ordnung, Familie, Gattung, Art – kommen für <b>alle</b> Gruppen live aus iNaturalist und GBIF. Die Tabelle zeigt, woher zusätzliche Merkmale (Größe, Ort, Wuchs- oder Pilzform) stammen und wo noch Lücken sind.</p>
+<div class="tbl"><table><thead><tr><th>Gruppe</th><th>Merkmale aus Datensätzen</th><th>Ebene</th><th>Lücke</th></tr></thead><tbody><tr><th scope="row">Bäume, Sträucher</th><td>WCVP (Wuchsform), EIVE (Ort)</td><td>Art</td><td><span class=ok>–</span></td></tr><tr><th scope="row">Kräuter &amp; Blumen, Gräser</th><td>EIVE (Ort)</td><td>Art</td><td>Wuchsform nicht eigens gefiltert</td></tr><tr><th scope="row">Farne, Schachtelhalme</th><td>EIVE (Ort)</td><td>Art</td><td>Wuchsform nicht eigens gefiltert</td></tr><tr><th scope="row">Moose</th><td><span class=no>–</span></td><td>–</td><td>keine Merkmal- oder Wuchsform-Daten</td></tr><tr><th scope="row">Pilze, Flechten</th><td>FungalTraits (Form, Ort)</td><td>Gattung</td><td><span class=ok>–</span></td></tr><tr><th scope="row">Säugetiere</th><td>Amniote, EltonTraits, COMBINE</td><td>Art</td><td><span class=ok>–</span></td></tr><tr><th scope="row">Vögel</th><td>AVONET</td><td>Art</td><td><span class=ok>–</span></td></tr><tr><th scope="row">Amphibien</th><td>Europäische Amphibien</td><td>Art</td><td><span class=ok>–</span></td></tr><tr><th scope="row">Reptilien</th><td>Amniote (Eidechsen)</td><td>Art</td><td>Längen von Schlangen und Schildkröten</td></tr><tr><th scope="row">Süßwasserfische</th><td>FISHMORPH</td><td>Art</td><td>Meeresfische</td></tr><tr><th scope="row">Tagfalter</th><td>Tagfalter Europas</td><td>Art</td><td>Nachtfalter</td></tr><tr><th scope="row">Käfer, Wanzen, Heuschrecken</th><td><span class=no>–</span></td><td>–</td><td>nur Wikipedia-Belege</td></tr><tr><th scope="row">Spinnen</th><td><span class=no>–</span></td><td>–</td><td>nur Wikipedia-Belege</td></tr><tr><th scope="row">Bienen, Wespen, Fliegen, Libellen</th><td><span class=no>–</span></td><td>–</td><td>nur Wikipedia-Belege</td></tr><tr><th scope="row">Weichtiere (Schnecken, Muscheln)</th><td><span class=no>–</span></td><td>–</td><td>nur Wikipedia-Belege</td></tr></tbody></table></div><h2 class="sec">Alle Quellen</h2>
+<p class="sec-lead">Live-Abfragen laufen beim Benutzen der Seite. Feste Datensätze wurden einmal aufbereitet und liegen als Tabelle im Repo.</p>
+<div class="filter">
+  <input type="search" id="q" placeholder="Quelle suchen, z. B. Vögel, CC0, Karte" aria-label="Quellen durchsuchen">
+  <button class="chip" type="button" data-f="" aria-pressed="true">Alle</button>
+  <button class="chip" type="button" data-f="live" aria-pressed="false">Live</button>
+  <button class="chip" type="button" data-f="fest" aria-pressed="false">Datensätze</button>
+  <button class="chip" type="button" data-f="technik" aria-pressed="false">Technik</button>
+</div>
+<div class="grid" id="list">
+<article class="src" data-art="live" data-text="inaturalist vorschläge bei der artsuche, arten in der umgebung nach häufigkeit, fotos, deutsche namen, fundzahlen, jahreszeit, verwechslungsarten, blüte/lebensstadium, verbreitungskarte (raster-kacheln). cc0 · cc by · cc by-nc (je foto/beobachtung)">
+  <header><h3>iNaturalist</h3><span class="lic">CC0 · CC BY · CC BY-NC (je Foto/Beobachtung)</span></header>
+  <p class="art">Live-Abfrage</p>
+  <p>Vorschläge bei der Artsuche, Arten in der Umgebung nach Häufigkeit, Fotos, deutsche Namen, Fundzahlen, Jahreszeit, Verwechslungsarten, Blüte/Lebensstadium, Verbreitungskarte (Raster-Kacheln).</p>
+  
+  <details><summary>Regeln</summary><ul><li>Kein Schlüssel nötig, kostenlos.</li><li>Höchstens etwa 1 Anfrage pro Sekunde (Seite: 1 gleichzeitig, mind. 0,6 s Abstand).</li><li>Nur Fotos mit license_code zeigen (CC), immer mit Urheber und Lizenz.</li><li>Deutsche Namen: locale=de, preferred_place_id=7207 (Deutschland).</li></ul></details>
+  <details><summary>Abfragen (9)</summary><ul class="ep"><li><code>GET https://api.inaturalist.org/v1/taxa/autocomplete</code><span>Vorschlagsliste der Artsuche</span><small>q, per_page=12, is_active=true, locale, preferred_place_id</small></li><li><code>GET …/v1/observations/species_counts</code><span>Arten am Ort nach Zahl der Beobachtungen</span><small>iconic_taxa | taxon_id, lat, lng, radius (km), quality_grade=research, per_page (≤500), page, month, term_id=12&amp;term_value_id=13 (blüht)</small></li><li><code>GET …/v1/observations/iconic_taxa_species_counts</code><span>Artenzahl je Großgruppe (Gruppen ohne Funde ausgrauen)</span><small>lat, lng, radius</small></li><li><code>GET …/v1/observations</code><span>Zahl der Funde einer Art am Ort</span><small>taxon_id, lat, lng, radius, per_page=0</small></li><li><code>GET …/v1/observations/histogram</code><span>Funde je Monat</span><small>taxon_id, date_field=observed, interval=month_of_year, verifiable=true (+ Ort)</small></li><li><code>GET …/v1/identifications/similar_species</code><span>Verwechslungsarten</span><small>taxon_id, locale</small></li><li><code>GET …/v1/taxa/{id}</code><span>Steckbrief: Fotos, Namen, Gefährdung, Systematik</span><small>locale, preferred_place_id</small></li><li><code>GET …/v1/taxa</code><span>Name → iNaturalist-Nummer</span><small>q (wissenschaftlicher Name), is_active=true</small></li><li><code>Kacheln …/v1/grid/{z}/{x}/{y}.png</code><span>Verbreitungskarte</span><small>taxon_id, color=#d9622b, quality_grade</small></li></ul></details>
+  <nav><a href="https://www.inaturalist.org/pages/terms" target="_blank" rel="noopener">Nutzungsbedingungen</a><a href="https://www.inaturalist.org/pages/api+recommended+practices" target="_blank" rel="noopener">API-Regeln</a><a href="https://api.inaturalist.org/v1/docs/" target="_blank" rel="noopener">API-Dokumentation</a></nav>
+</article>
+<article class="src" data-art="live" data-text="gbif fundmeldungen aus museen, herbarien, kartierungen und zählungen: „genauer rechnen“, hinweis „gbif kennt hier mehr arten“, bäume/sträucher, fundzahl im steckbrief. cc0 · cc by · cc by-nc (je datensatz)">
+  <header><h3>GBIF</h3><span class="lic">CC0 · CC BY · CC BY-NC (je Datensatz)</span></header>
+  <p class="art">Live-Abfrage</p>
+  <p>Fundmeldungen aus Museen, Herbarien, Kartierungen und Zählungen: „genauer rechnen“, Hinweis „GBIF kennt hier mehr Arten“, Bäume/Sträucher, Fundzahl im Steckbrief.</p>
+  
+  <details><summary>Regeln</summary><ul><li>Kein Schlüssel nötig.</li><li>Quelle GBIF mit Link nennen.</li><li>Fische und Reptilien sind im GBIF-Backbone keine eigene Klasse: Fische über ihre Ordnungen (548,1313,1153,587,550,590,495,588,549,708,773,538,498,547,1103,772,1068,537,496,1069,1165,1167,1067,499,1162,1311,1305,889), Reptilien über Squamata 11592253 + Testudines 11418114.</li><li>Gruppen-Schlüssel: Pflanzen 6, Pilze 5, Vögel 212, Insekten 216, Säugetiere 359, Amphibien 131, Spinnentiere 367, Weichtiere 52.</li></ul></details>
+  <details><summary>Abfragen (3)</summary><ul class="ep"><li><code>GET https://api.gbif.org/v1/occurrence/search</code><span>Arten am Ort mit Fundzahl (Facetten)</span><small>geoDistance=lat,lng,KMkm, taxonKey (mehrfach möglich), limit=0, facet=speciesKey|scientificName, facetLimit, occurrenceStatus=PRESENT, hasGeospatialIssue=false</small></li><li><code>GET …/v1/species/{key}</code><span>Schlüssel → Name und Gruppe</span><small>–</small></li><li><code>GET …/v1/species/match</code><span>Name → GBIF-Schlüssel</span><small>name, strict=true, kingdom</small></li></ul></details>
+  <nav><a href="https://www.gbif.org/terms" target="_blank" rel="noopener">Nutzungsbedingungen</a><a href="https://www.gbif.org/terms/data-user" target="_blank" rel="noopener">Vereinbarung für Datennutzer</a><a href="https://www.gbif.org/developer/summary" target="_blank" rel="noopener">API-Dokumentation</a></nav>
+</article>
+<article class="src" data-art="live" data-text="wikipedia (deutsch) die ersten sätze des artikels im steckbrief; belege für die merkmalstabelle. cc by-sa 4.0">
+  <header><h3>Wikipedia (deutsch)</h3><span class="lic">CC BY-SA 4.0</span></header>
+  <p class="art">Live-Abfrage</p>
+  <p>Die ersten Sätze des Artikels im Steckbrief; Belege für die Merkmalstabelle.</p>
+  
+  <details><summary>Regeln</summary><ul><li>Artikel über den wissenschaftlichen Namen suchen (Weiterleitungen folgen).</li><li>Unter dem Text: „Text: Wikipedia, Artikel …, CC BY-SA 4.0“ mit Link.</li></ul></details>
+  <details><summary>Abfragen (1)</summary><ul class="ep"><li><code>GET https://de.wikipedia.org/w/api.php</code><span>Artikelanfang</span><small>action=query, format=json, origin=*, redirects=1, titles=NAME, prop=extracts|info|pageprops, exsentences=5, explaintext=1, inprop=url, ppprop=disambiguation</small></li></ul></details>
+  <nav><a href="https://de.wikipedia.org/wiki/Wikipedia:Lizenzbestimmungen" target="_blank" rel="noopener">Lizenzbestimmungen</a><a href="https://creativecommons.org/licenses/by-sa/4.0/deed.de" target="_blank" rel="noopener">CC BY-SA 4.0</a></nav>
+</article>
+<article class="src" data-art="live" data-text="nominatim &amp; openstreetmap ortssuche und ortsname zum eigenen standort. odbl">
+  <header><h3>Nominatim &amp; OpenStreetMap</h3><span class="lic">ODbL</span></header>
+  <p class="art">Live-Abfrage</p>
+  <p>Ortssuche und Ortsname zum eigenen Standort.</p>
+  
+  <details><summary>Regeln</summary><ul><li>Höchstens 1 Anfrage pro Sekunde.</li><li>Keine Suche beim Tippen – erst nach dem Absenden.</li><li>Ergebnisse merken, nicht doppelt fragen.</li></ul></details>
+  <details><summary>Abfragen (2)</summary><ul class="ep"><li><code>GET https://nominatim.openstreetmap.org/search</code><span>Ortssuche</span><small>format=jsonv2, limit=6, accept-language=de, q</small></li><li><code>GET …/reverse</code><span>Name zum Standort</span><small>format=jsonv2, lat, lon, zoom=12, accept-language=de</small></li></ul></details>
+  <nav><a href="https://operations.osmfoundation.org/policies/nominatim/" target="_blank" rel="noopener">Nutzungsregeln</a><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OSM-Urheberrecht</a></nav>
+</article>
+<article class="src" data-art="live" data-text="pl@ntnet pflanzen per foto bestimmen. kostenlos mit eigenem schlüssel (500 bestimmungen/tag)">
+  <header><h3>Pl@ntNet</h3><span class="lic">kostenlos mit eigenem Schlüssel (500 Bestimmungen/Tag)</span></header>
+  <p class="art">Live-Abfrage</p>
+  <p>Pflanzen per Foto bestimmen.</p>
+  
+  <details><summary>Regeln</summary><ul><li>Jede Person trägt ihren eigenen Schlüssel ein (nur auf dem Gerät gespeichert).</li><li>Auf my.plantnet.org: „expose my API key“ und die Domain freigeben.</li><li>Fotos gehen nur zur Bestimmung an Pl@ntNet.</li></ul></details>
+  <details><summary>Abfragen (2)</summary><ul class="ep"><li><code>POST https://my-api.plantnet.org/v2/identify/all</code><span>Bestimmung</span><small>api-key, lang=de, nb-results=5, include-related-images=true; Formular: images, organs</small></li><li><code>GET …/v2/quota/daily</code><span>Schlüssel prüfen, Rest-Kontingent</span><small>api-key</small></li></ul></details>
+  <nav><a href="https://my.plantnet.org/terms_of_use" target="_blank" rel="noopener">Nutzungsbedingungen</a><a href="https://my.plantnet.org/" target="_blank" rel="noopener">Schlüssel holen</a></nav>
+</article>
+<article class="src" data-art="live" data-text="openfreemap kartenbild der verbreitungskarte. kostenlos · daten openstreetmap / openmaptiles">
+  <header><h3>OpenFreeMap</h3><span class="lic">kostenlos · Daten OpenStreetMap / OpenMapTiles</span></header>
+  <p class="art">Live-Abfrage</p>
+  <p>Kartenbild der Verbreitungskarte.</p>
+  
+  <details><summary>Regeln</summary><ul><li>Ohne Schlüssel, ohne Aufruf-Grenze.</li><li>Namensnennung OpenMapTiles und OpenStreetMap bleibt in der Karte sichtbar.</li></ul></details>
+  <details><summary>Abfragen (1)</summary><ul class="ep"><li><code>Stil https://tiles.openfreemap.org/styles/liberty</code><span>Kartenstil für MapLibre</span><small>–</small></li></ul></details>
+  <nav><a href="https://openfreemap.org" target="_blank" rel="noopener">openfreemap.org</a><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OSM-Urheberrecht</a></nav>
+</article>
+<article class="src" data-art="fest" data-text="eive 1.0 – zeigerwerte für europa ort bei pflanzen in der merkmalstabelle aus feuchte, licht und nährstoffen (14.835 arten). cc by 4.0">
+  <header><h3>EIVE 1.0 – Zeigerwerte für Europa</h3><span class="lic">CC BY 4.0</span></header>
+  <p class="art">Fester Datensatz</p>
+  <p>Ort bei Pflanzen in der Merkmalstabelle aus Feuchte, Licht und Nährstoffen (14.835 Arten).</p>
+  <p class="zitat">Dengler, J., Jansen, F. et al. (2023): Ecological Indicator Values for Europe (EIVE) 1.0. Vegetation Classification and Survey.</p>
+  <details><summary>Regeln</summary><ul><li>Feuchte ab 8,5 = im Wasser, ab 6,5 = Ufer. Licht bis 4,5 = Wald. Licht ab 6,5 bei mittlerer Feuchte = Wiese/Feld. Nährstoffe ab 7,5 bei Licht und mittlerer Feuchte = Garten/Siedlung.</li></ul></details>
+  
+  <nav><a href="https://zenodo.org/records/7534792" target="_blank" rel="noopener">Datensatz bei Zenodo</a></nav>
+</article>
+<article class="src" data-art="fest" data-text="avonet – merkmale aller vögel größe und ort bei vögeln (10.661 arten). cc by 4.0">
+  <header><h3>AVONET – Merkmale aller Vögel</h3><span class="lic">CC BY 4.0</span></header>
+  <p class="art">Fester Datensatz</p>
+  <p>Größe und Ort bei Vögeln (10.661 Arten).</p>
+  <p class="zitat">Tobias, J. A. et al. (2022): AVONET: morphological, ecological and geographical data for all birds. Ecology Letters 25: 581–597.</p>
+  <details><summary>Regeln</summary><ul><li>Länge in cm ≈ 5,3 × Kubikwurzel(Gewicht in g).</li><li>Hauptlebensraum → Wald / Wiese / Ufer / Wasser / Siedlung.</li></ul></details>
+  
+  <nav><a href="https://figshare.com/s/b990722d72a26b5bfead" target="_blank" rel="noopener">Datensatz bei Figshare</a><a href="https://doi.org/10.1111/ele.13898" target="_blank" rel="noopener">Artikel</a></nav>
+</article>
+<article class="src" data-art="fest" data-text="fishmorph – süßwasserfische größe bei süßwasserfischen (9.456 arten). cc by 4.0">
+  <header><h3>FISHMORPH – Süßwasserfische</h3><span class="lic">CC BY 4.0</span></header>
+  <p class="art">Fester Datensatz</p>
+  <p>Größe bei Süßwasserfischen (9.456 Arten).</p>
+  <p class="zitat">Brosse, S. et al. (2021): FISHMORPH: A global database on morphological traits of freshwater fishes. Global Ecology and Biogeography 30: 2330–2336.</p>
+  <details><summary>Regeln</summary><ul><li>Übliche Größe = 60 % der Höchstlänge. Meeresfische fehlen.</li></ul></details>
+  
+  <nav><a href="https://rodare.hzdr.de/record/1316" target="_blank" rel="noopener">Datensatz bei RODARE</a><a href="https://doi.org/10.1111/geb.13395" target="_blank" rel="noopener">Artikel</a></nav>
+</article>
+<article class="src" data-art="fest" data-text="amniote life-history database größe bei säugetieren und eidechsen (kopf-rumpf-länge). ohne urheberrechtsbeschränkung (nennung erbeten)">
+  <header><h3>Amniote Life-History Database</h3><span class="lic">ohne Urheberrechtsbeschränkung (Nennung erbeten)</span></header>
+  <p class="art">Fester Datensatz</p>
+  <p>Größe bei Säugetieren und Eidechsen (Kopf-Rumpf-Länge).</p>
+  <p class="zitat">Myhrvold, N. P. et al. (2015): An amniote life-history database to perform comparative analyses with birds, mammals, and reptiles. Ecology 96: 3109.</p>
+  
+  
+  <nav><a href="https://esapubs.org/archive/ecol/E096/269/metadata.php" target="_blank" rel="noopener">Datenarchiv mit Nutzungsangabe</a></nav>
+</article>
+<article class="src" data-art="fest" data-text="eltontraits 1.0 bei säugetieren: lebt im meer / in bäumen. ohne urheberrechtsbeschränkung (nennung erbeten)">
+  <header><h3>EltonTraits 1.0</h3><span class="lic">ohne Urheberrechtsbeschränkung (Nennung erbeten)</span></header>
+  <p class="art">Fester Datensatz</p>
+  <p>Bei Säugetieren: lebt im Meer / in Bäumen.</p>
+  <p class="zitat">Wilman, H. et al. (2014): EltonTraits 1.0: Species-level foraging attributes of the world&#x27;s birds and mammals. Ecology 95: 2027.</p>
+  
+  
+  <nav><a href="https://esapubs.org/archive/ecol/E095/178/metadata.php" target="_blank" rel="noopener">Datenarchiv mit Nutzungsangabe</a></nav>
+</article>
+<article class="src" data-art="fest" data-text="europäische amphibien größe und lebensraum bei fröschen, kröten, unken, molchen. cc by 4.0">
+  <header><h3>Europäische Amphibien</h3><span class="lic">CC BY 4.0</span></header>
+  <p class="art">Fester Datensatz</p>
+  <p>Größe und Lebensraum bei Fröschen, Kröten, Unken, Molchen.</p>
+  <p class="zitat">Trochet, A. et al. (2014): A database of life-history traits of European amphibians. Biodiversity Data Journal 2: e4123.</p>
+  
+  
+  <nav><a href="https://doi.org/10.3897/BDJ.2.e4123" target="_blank" rel="noopener">Artikel mit Daten</a></nav>
+</article>
+<article class="src" data-art="fest" data-text="tagfalter europas größe (spannweite) und ort (eiablage licht/schatten, rast an bauwerken) bei tagfaltern. cc0">
+  <header><h3>Tagfalter Europas</h3><span class="lic">CC0</span></header>
+  <p class="art">Fester Datensatz</p>
+  <p>Größe (Spannweite) und Ort (Eiablage Licht/Schatten, Rast an Bauwerken) bei Tagfaltern.</p>
+  <p class="zitat">Middleton-Welling, J. et al. (2020): A new comprehensive trait database of European and Maghreb butterflies, Papilionoidea. Scientific Data 7: 351.</p>
+  
+  
+  <nav><a href="https://datadryad.org/dataset/doi:10.5061/dryad.6m905qfx6" target="_blank" rel="noopener">Datensatz bei Dryad</a><a href="https://doi.org/10.1038/s41597-020-00697-7" target="_blank" rel="noopener">Artikel</a></nav>
+</article>
+<article class="src" data-art="fest" data-text="combine – säugetiere bei säugetieren: lebt im wasser / in bäumen. cc0">
+  <header><h3>COMBINE – Säugetiere</h3><span class="lic">CC0</span></header>
+  <p class="art">Fester Datensatz</p>
+  <p>Bei Säugetieren: lebt im Wasser / in Bäumen.</p>
+  <p class="zitat">Soria, C. D. et al. (2021): COMBINE: a coalesced mammal database of intrinsic and extrinsic traits. Ecology 102: e03344.</p>
+  <details><summary>Regeln</summary><ul><li>In der verwendeten Dryad-Kopie fehlen bei vielen Zahlen die Dezimaltrennzeichen – nur die Lebensraum-Angaben verwenden, keine Längen.</li></ul></details>
+  
+  <nav><a href="https://datadryad.org/dataset/doi:10.5061/dryad.05qfttfdq" target="_blank" rel="noopener">Datensatz bei Dryad</a></nav>
+</article>
+<article class="src" data-art="fest" data-text="fungaltraits 1.2 fruchtkörperform und ort bei pilzen, über 10.000 gattungen. zur öffentlichen nutzung freigegeben (keine cc-lizenz genannt)">
+  <header><h3>FungalTraits 1.2</h3><span class="lic">zur öffentlichen Nutzung freigegeben (keine CC-Lizenz genannt)</span></header>
+  <p class="art">Fester Datensatz</p>
+  <p>Fruchtkörperform und Ort bei Pilzen, über 10.000 Gattungen.</p>
+  <p class="zitat">Põlme, S. et al. (2020): FungalTraits: a user-friendly traits database of fungi and fungus-like stramenopiles. Fungal Diversity 105: 1–16.</p>
+  
+  
+  <nav><a href="https://doi.org/10.1007/s13225-020-00466-2" target="_blank" rel="noopener">Artikel</a><a href="https://github.com/bokulich-lab/q2-fungal-traits" target="_blank" rel="noopener">verwendete Kopie</a></nav>
+</article>
+<article class="src" data-art="fest" data-text="world checklist of vascular plants (wcvp) wuchsform: baum- und straucharten europas für die gruppen „bäume“ und „sträucher“ (1.083 bäume, 5.529 sträucher). cc by 4.0">
+  <header><h3>World Checklist of Vascular Plants (WCVP)</h3><span class="lic">CC BY 4.0</span></header>
+  <p class="art">Fester Datensatz</p>
+  <p>Wuchsform: Baum- und Straucharten Europas für die Gruppen „Bäume“ und „Sträucher“ (1.083 Bäume, 5.529 Sträucher).</p>
+  <p class="zitat">Govaerts, R., Nic Lughadha, E., Black, N., Turner, R. &amp; Paton, A. (2021): The World Checklist of Vascular Plants, a continuously updated resource for exploring global plant diversity. Scientific Data 8: 215. Royal Botanic Gardens, Kew.</p>
+  <details><summary>Regeln</summary><ul><li>Anerkannte Arten mit Vorkommen in Europa (heimisch oder eingeführt, nicht ausgestorben).</li><li>Baum: lifeform enthält „tree“; Strauch: enthält „shrub“ (auch Halb-/Zwergsträucher). „shrub or tree“ in beiden.</li><li>Arten am Ort aus iNaturalist UND GBIF prüfen – häufige Bäume (Fichte, Kiefer) fehlen bei iNaturalist oft.</li></ul></details>
+  
+  <nav><a href="https://doi.org/10.1038/s41597-021-00997-6" target="_blank" rel="noopener">Artikel</a><a href="https://www.gbif.org/dataset/f382f0ce-323a-4091-bb9f-add557f3a9a2" target="_blank" rel="noopener">Datensatz bei GBIF</a><a href="https://github.com/matildabrown/rWCVPdata" target="_blank" rel="noopener">verwendete Kopie (rWCVPdata)</a></nav>
+</article>
+<article class="src" data-art="technik" data-text="maplibre gl js 5.6.0 globus-karte für die verbreitung. liegt als datei im repo (vendor/), kein cdn. bsd-3-clause">
+  <header><h3>MapLibre GL JS 5.6.0</h3><span class="lic">BSD-3-Clause</span></header>
+  <p class="art">Technik</p>
+  <p>Globus-Karte für die Verbreitung. Liegt als Datei im Repo (vendor/), kein CDN.</p>
+  
+  
+  
+  <nav><a href="https://github.com/maplibre/maplibre-gl-js/blob/main/LICENSE.txt" target="_blank" rel="noopener">Lizenz</a><a href="https://maplibre.org" target="_blank" rel="noopener">maplibre.org</a></nav>
+</article>
+<article class="src" data-art="technik" data-text="schriften bricolage grotesque, figtree, newsreader, jetbrains mono – als dateien im repo (fonts/), nichts von google. sil open font license">
+  <header><h3>Schriften</h3><span class="lic">SIL Open Font License</span></header>
+  <p class="art">Technik</p>
+  <p>Bricolage Grotesque, Figtree, Newsreader, JetBrains Mono – als Dateien im Repo (fonts/), nichts von Google.</p>
+  
+  
+  
+  <nav><a href="https://openfontlicense.org" target="_blank" rel="noopener">Open Font License</a></nav>
+</article>
+</div>
+
+<h2 class="sec">Dateien zum Weiterverwenden</h2>
+<ul class="plain"><li><a href="https://github.com/bunwichtig/naturewissen/blob/main/v1/daten/merkmale.js" target="_blank" rel="noopener"><code>v1/daten/merkmale.js</code></a> – Merkmalstabelle: MERKMALE (Fragen und Antworten), GRUPPEN (263 Gruppen mit Merkmalen), BELEG (Wikipedia-Artikel je Gruppe), DATEN (aus Datensätzen berechnete Werte).</li><li><a href="https://github.com/bunwichtig/naturewissen/blob/main/v1/daten/wuchsform.js" target="_blank" rel="noopener"><code>v1/daten/wuchsform.js</code></a> – BAEUME und STRAEUCHER als Mengen wissenschaftlicher Namen (WCVP).</li><li><a href="https://github.com/bunwichtig/naturewissen/blob/main/v1/js/api.js" target="_blank" rel="noopener"><code>v1/js/api.js</code></a> – Warteschlangen je Dienst, Zwischenspeicher, Abbruch, Name → Nummer.</li><li><a href="https://github.com/bunwichtig/naturewissen/blob/main/v1/js/state.js" target="_blank" rel="noopener"><code>v1/js/state.js</code></a> – Gruppen mit iNaturalist- und GBIF-Schlüsseln, Umkreise, gemeinsamer Zustand.</li></ul>
+<p class="sec-lead">Alle Belege und die Merkmalstabelle: <a href="../v1/quellen.html">Quellen &amp; Lizenzen</a>.</p>
+
+<h2 class="sec">Geprüft, aber nicht verwendet</h2>
+<ul class="plain"><li><b>TRY Plant Trait Database</b> – Wuchsformen und weitere Pflanzenmerkmale; Download nur nach Registrierung, die gerade in Wartung war. Ersetzt durch WCVP. <a href="https://www.try-db.org" target="_blank" rel="noopener">Link</a></li><li><b>SquamBase</b> – Schlangen-Längen; es lag nur Tabelle S2 (Literaturliste) vor, gebraucht wird S1.</li><li><b>GBIF-Wabenkarte (v2/map)</b> – Nimmt nur einen Gruppen-Schlüssel – für Fische/Reptilien ungeeignet. Die große Karte ist im neuen Konzept ohnehin entfallen. <a href="https://www.gbif.org/developer/maps" target="_blank" rel="noopener">Link</a></li></ul>
+</div>
+<script>
+const plan = document.getElementById("plan").textContent;
+document.getElementById("copy").onclick = async () => {
+  const msg = document.getElementById("copied");
+  try { await navigator.clipboard.writeText(plan); msg.textContent = "Kopiert – jetzt in den neuen Chat einfügen."; }
+  catch { msg.textContent = "Kopieren ging nicht – bitte herunterladen."; }
+};
+let f = "";
+const apply = () => {
+  const q = document.getElementById("q").value.trim().toLowerCase();
+  document.querySelectorAll("#list .src").forEach(c => {
+    c.hidden = (f && c.dataset.art !== f) || (q && !c.dataset.text.includes(q));
+  });
+};
+document.querySelectorAll(".chip").forEach(b => b.onclick = () => {
+  f = b.dataset.f; document.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", x === b)); apply();
+});
+document.getElementById("q").oninput = apply;
+</script>
+</body>
+</html>

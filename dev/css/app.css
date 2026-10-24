@@ -243,3 +243,5 @@ body:not(.detail-open) .backdrop{display:none}
 @media (prefers-reduced-motion:reduce){ .skel{animation:none} .tier-tog .chev{transition:none} }
 .badge-ver{font:400 11px/1 var(--f-data);color:var(--night);background:var(--pollen);border-radius:999px;padding:5px 8px;text-decoration:none;white-space:nowrap}
 .badge-ver:hover{background:var(--pollen)}
+.chips.sub{margin-top:8px;padding:8px 10px;border-left:2px solid var(--plantae);background:var(--panel);border-radius:0 12px 12px 0}
+.chips.sub .sub-label{font:400 11px/1 var(--f-data);text-transform:uppercase;letter-spacing:.08em;color:var(--plantae);align-self:center;margin-right:4px}

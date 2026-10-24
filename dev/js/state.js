@@ -16,8 +16,6 @@ export const GBIF_FISH_ORDERS = [548,1313,1153,587,550,590,495,588,549,708,773,5
 export const GROUPS = [
   { id:"all",   label:"Alle",         taxa:"Plantae,Fungi,Mammalia,Aves,Reptilia,Amphibia,Actinopterygii,Insecta,Arachnida,Mollusca,Animalia", gbif:null },
   { id:"plants",label:"Pflanzen",     taxa:"Plantae",        gbif:[6] },
-  { id:"trees", label:"Bäume",        taxa:"Plantae",        gbif:null, wuchs:"baum" },
-  { id:"shrubs",label:"Sträucher",    taxa:"Plantae",        gbif:null, wuchs:"strauch" },
   { id:"fungi", label:"Pilze",        taxa:"Fungi",          gbif:[5] },
   { id:"birds", label:"Vögel",        taxa:"Aves",           gbif:[212] },
   { id:"ins",   label:"Insekten",     taxa:"Insecta",        gbif:[216] },
@@ -26,7 +24,17 @@ export const GROUPS = [
   { id:"rept",  label:"Reptilien",    taxa:"Reptilia",       gbif:[11592253,11418114] },
   { id:"fish",  label:"Fische",       taxa:"Actinopterygii", gbif:GBIF_FISH_ORDERS },
   { id:"arach", label:"Spinnentiere", taxa:"Arachnida",      gbif:[367] },
-  { id:"moll",  label:"Weichtiere",   taxa:"Mollusca",       gbif:[52] }
+  { id:"moll",  label:"Weichtiere",   taxa:"Mollusca",       gbif:[52] },
+  // Pflanzen nach Wuchsform (zweite Zeile unter „Pflanzen“). wuchs: Liste aus der WCVP (daten/wuchs/), moos: Gruppen bei iNaturalist
+  { id:"trees",  parent:"plants", label:"Bäume",              taxa:"Plantae", gbif:null, wuchs:"B" },
+  { id:"shrubs", parent:"plants", label:"Sträucher",          taxa:"Plantae", gbif:null, wuchs:"S" },
+  { id:"herbs",  parent:"plants", label:"Kräuter & Blumen",   taxa:"Plantae", gbif:null, wuchs:"H" },
+  { id:"grass",  parent:"plants", label:"Gräser",             taxa:"Plantae", gbif:null, wuchs:"G" },
+  { id:"climb",  parent:"plants", label:"Kletterpflanzen",    taxa:"Plantae", gbif:null, wuchs:"K" },
+  { id:"water",  parent:"plants", label:"Wasser & Sumpf",     taxa:"Plantae", gbif:null, wuchs:"W" },
+  { id:"bulbs",  parent:"plants", label:"Zwiebel & Knolle",   taxa:"Plantae", gbif:null, wuchs:"Z" },
+  { id:"ferns",  parent:"plants", label:"Farne",              taxa:"Plantae", gbif:null, wuchs:"F" },
+  { id:"moss",   parent:"plants", label:"Moose",              taxa:"Plantae", gbif:null, inatTaxa:["Bryophyta","Marchantiophyta","Anthocerotophyta"] }
 ];
 
 export const state = {

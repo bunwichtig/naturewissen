@@ -600,6 +600,7 @@ export const BELEG = {
 //   Säugetiere, Größe und Ort: Amniote Life-History Database (Myhrvold et al. 2015) und EltonTraits 1.0 (Wilman et al. 2014), beide ohne Nutzungsbeschränkung
 //   Reptilien, Größe: Amniote Life-History Database
 //   Amphibien, Größe und Ort: Trochet et al. 2014, europäische Amphibien (Biodiversity Data Journal, CC BY 4.0)
+//   Spinnen, Käfer, Heuschrecken: Gossner et al. 2015, Scientific Data 2: 150013, Daten Dryad doi:10.5061/dryad.53ds2 (CC0)
 //   Pilze, Form und Ort: FungalTraits 1.2 (Põlme et al. 2020), laut Autoren zur öffentlichen Nutzung
 //   Tagfalter, Größe und Ort: Trait data of European and Maghreb butterflies v1.2 (Middleton-Welling et al. 2020, CC0) – Spannweite, Lichtverhältnisse bei der Eiablage, Rast an Bauwerken
 //   Säugetiere, Wasser und Bäume: COMBINE (Soria et al. 2021, Kopie bei Dryad, CC0) – nur Lebensraum-Angaben; die Längen dieser Kopie haben verlorene Dezimaltrennzeichen und werden nicht verwendet
@@ -786,6 +787,12 @@ export const DATEN = {
   "Geastrales": { q:"FungalTraits", h:"wd", f:"kugel", n:3, cov:100 },
   "Hymenochaetales": { q:"FungalTraits", h:"wd", f:"hut,konsole,kruste", n:17, cov:100 },
   "Pucciniales": { q:"FungalTraits", f:"kruste", n:17, cov:100 },
+  // Gossner et al. 2015 (CC0): Körperlänge und Schicht (Krautschicht = Wiese, Bäume = Wald) – Arten aus Grünland in Deutschland
+  "Araneidae": { q:"Gossner", z:"1,2", h:"wi", n:22, cov:92 },
+  "Cantharidae": { q:"Gossner", z:"1,2", h:"wi", n:14, cov:75 },
+  "Coccinellidae": { q:"Gossner", z:"1", h:"wi", n:24, cov:83 },
+  "Ensifera": { q:"Gossner", z:"2", h:"wd,wi", n:12, cov:67 },
+  "Thomisidae": { q:"Gossner", z:"1", n:14, cov:81 },
 };
 
 // Zählt mit, wie viele berechnete Werte die Tabelle bestätigen und wie viele neu dazukommen (für quellen.html)
