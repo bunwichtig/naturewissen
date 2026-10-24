@@ -175,7 +175,7 @@ def md():
   o.append(f"\nDie Quellen-Seite mit allen Belegen und der Merkmalstabelle: {SITE}/dev/quellen.html\n")
   o.append("## Geprüft, aber nicht verwendet\n")
   for n, d, u in GEPRUEFT: o.append(f"- **{n}:** {d}" + (f" ({u})" if u else ""))
-  o.append("\n## Fassungen\n\n- `dev/` – Entwicklung, hier wird weitergearbeitet\n- `v1/` – Archiv, erste fertige Version\n- `v2/` – ruht\n- `alt/` – ursprüngliche Ein-Datei-Version\n")
+  o.append("\n## Fassungen\n\n- `dev/` – Entwicklung, hier wird weitergearbeitet\n- `v1/` – Archiv, erste fertige Version\n- `v2/` – in Vorbereitung (WIP-Seite)\n- `alt/` – ursprüngliche Ein-Datei-Version\n")
   return "\n".join(o) + "\n"
 
 E = html.escape

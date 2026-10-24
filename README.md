@@ -6,7 +6,7 @@ Zeigt auf einem Globus, welche Tiere, Pflanzen und Pilze an einem Ort leben, und
 
 - **Dev** (`dev/`): die Entwicklungsfassung. Alle Änderungen kommen nur hier hinein.
 - **V1** (`v1/`): **Archiv** – die erste fertige Version vom 25. Oktober 2026. Wird nicht mehr verändert.
-- **V2** (`v2/`): eine eigene Fassung, ruht vorerst (Stand 25. Oktober 2026).
+- **V2** (`v2/`): in Vorbereitung – zeigt vorerst nur eine „Work in progress“-Seite.
 
 **Datenbasis:** [datenbasis.html](https://bunwichtig.github.io/naturewissen/datenbasis.html) – alle freien Quellen mit Lizenz, Nachweis und Abfragen, dazu [bauplan.md](bauplan.md) zum Neuaufbau mit Claude (erzeugt mit `python3 werkzeuge/datenbasis.py`).
 
@@ -32,7 +32,7 @@ Eine Karte erscheint nur im Steckbrief. Die zuletzt gesuchten Orte merkt sich di
 
 ## Dateien
 
-Die Dateien unten liegen je Fassung in `dev/`, `v1/` und `v2/`. Im Hauptordner liegen nur die Startseite (`index.html`), die Schriften für die Startseite und `alt/`.
+Die Dateien unten liegen je Fassung in `dev/` und `v1/`. Im Hauptordner liegen nur die Startseite (`index.html`), die Schriften für die Startseite und `alt/`.
 
 | Datei | Inhalt |
 |---|---|
