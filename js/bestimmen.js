@@ -4,7 +4,6 @@ import { $, $$, esc, fmt, plural, local } from "./util.js";
 import { API, PRIO, isAbort, taxonIdsOf, findInatTaxon } from "./api.js";
 import { state, on, whereParams } from "./state.js";
 import { makeList } from "./liste.js";
-import { showPins, clearPins } from "./karte.js";
 import { MERKMALE, GRUPPEN } from "../daten/merkmale.js";
 import { pick } from "./entdecken.js";
 
@@ -31,9 +30,9 @@ export function setWay(way){
   $("#wayFoto").hidden = way !== "foto";
   $("#wayMerkmale").hidden = way !== "merkmale";
   $("#beBody").scrollTop = 0;
-  if (way === "merkmale") runMerkmale(); else clearPins();
+  if (way === "merkmale") runMerkmale();
 }
-export function onEnter(){ if (bs.way === "merkmale"){ bs.lastKey = null; runMerkmale(); } else clearPins(); }
+export function onEnter(){ if (bs.way === "merkmale"){ bs.lastKey = null; runMerkmale(); } }
 
 /* =====================================================================
    Mit Foto: Pflanzen über Pl@ntNet
@@ -222,7 +221,6 @@ function initMerkmale(){
   bs.list = makeList($("#mkList"), {
     emptyHTML:`<div class="state">Im Umkreis wurde dazu nichts gemeldet. Lass ein Merkmal weg oder zoom heraus.</div>`,
     onTotal:n => $("#mkTotal").textContent = n == null ? "" : plural(n, "Art", "Arten"),
-    onFirstPage:res => { if (state.mode === "bestimmen" && bs.way === "merkmale" && bs.params) showPins(bs.params, res); },
     onPick:pick
   });
   $("#mkForm").onclick = e => {
@@ -275,7 +273,7 @@ async function doRun(){
   bs.lastKey = key;
   bs.abort?.abort();
   if (!any){
-    clearPins(); bs.params = null;
+    bs.params = null;
     bs.list.clear();
     $("#mkSummary").innerHTML = `<p class="note">Tippe an, was dir aufgefallen ist. Schon ein Merkmal reicht; jedes weitere grenzt ein. Gesucht wird im Umkreis auf der Karte.</p>`;
     return;
@@ -287,7 +285,7 @@ async function doRun(){
     ? `<p class="note">Passt zu ${plural(m.length, "Gruppe", "Gruppen")}:</p><div class="matchlist">${names}</div>` +
       `<p class="note">${m.length > DIRECT ? "Noch sehr allgemein – ein, zwei weitere Merkmale machen das Ergebnis genauer." : "Oben stehen die Arten, die hier am häufigsten gemeldet werden, also am wahrscheinlichsten sind."} <a href="quellen.html#merkmale" target="_blank" rel="noopener">Woher die Merkmale kommen</a></p>`
     : `<p class="note">Keine Gruppe hat diese Merkmale zusammen. Nimm ein Merkmal zurück.</p>`;
-  if (!m.length){ bs.list.clear(); clearPins(); return; }
+  if (!m.length){ bs.list.clear(); return; }
   bs.list.clear(`<section class="tier"><div class="grid"></div></section>`);
   try{
     const p = new URLSearchParams({ ...whereParams(), quality_grade:"research" });

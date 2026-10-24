@@ -13,7 +13,7 @@ Zwei Bereiche, die auf denselben Ort, dieselbe Artenliste und denselben Steckbri
   - *Mit Foto:* Pflanzen automatisch über Pl@ntNet. Für Tiere und Pilze gibt es keinen frei nutzbaren Foto-Erkenner; das eigene Foto bleibt dann als Vergleich stehen.
   - *Nach Merkmalen:* Oberfläche, Beine, Flügel, Größe, Wuchs, Blätter, Pilzform, Ort und Zeit. Grundlage ist die Merkmalstabelle mit 241 Gruppen; jede Zeile hat einen Beleg (Wikipedia-Artikel), nachzulesen auf der Quellen-Seite.
 - **Steckbrief:** Fotos mit Urheber und Lizenz, Gefährdung, Zahlen, Jahreszeit (Funde je Monat), Beschreibung aus Wikipedia, Verwechslungsarten, Systematik, Verbreitung auf der Karte.
-- **Karte:** Globus (MapLibre, OpenFreeMap), Satellitenbild (EOX), Waben mit der Funddichte (GBIF), Fotos der häufigsten Lebewesen an ihren Fundorten.
+- **Karte:** Globus (MapLibre, OpenFreeMap), Satellitenbild (EOX), Waben mit der Funddichte (GBIF), Umkreis.
 
 Der **Umkreis folgt dem Zoom** und gilt für alle Bereiche gleich (5 bis 250 km). Start: Pinnow bei Schwerin, 30 km.
 
@@ -35,7 +35,7 @@ Der **Umkreis folgt dem Zoom** und gilt für alle Bereiche gleich (5 bis 250 km)
 | `js/main.js` | Einstieg, Panel, Handy-Blatt |
 | `js/state.js` | gemeinsamer Zustand (Ort, Umkreis, Gruppe …) |
 | `js/api.js` | alle Abfragen mit Warteschlangen und Zwischenspeicher |
-| `js/karte.js` | Globus, Ebenen, Ortssuche, Fotos auf der Karte |
+| `js/karte.js` | Globus, Ebenen, Ortssuche |
 | `js/liste.js` | Artenliste in Häufigkeitsstufen |
 | `js/entdecken.js` | Bereich Entdecken inkl. „genauer rechnen“ |
 | `js/bestimmen.js` | Bereich Bestimmen: Foto und Merkmale |

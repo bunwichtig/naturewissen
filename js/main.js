@@ -1,12 +1,12 @@
 // Pure Nature – Einstieg. Verbindet Karte, Panel, Entdecken, Bestimmen und Steckbrief.
 import { $, $$, fmt, isMobile, mq } from "./util.js";
 import { state, set, on } from "./state.js";
-import { initMap, setMapPadding, setDetailOpener as mapOpener, clearPins, map } from "./karte.js";
+import { initMap, setMapPadding, map } from "./karte.js";
 import { initEntdecken, load as loadEntdecken, reset as resetEntdecken, setDetailOpener as exOpener } from "./entdecken.js";
 import { initBestimmen, onEnter as enterBestimmen, setDetailOpener as beOpener } from "./bestimmen.js";
 import { initSteckbrief, openDetail, setDetailHooks } from "./steckbrief.js";
 
-[mapOpener, exOpener, beOpener].forEach(f => f(openDetail));
+[exOpener, beOpener].forEach(f => f(openDetail));
 
 initMap();
 initEntdecken();
@@ -23,7 +23,6 @@ on("mode", () => {
   $$("#modes [data-mode]").forEach(b => b.setAttribute("aria-selected", b.dataset.mode === state.mode));
   $("#paneEntdecken").hidden = state.mode !== "entdecken";
   $("#paneBestimmen").hidden = state.mode !== "bestimmen";
-  clearPins();
   if (state.mode === "entdecken"){ resetEntdecken(); loadEntdecken(); }
   else enterBestimmen();
 });

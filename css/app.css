@@ -59,12 +59,6 @@ a{color:var(--ink);text-decoration-color:var(--pollen);text-underline-offset:3px
 .mbtn.busy{animation:pulse 1s infinite}
 @keyframes pulse{50%{opacity:.4}}
 
-/* Fotos der Lebewesen auf der Karte */
-.ppin{width:46px;height:46px;border-radius:50%;padding:0;border:3px solid var(--c,var(--pollen));background:var(--panel-2);overflow:hidden;cursor:pointer;
-  box-shadow:0 3px 10px rgba(0,0,0,.5);transition:transform .15s}
-.ppin:hover,.ppin:focus-visible{transform:scale(1.25);z-index:2}
-.ppin.zone{border-style:dashed}
-.ppin img{width:100%;height:100%;object-fit:cover;display:block}
 
 /* ---------- Panel ---------- */
 .panel{position:fixed;top:0;right:0;bottom:0;width:var(--panel-w);z-index:6;background:var(--panel);border-left:1px solid var(--line);
@@ -238,8 +232,7 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
   .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
   .tier-head{top:-12px}
   .cmp{top:-12px}
-  .ppin{width:40px;height:40px}
   .detail{border-radius:18px 18px 0 0;padding-top:0}
   .d-sec{padding:14px 16px}
 }
-@media (prefers-reduced-motion:reduce){ .skel,.mbtn.busy{animation:none} .panel,.tier-tog .chev,.ppin{transition:none} }
+@media (prefers-reduced-motion:reduce){ .skel,.mbtn.busy{animation:none} .panel,.tier-tog .chev{transition:none} }

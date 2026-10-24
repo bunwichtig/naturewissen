@@ -3,7 +3,7 @@
 //   iNaturalist  höchstens 1 Anfrage gleichzeitig, mindestens 0,6 s Abstand (Empfehlung: etwa 1 pro Sekunde)
 //   Nominatim    höchstens 1 Anfrage pro Sekunde, Ergebnisse werden gemerkt
 //   GBIF, Wikipedia  bis zu 4 gleichzeitig
-// Wichtiges (die Artenliste) kommt vor Unwichtigem (Fotos auf der Karte).
+// Wichtiges (die Artenliste) kommt vor Unwichtigem (Jahreszeit, Verwechslungsarten).
 // Gleiche Anfragen werden für die Sitzung gemerkt und nicht wiederholt.
 
 export const API = {

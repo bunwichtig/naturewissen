@@ -31,10 +31,9 @@ const barsHTML = n => `<span class="freq" aria-hidden="true">${[1,2,3,4,5].map(i
 /**
  * Liste in einem Kasten anlegen.
  * onTotal(n)       – Gesamtzahl der Arten (null = lädt)
- * onFirstPage(res) – erste Ergebnisseite (für die Fotos auf der Karte)
  * onPick(card)     – Antippen einer Art
  */
-export function makeList(box, { emptyHTML, onTotal = () => {}, onFirstPage = () => {}, onPick }){
+export function makeList(box, { emptyHTML, onTotal = () => {}, onPick }){
   const L = { ctx:null, closed:new Set() };
 
   function getPage(c, n){
@@ -82,7 +81,6 @@ export function makeList(box, { emptyHTML, onTotal = () => {}, onFirstPage = () 
       if (L.ctx !== c) return;
       const total = first.total_results;
       onTotal(total);
-      onFirstPage(first.results);
       if (!total){ box.innerHTML = emptyHTML; return; }
       const n = Math.min(total, MAX_RANK);
       let prev = 0;

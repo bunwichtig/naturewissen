@@ -4,7 +4,6 @@ import { $, $$, esc, fmt, plural, local } from "./util.js";
 import { API, INAT_DE, PRIO, inat, getJSON, isAbort, findInatTaxon } from "./api.js";
 import { state, set, on, GROUPS, whereParams } from "./state.js";
 import { makeList } from "./liste.js";
-import { showPins, clearPins } from "./karte.js";
 
 let openDetail = () => {};
 export const setDetailOpener = fn => { openDetail = fn; };
@@ -26,7 +25,6 @@ export function initEntdecken(){
   list = makeList($("#exList"), {
     emptyHTML:`<div class="state">Hier wurden noch keine Arten dieser Gruppe gemeldet. Zoom heraus oder wähle eine andere Gruppe.</div>`,
     onTotal:n => $("#exTotal").textContent = n == null ? "" : plural(n, "Art", "Arten"),
-    onFirstPage:res => { if (!state.combo && state.mode === "entdecken") showPins(lastParams, res); },
     onPick:pick
   });
 
@@ -142,7 +140,6 @@ async function loadCombo(p, signal){
       getJSON(`${API.gbif}/occurrence/search?${gp}`, { signal })
     ]);
     const inatList = [...(inat1.results || [])];
-    showPins(ip, inatList);
     for (let pg = 2; pg <= COMBO_INAT_PAGES && inatList.length < inat1.total_results; pg++){
       stat.textContent = `Lade weitere iNaturalist-Arten … ${fmt(inatList.length)} von ${fmt(inat1.total_results)}`;
       const q = new URLSearchParams(ip); q.set("page", pg);

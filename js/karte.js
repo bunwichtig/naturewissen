@@ -1,6 +1,6 @@
-// Globus mit Kartenbild, Satellit, Waben (Funddichte), Umkreis und Fotos der Lebewesen.
-import { $, esc, fmt, photoSize, isFree, licName, groupColor, commonName, circle, debounce, isMobile } from "./util.js";
-import { API, INAT_DE, PRIO, inat, getJSON, isAbort } from "./api.js";
+// Globus mit Kartenbild, Satellit, Waben (Funddichte) und Umkreis.
+import { $, esc, circle, debounce, isMobile } from "./util.js";
+import { API, PRIO, getJSON, isAbort } from "./api.js";
 import { state, set, on, HOME, GROUPS, radiusForZoom, zoomForRadius } from "./state.js";
 
 const SAT_TILES = "https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2020_3857/default/g/{z}/{y}/{x}.jpg";
@@ -9,8 +9,6 @@ const ATTR_GBIF = '<a href="https://www.gbif.org" target="_blank" rel="noopener"
 const ATTR_INAT = '<a href="https://www.inaturalist.org" target="_blank" rel="noopener">iNaturalist</a>';
 
 export let map;
-let openDetail = () => {};
-export const setDetailOpener = fn => { openDetail = fn; };
 
 export function initMap(){
   map = new maplibregl.Map({
@@ -40,8 +38,6 @@ export function initMap(){
     set({ center:{ lng:c.lng, lat:c.lat }, radius:radiusForZoom(map.getZoom()) });
   }, 500));
   map.on("click", e => map.easeTo({ center:e.lngLat, duration:700 }));
-  map.on("zoom", () => { cancelAnimationFrame(declutterRaf); declutterRaf = requestAnimationFrame(declutter); });
-  map.on("moveend", declutter);
 
   on("center", drawArea); on("radius", drawArea);
   on("center", loadPlaceName); on("radius", loadPlaceName);
@@ -162,111 +158,3 @@ export function setMapPadding(bottom){
   map?.easeTo({ padding:{ top:0, right:0, left:0, bottom }, duration:250 });
 }
 export const flyToRadius = km => map.easeTo({ zoom:zoomForRadius(km), duration:900 });
-
-/* =====================================================================
-   Fotos der Lebewesen auf der Karte
-   – Grundauswahl: die häufigsten Arten (2/3 Tiere, 1/3 Pflanzen), am Handy 5, am PC 9
-   – Zonen: Arten, die an einer Stelle des Umkreises auffällig häufiger sind (See, Wald …)
-   – Nur Fotos mit freier Lizenz; Fotos rücken zur Seite, statt sich zu überdecken
-   ===================================================================== */
-const ANIMALS = ["Mammalia","Aves","Reptilia","Amphibia","Actinopterygii","Insecta","Arachnida","Mollusca","Animalia"];
-const PIN_PX = 54, ZONE_GRID = 5;
-const pins = { markers:[], key:null, abort:null };
-const iconOf = t => t?.iconic_taxon_name || "Animalia";
-
-export function clearPins(){ pins.markers.forEach(m => m.remove()); pins.markers = []; pins.key = null; pins.abort?.abort(); }
-
-/** Fotos zeigen. base: iNaturalist-Parameter (Ort, Filter); pool: Arten nach Häufigkeit (erste Listenseite). */
-export async function showPins(base, pool){
-  const b = new URLSearchParams(base);
-  ["locale","preferred_place_id","per_page","page"].forEach(k => b.delete(k));
-  const key = b.toString() + "|" + isMobile();
-  if (key === pins.key) return;
-  clearPins(); pins.key = key;
-  pins.abort = new AbortController();
-  const signal = pins.abort.signal;
-  const max = isMobile() ? 5 : 9, zoneMax = isMobile() ? 2 : 4;
-  try{
-    const s = new URLSearchParams(b);
-    s.set("photos", "true"); s.set("photo_license", "cc0,cc-by,cc-by-sa,cc-by-nc,cc-by-nc-sa,cc-by-nd,cc-by-nc-nd");
-    s.set("per_page", "200"); Object.entries(INAT_DE).forEach(([k, v]) => s.set(k, v));
-    const d = await inat("/observations", s, { signal, prio:PRIO.low });
-    if (signal.aborted) return;
-    const sample = (d.results || []).filter(o => o.geojson && o.taxon && isFree(o.photos?.[0]));
-    const c = { lat:+b.get("lat"), lng:+b.get("lng") }, radius = +b.get("radius");
-    // Grundauswahl aus der Häufigkeitsliste, Fundort aus der Stichprobe
-    const animals = pool.filter(r => ANIMALS.includes(iconOf(r.taxon))), plants = pool.filter(r => iconOf(r.taxon) === "Plantae");
-    let main = [...animals.slice(0, Math.ceil(max * 2 / 3)), ...plants.slice(0, Math.floor(max / 3))];
-    if (main.length < max) main = [...main, ...pool.filter(r => !main.includes(r))].slice(0, max);
-    const taken = new Set();
-    main.forEach(r => { const o = sample.find(x => x.taxon.id === r.taxon.id); if (o){ addPin(r.taxon, o); taken.add(r.taxon.id); } });
-    if (radius) zonePicks(sample, c, radius, taken, zoneMax).forEach(z => addPin(z.o.taxon, z.o, true));
-    declutter();
-  }catch(err){ if (!isAbort(err)) pins.key = null; }
-}
-
-function zoneOf(o, c, radius){
-  const [lng, lat] = o.geojson.coordinates;
-  const dy = (lat - c.lat) * 111.32, dx = (lng - c.lng) * 111.32 * Math.cos(c.lat * Math.PI / 180);
-  const size = 2 * radius / ZONE_GRID;
-  return `${Math.floor((dx + radius) / size)}:${Math.floor((dy + radius) / size)}`;
-}
-function zonePicks(sample, c, radius, taken, max){
-  const all = new Map(), zones = new Map();
-  sample.forEach(o => {
-    const id = o.taxon.id, z = zoneOf(o, c, radius);
-    all.set(id, (all.get(id) || 0) + 1);
-    if (!zones.has(z)) zones.set(z, { n:0, sp:new Map() });
-    const Z = zones.get(z); Z.n++; Z.sp.set(id, [(Z.sp.get(id)?.[0] || 0) + 1, o]);
-  });
-  const N = sample.length, cands = [];
-  zones.forEach(Z => {
-    if (Z.n < 4) return;
-    const best = {};
-    Z.sp.forEach(([k, o], id) => {
-      if (k < 2 || taken.has(id)) return;
-      const lift = (k / Z.n) / (all.get(id) / N);
-      const score = lift * Math.sqrt(k), kind = iconOf(o.taxon) === "Plantae" ? "p" : "a";
-      if (lift >= 1.8 && (!best[kind] || score > best[kind].score)) best[kind] = { score, o, id, kind };
-    });
-    Object.values(best).forEach(x => cands.push(x));
-  });
-  const a = cands.filter(x => x.kind === "a").sort((x, y) => y.score - x.score), pl = cands.filter(x => x.kind === "p").sort((x, y) => y.score - x.score);
-  const out = [], used = new Set();
-  while (out.length < max && (a.length || pl.length)){
-    for (const arr of [a, pl]){
-      while (arr.length && used.has(arr[0].id)) arr.shift();
-      if (arr.length && out.length < max){ const x = arr.shift(); used.add(x.id); out.push(x); }
-    }
-  }
-  return out;
-}
-
-function addPin(t, o, zone){
-  const ph = o.photos[0];
-  const el = document.createElement("button");
-  el.className = "ppin" + (zone ? " zone" : "");
-  el.style.setProperty("--c", groupColor(t));
-  const credit = `${ph.attribution || ""}`.replace(/\s+/g, " ");
-  el.title = `${commonName(t)}${zone ? " – typisch für diese Stelle" : ""}\nFoto: ${credit}`;
-  el.setAttribute("aria-label", `${commonName(t)} – Steckbrief öffnen`);
-  el.innerHTML = `<img src="${esc(photoSize(ph.url, "square"))}" alt="" loading="lazy">`;
-  el.addEventListener("click", e => { e.stopPropagation(); openDetail(t.id); });
-  const m = new maplibregl.Marker({ element:el, anchor:"center" }).setLngLat(o.geojson.coordinates).addTo(map);
-  pins.markers.push(m);
-}
-
-const RING = [[0, 0]];
-[1, 2, 3].forEach(r => { const n = 6 * r; for (let i = 0; i < n; i++){ const a = 2 * Math.PI * i / n + r; RING.push([Math.cos(a) * PIN_PX * r, Math.sin(a) * PIN_PX * r]); } });
-let declutterRaf = 0;
-function declutter(){
-  const placed = [];
-  pins.markers.forEach(m => {
-    const p = map.project(m.getLngLat());
-    const spot = RING.find(([ox, oy]) => placed.every(q => Math.hypot(p.x + ox - q[0], p.y + oy - q[1]) >= PIN_PX));
-    m.getElement().style.visibility = spot ? "" : "hidden";
-    if (!spot) return;
-    m.setOffset(spot);
-    placed.push([p.x + spot[0], p.y + spot[1]]);
-  });
-}
