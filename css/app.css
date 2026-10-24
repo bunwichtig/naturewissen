@@ -94,6 +94,7 @@ a{color:var(--ink);text-decoration-color:var(--pollen);text-underline-offset:3px
 .btn:disabled{opacity:.55;cursor:default}
 .alert{background:rgba(231,173,79,.08);border:1px solid rgba(231,173,79,.4);border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.45}
 .alert b{display:block}
+.more-gbif{display:grid;gap:8px;justify-items:start}
 .alert ol,.alert ul{margin:6px 0 0;padding-left:18px}
 h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0}
 

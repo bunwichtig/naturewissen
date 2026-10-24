@@ -2,13 +2,13 @@
 // Standard: Arten nach Häufigkeit bei iNaturalist. Schalter „Genauer rechnen“ nimmt GBIF dazu (früher Reiter „Kombi“).
 import { $, $$, esc, fmt, plural, local } from "./util.js";
 import { API, INAT_DE, PRIO, inat, getJSON, isAbort, findInatTaxon } from "./api.js";
-import { state, set, on, GROUPS, whereParams } from "./state.js";
+import { state, set, on, GROUPS, GBIF_FISH_ORDERS, whereParams } from "./state.js";
 import { makeList } from "./liste.js";
 
 let openDetail = () => {};
 export const setDetailOpener = fn => { openDetail = fn; };
 
-let list, abort, lastKey;
+let list, abort, lastKey, lastTotal = null;
 
 export function initEntdecken(){
   $("#groups").innerHTML = GROUPS.map(g =>
@@ -24,7 +24,7 @@ export function initEntdecken(){
 
   list = makeList($("#exList"), {
     emptyHTML:`<div class="state">Hier wurden noch keine Arten dieser Gruppe gemeldet. Zoom heraus oder wähle eine andere Gruppe.</div>`,
-    onTotal:n => $("#exTotal").textContent = n == null ? "" : plural(n, "Art", "Arten"),
+    onTotal:n => { lastTotal = n; $("#exTotal").textContent = n == null ? "" : plural(n, "Art", "Arten"); },
     onPick:pick
   });
 
@@ -64,10 +64,31 @@ export function load(){
   $("#exBody").scrollTop = 0;
   $("#comboNote").hidden = !state.combo;
   updateGroupAvailability(p, abort.signal);
+  $("#gbifMore").hidden = true;
   if (state.combo) return loadCombo(p, abort.signal).catch(() => { lastKey = null; });
-  list.load(p, abort.signal).catch(() => { lastKey = null; });
+  const signal = abort.signal;
+  list.load(p, signal).then(() => checkGbifMore(signal)).catch(() => { lastKey = null; });
 }
 export const reset = () => { lastKey = null; };
+
+/* Für manche Gruppen (z. B. Fische) hat iNaturalist nur wenige Meldungen, GBIF aber viele aus Kartierungen
+   und Museen. Dann bietet die Seite an, beide Quellen zusammen zu zeigen. */
+async function checkGbifMore(signal){
+  const g = GROUPS.find(x => x.id === state.group);
+  if (!g.gbif || lastTotal == null || signal.aborted) return;
+  const gp = new URLSearchParams({ geoDistance:`${state.center.lat.toFixed(4)},${state.center.lng.toFixed(4)},${state.radius}km`,
+    facet:"speciesKey", facetLimit:1000, limit:0, occurrenceStatus:"PRESENT", hasGeospatialIssue:"false" });
+  g.gbif.forEach(k => gp.append("taxonKey", k));
+  try{
+    const d = await getJSON(`${API.gbif}/occurrence/search?${gp}`, { signal });
+    const n = d.facets?.[0]?.counts?.length || 0;
+    if (signal.aborted || n < lastTotal * 1.5 || n - lastTotal < 5) return;
+    const box = $("#gbifMore");
+    box.innerHTML = `<b>GBIF kennt hier ${fmt(n)} ${esc(g.label)}-Arten, iNaturalist nur ${fmt(lastTotal)}.</b> GBIF sammelt auch Kartierungen, Zählungen und Museumsfunde. <button class="btn primary" type="button">Alle zusammen zeigen</button>`;
+    box.querySelector("button").onclick = () => { $("#combo").checked = true; set({ combo:true }); };
+    box.hidden = false;
+  }catch{}
+}
 
 /* Gruppen ohne Funde im Umkreis ausgrauen – eine Abfrage für alle Gruppen */
 async function updateGroupAvailability(p, signal){
@@ -104,7 +125,9 @@ function iconicFromGbif(s){
   if (s.kingdom === "Fungi") return "Fungi";
   const cl = { Mammalia:"Mammalia", Aves:"Aves", Reptilia:"Reptilia", Squamata:"Reptilia", Testudines:"Reptilia", Amphibia:"Amphibia",
     Actinopterygii:"Actinopterygii", Insecta:"Insecta", Arachnida:"Arachnida" }[s.class];
-  return cl || (s.phylum === "Mollusca" ? "Mollusca" : "Animalia");
+  if (cl) return cl;
+  if (GBIF_FISH_ORDERS.includes(s.orderKey)) return "Actinopterygii";
+  return s.phylum === "Mollusca" ? "Mollusca" : "Animalia";
 }
 async function gbifResolve(keys, signal, progress){
   const todo = keys.filter(k => !gbifNames.has(String(k)));
@@ -131,7 +154,7 @@ async function loadCombo(p, signal){
   ip.set("radius", Math.min(state.radius, COMBO_MAX_KM)); ip.set("per_page", 500);
   const gp = new URLSearchParams({ geoDistance:`${state.center.lat.toFixed(4)},${state.center.lng.toFixed(4)},${Math.min(state.radius, COMBO_MAX_KM)}km`,
     facet:"speciesKey", facetLimit:COMBO_GBIF_TOP, limit:0, occurrenceStatus:"PRESENT", hasGeospatialIssue:"false" });
-  if (g.gbif) gp.set("taxonKey", g.gbif);
+  (g.gbif || []).forEach(k => gp.append("taxonKey", k));
   list.clear(`<section class="tier"><div class="grid"></div></section>`);
   stat.textContent = "Lade iNaturalist und GBIF …";
   try{

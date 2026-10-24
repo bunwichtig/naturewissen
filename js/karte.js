@@ -68,7 +68,7 @@ function syncLayers(){
 function wabenUrl(){
   const g = GROUPS.find(x => x.id === state.group);
   const p = new URLSearchParams({ style:"green.poly", bin:"hex", hexPerTile:"40" });
-  if (g?.gbif) p.set("taxonKey", g.gbif);
+  if (g?.gbif?.length === 1) p.set("taxonKey", g.gbif[0]);   // Kartenbilder kennen nur eine Gruppe; Fische und Reptilien zeigen alle Funde
   return `${API.gbifMap}/{z}/{x}/{y}@1x.png?${p}`;
 }
 function addWaben(before){

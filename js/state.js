@@ -8,19 +8,22 @@ export const RADIUS_MIN = 5, RADIUS_MAX = 250;
 export const radiusForZoom = z => Math.round(Math.min(RADIUS_MAX, Math.max(RADIUS_MIN, 9000 / Math.pow(2, z - 1))));
 export const zoomForRadius = km => 1 + Math.log2(9000 / km);
 
-// Gruppen für Entdecken (iNaturalist „iconic taxa“) und die passende GBIF-Nummer für Waben und Kombi
+// Gruppen für Entdecken (iNaturalist „iconic taxa“) und die passenden GBIF-Nummern für Waben und „genauer rechnen“.
+// GBIF führt Strahlenflosser und Reptilien nicht als eigene Klasse; dort stehen die Ordnungen
+// (Fische: alle Ordnungen, die in Deutschland bei iNaturalist vorkommen; Reptilien: Schuppenkriechtiere und Schildkröten).
+export const GBIF_FISH_ORDERS = [548,1313,1153,587,550,590,495,588,549,708,773,538,498,547,1103,772,1068,537,496,1069,1165,1167,1067,499,1162,1311,1305,889];
 export const GROUPS = [
   { id:"all",   label:"Alle",         taxa:"Plantae,Fungi,Mammalia,Aves,Reptilia,Amphibia,Actinopterygii,Insecta,Arachnida,Mollusca,Animalia", gbif:null },
-  { id:"plants",label:"Pflanzen",     taxa:"Plantae",        gbif:6 },
-  { id:"fungi", label:"Pilze",        taxa:"Fungi",          gbif:5 },
-  { id:"birds", label:"Vögel",        taxa:"Aves",           gbif:212 },
-  { id:"ins",   label:"Insekten",     taxa:"Insecta",        gbif:216 },
-  { id:"mamm",  label:"Säugetiere",   taxa:"Mammalia",       gbif:359 },
-  { id:"amph",  label:"Amphibien",    taxa:"Amphibia",       gbif:131 },
-  { id:"rept",  label:"Reptilien",    taxa:"Reptilia",       gbif:358 },
-  { id:"fish",  label:"Fische",       taxa:"Actinopterygii", gbif:204 },
-  { id:"arach", label:"Spinnentiere", taxa:"Arachnida",      gbif:367 },
-  { id:"moll",  label:"Weichtiere",   taxa:"Mollusca",       gbif:52 }
+  { id:"plants",label:"Pflanzen",     taxa:"Plantae",        gbif:[6] },
+  { id:"fungi", label:"Pilze",        taxa:"Fungi",          gbif:[5] },
+  { id:"birds", label:"Vögel",        taxa:"Aves",           gbif:[212] },
+  { id:"ins",   label:"Insekten",     taxa:"Insecta",        gbif:[216] },
+  { id:"mamm",  label:"Säugetiere",   taxa:"Mammalia",       gbif:[359] },
+  { id:"amph",  label:"Amphibien",    taxa:"Amphibia",       gbif:[131] },
+  { id:"rept",  label:"Reptilien",    taxa:"Reptilia",       gbif:[11592253,11418114] },
+  { id:"fish",  label:"Fische",       taxa:"Actinopterygii", gbif:GBIF_FISH_ORDERS },
+  { id:"arach", label:"Spinnentiere", taxa:"Arachnida",      gbif:[367] },
+  { id:"moll",  label:"Weichtiere",   taxa:"Mollusca",       gbif:[52] }
 ];
 
 export const state = {
