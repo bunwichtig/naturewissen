@@ -4,10 +4,11 @@ Zeigt auf einem Globus, welche Tiere, Pflanzen und Pilze an einem Ort leben, und
 
 **Seite:** <https://bunwichtig.github.io/naturewissen/> – eine Startseite zur Wahl der Version:
 
-- **V1** (`v1/`): die Version, an der weitergearbeitet wird.
-- **V2** (`v2/`): eine eigene Fassung, vorerst unverändert auf dem Stand vom 25. Oktober 2026.
+- **Dev** (`dev/`): die Entwicklungsfassung. Alle Änderungen kommen nur hier hinein.
+- **V1** (`v1/`): **Archiv** – die erste fertige Version vom 25. Oktober 2026. Wird nicht mehr verändert.
+- **V2** (`v2/`): eine eigene Fassung, ruht vorerst (Stand 25. Oktober 2026).
 
-**Quellen & Lizenzen:** [v1/quellen.html](https://bunwichtig.github.io/naturewissen/v1/quellen.html) · Alte Version (bis Oktober 2026): [alt/](https://bunwichtig.github.io/naturewissen/alt/)
+**Quellen & Lizenzen:** [dev/quellen.html](https://bunwichtig.github.io/naturewissen/dev/quellen.html) · Alte Version (bis Oktober 2026): [alt/](https://bunwichtig.github.io/naturewissen/alt/)
 
 ## Aufbau
 
@@ -29,7 +30,7 @@ Eine Karte erscheint nur im Steckbrief. Die zuletzt gesuchten Orte merkt sich di
 
 ## Dateien
 
-Die Dateien unten liegen je Version in `v1/` bzw. `v2/`. Im Hauptordner liegen nur die Startseite (`index.html`), die Schriften für die Startseite und `alt/`.
+Die Dateien unten liegen je Fassung in `dev/`, `v1/` und `v2/`. Im Hauptordner liegen nur die Startseite (`index.html`), die Schriften für die Startseite und `alt/`.
 
 | Datei | Inhalt |
 |---|---|

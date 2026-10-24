@@ -241,3 +241,5 @@ body:not(.detail-open) .backdrop{display:none}
   .range-map{height:300px}
 }
 @media (prefers-reduced-motion:reduce){ .skel{animation:none} .tier-tog .chev{transition:none} }
+.badge-ver{font:400 11px/1 var(--f-data);color:var(--night);background:var(--muted);border-radius:999px;padding:5px 8px;text-decoration:none;white-space:nowrap}
+.badge-ver:hover{background:var(--pollen)}

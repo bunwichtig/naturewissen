@@ -33,6 +33,7 @@ h1 span{color:var(--pollen)}
 .v:focus-visible{outline:2px solid var(--pollen);outline-offset:3px}
 .tag{font:400 12px/1 var(--f-data);color:var(--night);background:var(--plantae);border-radius:999px;padding:5px 9px;display:inline-block}
 .v.frozen .tag{background:var(--muted)}
+.v.dev .tag{background:var(--pollen)}
 .v h2{font:700 30px/1.1 var(--f-display);margin:14px 0 6px}
 .v p{margin:0;color:var(--muted);font-size:15px}
 .go{display:inline-block;margin-top:16px;font-weight:600;color:var(--pollen)}
@@ -43,22 +44,28 @@ footer a{color:var(--muted);text-underline-offset:3px}
 <body>
 <main>
   <h1>Pure <span>Nature</span></h1>
-  <p class="lead">Was lebt an diesem Ort? Tiere, Pflanzen und Pilze aus freien Quellen, mit Hilfe beim Bestimmen. Wähle eine Version.</p>
+  <p class="lead">Was lebt an diesem Ort? Tiere, Pflanzen und Pilze aus freien Quellen, mit Hilfe beim Bestimmen. Wähle eine Fassung.</p>
   <div class="choice">
-    <a class="v" href="v1/">
-      <span class="tag">wird weiterentwickelt</span>
+    <a class="v dev" href="dev/">
+      <span class="tag">in Arbeit</span>
+      <h2>Dev</h2>
+      <p>Die Entwicklungsfassung: Hier kommen alle Neuerungen zuerst hinein. Kann sich jederzeit ändern.</p>
+      <span class="go">Öffnen →</span>
+    </a>
+    <a class="v frozen" href="v1/">
+      <span class="tag">Archiv · 25. Oktober 2026</span>
       <h2>V1</h2>
-      <p>Die aktuelle Version: Ort suchen, Arten entdecken, bestimmen, Steckbrief mit Verbreitungskarte.</p>
+      <p>Die erste fertige Version: Ort suchen, Arten entdecken, bestimmen, Steckbrief mit Verbreitungskarte. Bleibt unverändert.</p>
       <span class="go">Öffnen →</span>
     </a>
     <a class="v frozen" href="v2/">
-      <span class="tag">Stand 25. Oktober 2026</span>
+      <span class="tag">ruht</span>
       <h2>V2</h2>
-      <p>Eine eigene Fassung, vorerst unverändert auf dem Stand vom 25. Oktober 2026.</p>
+      <p>Eine eigene Fassung, vorerst nicht bearbeitet. Stand 25. Oktober 2026.</p>
       <span class="go">Öffnen →</span>
     </a>
   </div>
-  <footer><a href="v1/quellen.html">Quellen &amp; Lizenzen</a> · <a href="alt/">Alte Version</a></footer>
+  <footer><a href="dev/quellen.html">Quellen &amp; Lizenzen</a> · <a href="alt/">Alte Version</a></footer>
 </main>
 </body>
 </html>
