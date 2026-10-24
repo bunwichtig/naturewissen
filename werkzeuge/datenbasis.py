@@ -18,6 +18,7 @@ QUELLEN = [
     endpunkte=[
       ("GET https://api.inaturalist.org/v1/taxa/autocomplete", "q, per_page=12, is_active=true, locale, preferred_place_id", "Vorschlagsliste der Artsuche"),
       ("GET …/v1/observations/species_counts", "iconic_taxa | taxon_id, lat, lng, radius (km), quality_grade=research, per_page (≤500), page, month, term_id=12&term_value_id=13 (blüht)", "Arten am Ort nach Zahl der Beobachtungen"),
+      ("GET …/v1/observations/taxonomy", "lat, lng, radius, quality_grade, locale", "Bereich Liste: alle Taxa am Ort mit parent_id und Fundzahl (nur Datenbasis 2)"),
       ("GET …/v1/observations/iconic_taxa_species_counts", "lat, lng, radius", "Artenzahl je Großgruppe (Gruppen ohne Funde ausgrauen)"),
       ("GET …/v1/observations", "taxon_id, lat, lng, radius, per_page=0", "Zahl der Funde einer Art am Ort"),
       ("GET …/v1/observations/histogram", "taxon_id, date_field=observed, interval=month_of_year, verifiable=true (+ Ort)", "Funde je Monat"),
@@ -420,7 +421,8 @@ F2 = FUNKTIONEN.replace("Gruppen: Alle, Pflanzen, Bäume, Sträucher, Pilze,", "
   "(Gruppen ohne Funde ausgegraut).", "(Gruppen ohne Funde ausgegraut). Unter „Pflanzen“ eine zweite Zeile **Wuchsform**: Alle Pflanzen, Bäume, Sträucher, Kräuter & Blumen, Gräser, Kletterpflanzen, Wasser & Sumpf, Zwiebel & Knolle, Farne, Moose.").replace(
   "5. **Bäume / Sträucher:**", "5. **Wuchsformen (außer Moose):**").replace("→ nur Namen aus der WCVP-Liste behalten", "→ nur Namen aus der WCVP-Liste der gewählten Wuchsform behalten").replace(
   "„Baum“/„Strauch“ ergibt den Vorschlag „Alle Bäume um <Ort>“.", "„Baum“, „Strauch“, „Kraut“, „Gras“, „Farn“, „Moos“, „Kletterpflanze“, „Wasserpflanze“ ergeben den Vorschlag „Alle … um <Ort>“.") + \
-  "9. **Moose:** iNaturalist-Taxa Bryophyta, Marchantiophyta, Anthocerotophyta → Nummern über /taxa nachschlagen → species_counts mit taxon_id.\n"
+  "9. **Moose:** iNaturalist-Taxa Bryophyta, Marchantiophyta, Anthocerotophyta → Nummern über /taxa nachschlagen → species_counts mit taxon_id.\n" + \
+  "10. **Liste – alle Arten als Baum:** dritter Bereich neben Entdecken und Bestimmen. Eine Abfrage `GET /v1/observations/taxonomy` (lat, lng, radius, quality_grade) liefert alle Taxa am Ort mit parent_id und Fundzahl. Angezeigt werden nur die Stufen Gruppe › Ordnung › Familie › Gattung › Art; Ketten mit nur einem Kind werden zusammengefasst. Deutsche Namen und Bilder kommen beim Aufklappen über `GET /v1/taxa/{bis zu 30 ids}`; Mini-Bilder nur für die ersten drei Einträge jeder Stufe und je Gruppe drei häufigste Arten. Links Suche (wissenschaftlich sofort, deutsch über /taxa/autocomplete, nur Treffer am Ort; Tipp klappt den Pfad auf), Vorfilter nach Gruppe, Sortierung häufigste zuerst oder A–Z. Je Stufe erst 60 Einträge, dann „weitere anzeigen“.\n"
 
 V2 = dict(nr=2, app="dev", stand="25. Oktober 2026 – Erweiterung, in der Dev-Fassung",
   intro='<p class="lead">Die erweiterte Datenbasis: alle Wuchsformen der Pflanzen, Moose, Systematik über alle Ebenen, mehr Merkmale für Insekten und Spinnen. Sie steckt in der Dev-Fassung.</p>',
@@ -429,7 +431,8 @@ V2 = dict(nr=2, app="dev", stand="25. Oktober 2026 – Erweiterung, in der Dev-F
        "Moose als eigene Gruppe (iNaturalist: Laub-, Leber- und Hornmoose).",
        "GBIF Backbone Taxonomy als Quelle für die Systematik über alle Ebenen von Reich bis Art.",
        "Neuer Datensatz Gossner et al. 2015 (CC0): Größe und Schicht für Spinnen, Käfer, Wanzen und Heuschrecken; bestätigt die Merkmalstabelle bei fünf Gruppen.",
-       "Abdeckungs-Tabelle: welche Gruppe Merkmale aus welchem Datensatz hat und wo noch Lücken sind."],
+       "Abdeckungs-Tabelle: welche Gruppe Merkmale aus welchem Datensatz hat und wo noch Lücken sind.",
+       "Neuer Bereich „Liste“: alle Arten am Ort als aufklappbarer Baum (iNaturalist /observations/taxonomy) mit Suche, Vorfilter und Mini-Bildern."],
   geprueft=GEPRUEFT + [
     ("DISPERSE (Wasserinsekten, Libellen)", "Größe und Flugfähigkeit europäischer Wasser-Wirbelloser; die Lizenz der Tabelle ist im Artikel nicht genannt – erst nach Klärung verwenden.", "https://doi.org/10.6084/m9.figshare.c.5000633"),
     ("Europäische Reptilien (Grimm et al. 2014)", "Bei Dryad unter CC0; die Merkmale liegen als Zahlencodes vor, deren Schlüssel noch fehlt – noch nicht ausgewertet.", "https://datadryad.org/dataset/doi:10.5061/dryad.hb4ht")],

@@ -17,8 +17,9 @@ Zeigt auf einem Globus, welche Tiere, Pflanzen und Pilze an einem Ort leben, und
 1. **Ort suchen** (oder eigenen Standort verwenden), Umkreis wählen: 5 bis 250 km.
    Oder direkt ein **Lebewesen suchen**: Vorschläge erscheinen schon beim Tippen (iNaturalist), ein Tipp öffnet den Steckbrief.
 2. **Entdecken – Was lebt hier?** Arten im Umkreis nach Häufigkeit (iNaturalist), filterbar nach Gruppe; unter Pflanzen nach **Wuchsform** (Bäume, Sträucher, Kräuter, Gräser, Kletter-, Wasserpflanzen, Zwiebel & Knolle, Farne, Moose) (Wuchsform aus der World Checklist of Vascular Plants, Kew; Arten aus iNaturalist und GBIF). Wer im Lebewesen-Suchfeld „Baum“ oder „Strauch“ tippt, bekommt das als ersten Vorschlag. „Genauer rechnen“ nimmt die Fundmeldungen von GBIF dazu; kennt GBIF deutlich mehr Arten (z. B. bei Fischen), bietet die Seite das von selbst an.
-3. **Bestimmen – Was habe ich gesehen?** Mit Foto (Pflanzen über Pl@ntNet) oder nach Merkmalen (Merkmalstabelle mit Belegen und Messdaten, siehe Quellen-Seite).
-4. **Steckbrief** als Seitenleiste: Fotos mit Urheber und Lizenz, Gefährdung, Zahlen, Jahreszeit, Beschreibung aus Wikipedia, Verwechslungsarten, Systematik. Auf Knopfdruck die **Verbreitungskarte** (Fundorte bei iNaturalist auf einem Globus, der gesuchte Ort markiert).
+3. **Liste** (nur Dev): alle Arten am Ort als aufklappbarer Baum – Gruppe › Ordnung › Familie › Gattung › Art, mit Suche links, Vorfilter und Mini-Bildern.
+4. **Bestimmen – Was habe ich gesehen?** Mit Foto (Pflanzen über Pl@ntNet) oder nach Merkmalen (Merkmalstabelle mit Belegen und Messdaten, siehe Quellen-Seite).
+5. **Steckbrief** als Seitenleiste: Fotos mit Urheber und Lizenz, Gefährdung, Zahlen, Jahreszeit, Beschreibung aus Wikipedia, Verwechslungsarten, Systematik. Auf Knopfdruck die **Verbreitungskarte** (Fundorte bei iNaturalist auf einem Globus, der gesuchte Ort markiert).
 
 Eine Karte erscheint nur im Steckbrief. Die zuletzt gesuchten Orte merkt sich die Seite auf dem Gerät.
 
@@ -46,6 +47,7 @@ Die Dateien unten liegen je Fassung in `dev/` und `v1/`. Im Hauptordner liegen n
 | `js/artsuche.js` | Lebewesen suchen mit Vorschlagsliste |
 | `js/karte.js` | Verbreitungskarte im Steckbrief |
 | `js/liste.js` | Artenliste in Häufigkeitsstufen |
+| `js/liste-baum.js` | Bereich Liste: alle Arten als Baum (nur Dev) |
 | `js/entdecken.js` | Bereich Entdecken inkl. „genauer rechnen“ |
 | `js/bestimmen.js` | Bereich Bestimmen: Foto und Merkmale |
 | `js/steckbrief.js` | Steckbrief einer Art |
