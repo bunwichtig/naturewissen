@@ -142,3 +142,7 @@ Das Ergebnis sind die passenden Arten, sortiert nach Anzahl passender Beobachtun
 Alle Merkmale auf einer Seite: Oberfläche (Fell, Federn, Schuppen, glatte Haut, Panzer, Schale, schleimig, Blätter, Pilz), bei Tieren Beine, Flügel und Größe, bei Pflanzen Wuchs, Blätter und Blüte/Frucht, bei Pilzen die Form, dazu Lebensraum, „gerade eben“ und Umkreis.
 
 Die Zuordnung „Merkmal → Tier-/Pflanzengruppe“ steht als Tabelle `LOOK_DB` in `index.html` (leicht erweiterbar). Welche Arten dieser Gruppen im Umkreis vorkommen, kommt live aus iNaturalist; „blüht gerade“, „trägt Früchte“ und „gerade eben“ sind echte API-Filter. Auswahlen, die zu nichts mehr passen würden, sind ausgegraut.
+
+## Fotos auf der Karte
+
+Statt einer Dichtekarte stehen runde Fotos der Lebewesen an echten Fundorten (jüngste Beobachtung mit Foto aus iNaturalist). Bis 100 km Umkreis sind es die 5 häufigsten Arten (3 Tiere, 2 Pflanzen), bei größerem Umkreis je 2 pro Gruppe. Der kleine Knopf „+ Fotos“ ergänzt je Gruppe 2 weitere. Antippen öffnet den Steckbrief. Die Fotos folgen dem aktiven Reiter und seinen Filtern.
