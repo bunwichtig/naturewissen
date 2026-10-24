@@ -117,7 +117,7 @@ export const GRUPPEN = [
   ["Aale","Anguillidae","Actinopterygii","s:haut l:0 w:0 z:4,5 h:wa"],
   ["Heringe","Clupeidae","Actinopterygii","s:schuppe l:0 w:0 z:3 h:wa"],
   ["Dorsche","Gadidae","Actinopterygii","s:schuppe l:0 w:0 z:4,5 h:wa"],
-  ["Plattfische (Flunder, Scholle)","Pleuronectiformes","Actinopterygii","s:schuppe,haut l:0 w:0 z:3,4 h:wa"],
+  ["Plattfische (Flunder, Scholle)","Pleuronectoidei","Actinopterygii","s:schuppe,haut l:0 w:0 z:3,4 h:wa"],
   ["Grundeln","Gobiidae","Actinopterygii","s:schuppe l:0 w:0 z:2,3 h:wa"],
   ["Fische (alle übrigen)","Actinopterygii","Actinopterygii","s:schuppe,haut l:0 w:0 z:2,3,4,5 h:wa"],
 
@@ -299,11 +299,11 @@ export const GRUPPEN = [
   ["Zitterlinge","Tremellales","Fungi","s:pilz f:gallert h:wd"],
   ["Rostpilze (auf Blättern)","Pucciniales","Fungi","s:pilz f:kruste h:wi,ga,wd"],
   ["Flechten","Lecanoromycetes","Fungi","s:pilz f:kruste h:wd,ga,wi"],
-  ["Schleimpilze (keine echten Pilze)","Myxogastria","Protozoa","s:pilz,schleim f:kruste,kugel h:wd"]
+  ["Schleimpilze (keine echten Pilze)","Myxomycetes","Protozoa","s:pilz,schleim f:kruste,kugel h:wd"]
 ].map(([label, sci, icon, attrs]) => ({ label, sci, icon,
   a:Object.fromEntries(attrs.split(" ").map(x => { const [k, v] = x.split(":"); return [k, new Set(v.split(","))]; })) }));
 
-// Beleg je Gruppe: Titel des deutschen Wikipedia-Artikels (geprüft am 24.10.2026).
+// Beleg je Gruppe: Titel des deutschen Wikipedia-Artikels (geprüft am 24.10.2026; alle wissenschaftlichen Namen auch bei iNaturalist gefunden).
 // Link: https://de.wikipedia.org/wiki/<Titel>
 export const BELEG = {
   "Cervidae": "Hirsche",
@@ -388,7 +388,7 @@ export const BELEG = {
   "Anguillidae": "Aale",
   "Clupeidae": "Heringe",
   "Gadidae": "Dorsche",
-  "Pleuronectiformes": "Plattfische",
+  "Pleuronectoidei": "Plattfische",
   "Gobiidae": "Grundeln",
   "Actinopterygii": "Strahlenflosser",
   "Carabidae": "Laufkäfer",
@@ -546,5 +546,5 @@ export const BELEG = {
   "Tremellales": "Zitterlingsartige",
   "Pucciniales": "Rostpilze",
   "Lecanoromycetes": "Lecanoromycetes",
-  "Myxogastria": "Myxogastria",
+  "Myxomycetes": "Myxogastria",
 };
