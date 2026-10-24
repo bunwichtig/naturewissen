@@ -249,6 +249,7 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
 .chip.empty{opacity:.35;cursor:not-allowed}
 .pane{flex:1;min-height:0;display:flex;flex-direction:column}
 /* Vergrößern: PC halbe Bildschirmbreite, Handy vollflächig */
+.detail-bar .grow{margin-left:auto}
 .grow{margin-left:auto;align-self:center;width:30px;height:30px;flex:0 0 auto;display:grid;place-items:center;padding:0;border-radius:8px;
   background:var(--panel-2);border:1px solid var(--line);color:var(--muted);cursor:pointer}
 .grow:hover{color:var(--ink);border-color:var(--pollen)}
@@ -532,6 +533,9 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
   <section class="detail" id="detail" hidden aria-live="polite">
     <div class="detail-bar">
       <button class="back" id="back">← Zurück zur Liste</button>
+      <button class="grow" id="growBtn2" aria-pressed="false" title="Verkleinern" aria-label="Verkleinern">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg>
+      </button>
     </div>
     <div class="detail-body" id="detailBody"></div>
   </section>
@@ -1206,16 +1210,20 @@ function setSheet(name){
   syncGrow();
 }
 
+/* Vergrößert wird automatisch beim Antippen eines Lebewesens; der Knopf erscheint nur zum Verkleinern */
 function syncGrow(){
   const on = isMobile() ? snap === "full" : document.documentElement.classList.contains("wide");
-  const b = $("#growBtn"); b.setAttribute("aria-pressed", on);
-  b.title = b.ariaLabel = on ? "Liste verkleinern" : (isMobile() ? "Liste bildschirmfüllend" : "Liste auf halbe Breite vergrößern");
+  document.querySelectorAll(".grow").forEach(b => { b.setAttribute("aria-pressed", on); b.hidden = !on; });
 }
-$("#growBtn").onclick = () => {
-  if (isMobile()){ setSheet(snap === "full" ? "mid" : "full"); return; }
-  document.documentElement.classList.toggle("wide");
+function setWide(on){
+  if (isMobile()) return;
+  document.documentElement.classList.toggle("wide", on);
   map.resize(); syncGrow();
-};
+}
+document.querySelectorAll(".grow").forEach(b => b.onclick = () => {
+  if (isMobile()){ setSheet("mid"); return; }
+  setWide(false);
+});
 
 function applyLayout(){
   if (isMobile()){
@@ -1276,7 +1284,7 @@ window.addEventListener("resize", () => { if (isMobile()) document.documentEleme
 
 // Detailansicht auf dem Handy immer bildschirmfüllend, danach zurück zur vorherigen Höhe
 const _open = openDetail, _close = closeDetail;
-openDetail = id => { if (isMobile()){ beforeDetail = snap; setSheet("full"); } return _open(id); };
+openDetail = id => { if (isMobile()){ beforeDetail = snap; setSheet("full"); } else setWide(true); return _open(id); };
 closeDetail = () => { _close(); if (isMobile()) setSheet(beforeDetail === "full" ? "mid" : beforeDetail); };
 $("#back").onclick = () => closeDetail();
 
