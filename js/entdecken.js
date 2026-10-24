@@ -159,6 +159,10 @@ async function loadCombo(p, signal){
     const iTot = {}, gTot = {}, iMin = {}, gMin = {};
     inatList.forEach(x => { const k = iconOf(x.taxon); iTot[k] = (iTot[k] || 0) + x.count; });
     gMap.forEach(([n, k]) => { gTot[k] = (gTot[k] || 0) + n; });
+    // Sehr kleine Gruppen (z. B. eine einzige Egel-Art) sollen nicht künstlich nach oben rutschen:
+    // jede Gruppe zählt mindestens mit 5 % aller Funde der Quelle.
+    const floorTot = (tot) => { const all = Object.values(tot).reduce((a, b) => a + b, 0); Object.keys(tot).forEach(k => tot[k] = Math.max(tot[k], all * 0.05)); };
+    floorTot(iTot); floorTot(gTot);
     inatList.forEach(x => { const k = iconOf(x.taxon); iMin[k] = Math.min(iMin[k] ?? 1, x.count / iTot[k]); });
     gMap.forEach(([n, k]) => { gMin[k] = Math.min(gMin[k] ?? 1, n / gTot[k]); });
     const floorI = k => (iMin[k] ?? 1e-4) / 2, floorG = k => (gMin[k] ?? 1e-4) / 2;

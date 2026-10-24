@@ -10,7 +10,7 @@ export const API = {
   inat: "https://api.inaturalist.org/v1",
   gbif: "https://api.gbif.org/v1",
   gbifMap: "https://api.gbif.org/v2/map/occurrence/density",
-  wikiDe: "https://de.wikipedia.org/api/rest_v1/page/summary/",
+  wikiApi: "https://de.wikipedia.org/w/api.php",
   nominatim: "https://nominatim.openstreetmap.org",
   plantnet: "https://my-api.plantnet.org/v2"
 };

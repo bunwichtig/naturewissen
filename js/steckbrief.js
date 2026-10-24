@@ -167,13 +167,18 @@ async function loadSeason(t, signal){
   }catch(err){ if (!isAbort(err) && box()) box().innerHTML = `<p class="note">Jahreszeit nicht verfügbar.</p>`; }
 }
 
+// Die ersten Sätze des deutschen Wikipedia-Artikels (gesucht über den wissenschaftlichen Namen)
 async function loadWikipedia(t, signal){
   const el = () => $("#wiki");
   try{
-    const d = await getJSON(API.wikiDe + encodeURIComponent(t.name.replace(/ /g, "_")), { signal });
-    if (d.type !== "disambiguation" && d.extract && el()){
-      el().innerHTML = `<p>${esc(d.extract)}</p><p class="src">Text: Wikipedia, <a href="${esc(d.content_urls?.desktop?.page || "#")}" target="_blank" rel="noopener">Artikel „${esc(d.title)}“</a>, CC BY-SA 4.0</p>`;
-      $("#wikiLink").href = d.content_urls?.desktop?.page || $("#wikiLink").href;
+    const q = new URLSearchParams({ action:"query", format:"json", origin:"*", redirects:"1", titles:t.name,
+      prop:"extracts|info|pageprops", exsentences:"5", explaintext:"1", inprop:"url", ppprop:"disambiguation" });
+    const d = await getJSON(`${API.wikiApi}?${q}`, { signal });
+    const page = Object.values(d.query?.pages || {})[0];
+    if (page && !("missing" in page) && !page.pageprops && page.extract && el()){
+      const text = page.extract.split(/\n+/).filter(Boolean).slice(0, 3).map(p => `<p>${esc(p)}</p>`).join("");
+      el().innerHTML = `${text}<p class="src">Text: Wikipedia, <a href="${esc(page.fullurl)}" target="_blank" rel="noopener">Artikel „${esc(page.title)}“</a>, CC BY-SA 4.0</p>`;
+      $("#wikiLink").href = page.fullurl;
       return;
     }
   }catch(err){ if (isAbort(err)) return; }
