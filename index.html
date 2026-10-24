@@ -76,6 +76,17 @@ button,input{font:inherit;color:inherit}
 .loc{pointer-events:auto;display:flex;align-items:center;gap:9px;max-width:100%;background:rgba(16,24,22,.88);border:1px solid var(--line);border-radius:12px;padding:5px 12px 5px 5px;
   -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);box-shadow:0 6px 20px rgba(0,0,0,.3)}
 .loc.pinned{border-color:var(--pollen)}
+/* Unten auf der Karte: halbtransparent; mit Knöpfen einklappbar und nach oben verschiebbar */
+.loc-dock{position:fixed;z-index:5;left:0;right:var(--panel-w);bottom:calc(34px + env(safe-area-inset-bottom,0px));display:flex;justify-content:center;padding:0 70px;pointer-events:none}
+.loc-dock .loc{background:rgba(16,24,22,.5);box-shadow:none;transition:background .2s}
+.loc-dock .loc:hover,.loc-dock .loc:focus-within{background:rgba(16,24,22,.88)}
+.loc-btn{flex:0 0 auto;width:26px;height:26px;border-radius:7px;display:grid;place-items:center;padding:0;background:none;border:1px solid transparent;color:var(--muted);cursor:pointer}
+.loc-btn:hover{color:var(--ink);border-color:var(--line)}
+.loc-btn svg{width:15px;height:15px;transition:transform .2s}
+.loc #locMove{margin-left:2px}
+.loc.folded{padding-right:5px}
+.loc.folded .loc-txt,.loc.folded #locMove{display:none}
+.loc.folded #locFold svg{transform:rotate(180deg)}
 .pin{flex:0 0 auto;width:32px;height:32px;border-radius:9px;display:grid;place-items:center;background:var(--panel-2);border:1px solid var(--line);color:var(--muted);cursor:pointer;padding:0}
 .pin svg{width:17px;height:17px}
 .pin[aria-pressed="true"]{background:var(--pollen);border-color:var(--pollen);color:var(--night)}
@@ -208,6 +219,7 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
   .loc-row{flex:1 1 auto;min-width:0}
   .loc{padding:4px 10px 4px 4px}
   .loc-txt span{display:none}
+  .loc-dock{bottom:min(calc(var(--sheet-h) + 12px),calc(100% - 160px));padding:0 64px}
   .maplibregl-ctrl-bottom-right{bottom:calc(var(--sheet-h) + 4px)}
   .maplibregl-ctrl-bottom-left,.maplibregl-ctrl-bottom-right .maplibregl-ctrl-attrib{display:none}
 
@@ -378,10 +390,18 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z"/><circle cx="12" cy="10" r="2.2"/></svg>
       </button>
       <div class="loc-txt"><b id="locName">–</b><span id="readout">–</span></div>
+      <button class="loc-btn" id="locMove" title="Nach oben unter die Suche schieben" aria-label="Ortsanzeige verschieben">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M7 8l5-5 5 5M7 16l5 5 5-5"/></svg>
+      </button>
+      <button class="loc-btn" id="locFold" aria-expanded="true" title="Einklappen" aria-label="Ortsanzeige einklappen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+      </button>
     </div>
   </div>
 </header>
 
+
+<div class="loc-dock" id="locDock"></div>
 
 <button class="idf-fab" id="tgIdentify" title="Pflanze per Foto bestimmen (Pl@ntNet)" aria-label="Pflanze per Foto bestimmen">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
@@ -677,6 +697,22 @@ function setPin(lngLat){
   updateReadout(); scheduleLoad(0);
 }
 $("#pinBtn").onclick = () => setPin(state.pin ? null : map.getCenter());
+
+/* Ortsanzeige: Platz (unten auf der Karte / oben unter der Suche) und Einklappen, auf dem Gerät gemerkt */
+const LOC_STORE = "pn-loc";
+const locPref = (() => { try{ return JSON.parse(localStorage.getItem(LOC_STORE)) || {}; }catch{ return {}; } })();
+function applyLoc(){
+  const top = locPref.top === true, fold = locPref.fold === true;
+  (top ? $(".loc-row") : $("#locDock")).appendChild($("#loc"));
+  $("#loc").classList.toggle("folded", fold);
+  $("#locFold").setAttribute("aria-expanded", !fold);
+  $("#locFold").title = $("#locFold").ariaLabel = fold ? "Ortsanzeige aufklappen" : "Ortsanzeige einklappen";
+  $("#locMove").title = top ? "Nach unten auf die Karte schieben" : "Nach oben unter die Suche schieben";
+  try{ localStorage.setItem(LOC_STORE, JSON.stringify(locPref)); }catch{}
+}
+$("#locFold").onclick = () => { locPref.fold = !locPref.fold; applyLoc(); };
+$("#locMove").onclick = () => { locPref.top = !locPref.top; applyLoc(); };
+applyLoc();
 
 function updateReadout(){
   const c = searchCenter();
