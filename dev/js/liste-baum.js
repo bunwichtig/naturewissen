@@ -113,7 +113,7 @@ function render(){
 
 function rowHTML(n, depth, thumb){
   const c = n.group ? [n] : chain(n), last = c[c.length - 1];
-  const nm = n.group ? n.label : c.map(x => labelOf(x)).join(" › ");
+  const nm = n.group ? n.label : chainText(c);
   const leaf = isLeaf(last);
   const ph = thumb && !n.group ? names.get(last.id)?.photo : null;
   return `<div class="ls-node" data-node="${esc(last.id)}" style="--d:${depth}">
@@ -126,7 +126,9 @@ function rowHTML(n, depth, thumb){
     ${leaf ? "" : `<div class="ls-kids" data-kids="${esc(last.id)}" hidden></div>`}
   </div>`;
 }
-const labelOf = x => names.get(x.id)?.common || (isLeaf(x) ? x.sci : x.sci);
+const labelOf = x => names.get(x.id)?.common || x.sci;
+// Kette als Text, gleiche Namen hintereinander nur einmal (Familie „Reiher“ › Gattung „Reiher“)
+const chainText = c => c.map(labelOf).filter((t, i, a) => t !== a[i - 1]).join(" › ");
 
 function onTreeClick(e){
   const more = e.target.closest("[data-more]");
@@ -174,7 +176,7 @@ async function loadNames(ids){
 }
 function paint(id){
   const x = names.get(id); if (!x || !T) return;
-  $$(`[data-chain~="${id}"]`).forEach(el => { el.textContent = el.dataset.chain.split(" ").map(i => labelOf(T.nodes.get(+i))).join(" › "); });
+  $$(`[data-chain~="${id}"]`).forEach(el => { el.textContent = chainText(el.dataset.chain.split(" ").map(i => T.nodes.get(+i))); });
   $$(`[data-th="${id}"]`).forEach(el => { if (x.photo && !el.firstChild) el.innerHTML = `<img src="${esc(photoSize(x.photo.square_url || x.photo.url, "square"))}" alt="" loading="lazy" title="Foto: ${esc(x.photo.attribution)}">`; });
 }
 // Je Gruppe drei Mini-Bilder der häufigsten Arten
