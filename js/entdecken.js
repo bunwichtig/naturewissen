@@ -74,32 +74,65 @@ export function load(){
 }
 export const reset = () => { lastKey = null; };
 
-/* Bäume und Sträucher: iNaturalist kennt keine Wuchsform. Die Seite holt die Pflanzenarten im Umkreis
-   und behält die, die in der World Checklist of Vascular Plants (Kew) als Baum bzw. Strauch stehen.
+/* Bäume und Sträucher: iNaturalist kennt keine Wuchsform, und gewöhnliche Bäume fotografiert kaum jemand.
+   Deshalb kommen die Pflanzenarten im Umkreis aus iNaturalist UND GBIF (Florenkartierungen, Herbarien),
+   behalten werden die, die in der World Checklist of Vascular Plants (Kew) als Baum bzw. Strauch stehen.
+   Arten nur bei GBIF bekommen Foto und deutschen Namen aus der Pflanzenliste der weiteren Umgebung (250 km).
    Die Liste (daten/wuchsform.js) wird erst geladen, wenn jemand die Gruppe wählt. */
-const WUCHS_PAGES = 4;
+const WUCHS_PAGES = 4, WUCHS_REGION_PAGES = 4;
+const binomial = s => { const w = s.split(" "); return w[1] === "×" ? w.slice(0, 3).join(" ") : w.slice(0, 2).join(" "); };
 async function loadWuchs(g, p, signal){
   const stat = $("#comboStat");
   $("#comboNote").hidden = false;
   list.clear(`<section class="tier"><div class="grid"></div></section>`);
-  stat.textContent = `Suche ${g.label} …`;
+  stat.textContent = `Suche ${g.label} bei iNaturalist und GBIF …`;
+  const km = Math.min(state.radius, COMBO_MAX_KM);
+  const gp = new URLSearchParams({ geoDistance:`${state.center.lat.toFixed(4)},${state.center.lng.toFixed(4)},${km}km`, taxonKey:6,
+    facet:"scientificName", facetLimit:10000, limit:0, occurrenceStatus:"PRESENT", hasGeospatialIssue:"false" });
   try{
-    const [{ BAEUME, STRAEUCHER }, first] = await Promise.all([
+    const [{ BAEUME, STRAEUCHER }, first, gbif] = await Promise.all([
       import("../daten/wuchsform.js"),
-      inat("/observations/species_counts", withPage(p, 1), { signal, prio:PRIO.high })
+      inat("/observations/species_counts", withPage(p, 1), { signal, prio:PRIO.high }),
+      getJSON(`${API.gbif}/occurrence/search?${gp}`, { signal }).catch(err => { if (isAbort(err)) throw err; return null; })
     ]);
     const all = [...(first.results || [])];
     for (let pg = 2; pg <= WUCHS_PAGES && all.length < first.total_results; pg++){
-      stat.textContent = `Suche ${g.label} … ${fmt(all.length)} von ${fmt(first.total_results)} Pflanzenarten geprüft`;
+      stat.textContent = `Suche ${g.label} … ${fmt(all.length)} von ${fmt(first.total_results)} Pflanzenarten bei iNaturalist geprüft`;
       const d = await inat("/observations/species_counts", withPage(p, pg), { signal });
       all.push(...(d.results || []));
     }
     if (signal.aborted) return;
-    const set_ = g.wuchs === "baum" ? BAEUME : STRAEUCHER;
-    const out = all.filter(x => set_.has(x.taxon.name));
-    const rest = first.total_results - all.length;
-    stat.textContent = `${plural(out.length, "Art", "Arten")} unter ${fmt(all.length)} Pflanzenarten hier. Wuchsform nach der World Checklist of Vascular Plants (Kew)` +
-      (g.wuchs === "strauch" ? ", mit Halb- und Zwergsträuchern." : ".") + (rest > 0 ? ` Die ${fmt(rest)} seltensten Pflanzen sind nicht geprüft.` : "");
+    const keep = g.wuchs === "baum" ? BAEUME : STRAEUCHER;
+    const by = new Map();
+    all.forEach(x => { if (keep.has(x.taxon.name)) by.set(x.taxon.name, { taxon:x.taxon, i:x.count, g:0 }); });
+    (gbif?.facets?.[0]?.counts || []).forEach(x => {
+      const n = binomial(x.name);
+      if (!keep.has(n)) return;
+      const e = by.get(n) || by.set(n, { taxon:null, i:0, g:0 }).get(n);
+      e.g += x.count;
+    });
+    // Arten nur bei GBIF: Foto und deutschen Namen aus der weiteren Umgebung holen
+    const missing = [...by].filter(([, e]) => !e.taxon);
+    if (missing.length){
+      const rp = new URLSearchParams({ iconic_taxa:"Plantae", lat:state.center.lat.toFixed(2), lng:state.center.lng.toFixed(2), radius:250, ...INAT_DE, per_page:500 });
+      for (let pg = 1; pg <= WUCHS_REGION_PAGES && missing.some(([, e]) => !e.taxon); pg++){
+        stat.textContent = `Hole Fotos und Namen für ${plural(missing.filter(([, e]) => !e.taxon).length, "Art", "Arten")} aus der Umgebung …`;
+        rp.set("page", pg);
+        const d = await inat("/observations/species_counts", rp, { signal });
+        (d.results || []).forEach(x => { const e = by.get(x.taxon.name); if (e && !e.taxon) e.taxon = x.taxon; });
+        if (!d.results?.length || pg * 500 >= d.total_results) break;
+      }
+    }
+    if (signal.aborted) return;
+    const out = [...by].map(([n, e]) => ({
+      taxon:e.taxon || { id:null, name:n, iconic_taxon_name:"Plantae" },
+      count:e.i + e.g, score:e.i + e.g,
+      label:[e.i && `${fmt(e.i)} iNat`, e.g && `${fmt(e.g)} GBIF`].filter(Boolean).join(" · ")
+    })).sort((a, b) => b.score - a.score);
+    const nI = [...by.values()].filter(e => e.i).length, nG = [...by.values()].filter(e => e.g && !e.i).length;
+    stat.textContent = `${plural(out.length, "Art", "Arten")}: ${fmt(nI)} bei iNaturalist, ${fmt(nG)} weitere nur bei GBIF. ` +
+      `Wuchsform nach der World Checklist of Vascular Plants (Kew)` + (g.wuchs === "strauch" ? ", mit Halb- und Zwergsträuchern." : ".") +
+      (gbif ? "" : " GBIF war gerade nicht erreichbar.") + (state.radius > COMBO_MAX_KM ? ` GBIF-Umkreis höchstens ${COMBO_MAX_KM} km.` : "");
     await list.load(null, signal, out);
   }catch(err){
     if (isAbort(err)) return;
