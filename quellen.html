@@ -86,6 +86,13 @@ td.beleg{white-space:nowrap;font-size:13px}
 td.beleg span{display:block;color:var(--muted);font:11px/1.4 var(--f-data)}
 .empty{padding:20px;color:var(--muted)}
 footer{color:var(--muted);font-size:14px;border-top:1px solid var(--line);padding-top:16px}
+@media (max-width:620px){
+  table{min-width:0}
+  thead{display:none}
+  tr{display:grid;gap:8px;padding:12px;border-bottom:1px solid var(--line)}
+  td{display:block;padding:0;border:0}
+  td.beleg{white-space:normal}
+}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -193,7 +200,6 @@ footer{color:var(--muted);font-size:14px;border-top:1px solid var(--line);paddin
     <span class="count" id="count"></span>
   </div>
   <div class="tools" id="kingdoms" role="group" aria-label="Nach Reich filtern"></div>
-  <div class="legend" id="legend"></div>
   <div class="tbl">
     <table>
       <thead><tr><th>Gruppe</th><th>Merkmale</th><th>Beleg</th></tr></thead>
@@ -222,8 +228,6 @@ const LABEL = {}, VALUE = {};
 const SHORT = { s:"Oberfläche", l:"Beine", w:"Flügel", z:"Größe", g:"Wuchs", b:"Blätter", f:"Form", h:"Ort" };
 for (const q of MERKMALE){ LABEL[q.id] = SHORT[q.id] || q.label; VALUE[q.id] = Object.fromEntries(q.opts); }
 
-document.getElementById("legend").innerHTML = MERKMALE.map(q =>
-  `<div><b>${esc(SHORT[q.id])}:</b> ${q.opts.map(o => esc(o[1])).join(" · ")}</div>`).join("");
 
 let reich = "alle";
 const kBox = document.getElementById("kingdoms");
