@@ -200,6 +200,50 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
 }
 @media (max-width:820px) and (prefers-reduced-motion:reduce){.panel{transition:none}}
 
+/* Registerkarten im Panel */
+.tabs{display:flex;gap:18px;padding:10px 20px 0;border-bottom:1px solid var(--line);flex:0 0 auto}
+.tab{background:none;border:0;border-bottom:2px solid transparent;padding:8px 2px 10px;color:var(--muted);font:600 14px var(--f-body);cursor:pointer;margin-bottom:-1px}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--pollen)}
+.pane{flex:1;min-height:0;display:flex;flex-direction:column}
+
+/* Bestimmungsschlüssel */
+.key-head{padding:14px 20px 12px;border-bottom:1px solid var(--line)}
+.key-body{flex:1;overflow:auto;min-height:0;padding:0 20px 28px}
+.steps{list-style:none;margin:0;padding:0}
+.step{padding:14px 0;border-bottom:1px solid var(--line);display:grid;gap:10px;transition:opacity .2s}
+.step[aria-disabled="true"]{opacity:.4;pointer-events:none}
+.step h4{display:flex;align-items:center;gap:9px;margin:0;font:600 14px var(--f-body)}
+.step h4 b{width:22px;height:22px;flex:0 0 auto;border-radius:50%;display:grid;place-items:center;background:var(--panel-2);border:1px solid var(--line);font:500 11px var(--f-data);color:var(--muted)}
+.step.done h4 b{background:var(--pollen);color:var(--night);border-color:var(--pollen)}
+.step .sel{margin-left:auto;font:400 12px var(--f-body);color:var(--muted);text-align:right}
+.cats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.cat{display:grid;grid-template-columns:10px 1fr;column-gap:10px;row-gap:2px;align-items:center;text-align:left;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:9px 12px;cursor:pointer;color:var(--ink)}
+.cat i{width:10px;height:10px;border-radius:50%;background:var(--c)}
+.cat .n{font-weight:600;font-size:14px}
+.cat .c{grid-column:2;font:11px var(--f-data);color:var(--muted);font-variant-numeric:tabular-nums;min-height:14px}
+.cat[aria-pressed="true"]{border-color:var(--c);box-shadow:inset 0 0 0 1px var(--c)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip small{color:var(--muted);font:11px var(--f-data)}
+.chip:disabled{opacity:.5;cursor:progress}
+.trait{display:grid;gap:6px}
+.trait+.trait{margin-top:10px}
+.trait-label{font:500 11px/1 var(--f-body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.hint{font-size:12px;color:var(--muted)}
+.checks{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.checks label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.checks input{accent-color:var(--pollen)}
+.key-res{padding-top:4px}
+.key-res-head{position:sticky;top:0;z-index:1;background:var(--panel);display:flex;align-items:center;gap:10px;padding:14px 0 6px}
+.key-res-head h3{font:700 17px/1.1 var(--f-display);margin:0}
+.key-res-head .linkbtn{margin-left:auto;font-size:12px;color:var(--muted)}
+#kSummary{margin:0 0 12px}
+@media (max-width:820px){
+  .tabs{padding:0 16px}
+  .panel-head{padding-top:10px}
+  .key-head{padding:10px 16px 10px;touch-action:none}
+  .key-body{padding:0 16px 24px}
+}
+
 /* Fotobestimmung (Pl@ntNet): Vollbild-Dialog auf dem Handy, Karte in der Mitte am Desktop */
 /* Kleiner Kamera-Knopf links unten; Beschriftung klappt bei Hover/Fokus aus */
 .idf-fab{position:fixed;z-index:5;left:max(16px,env(safe-area-inset-left,0px));bottom:calc(72px + env(safe-area-inset-bottom,0px));
@@ -288,6 +332,11 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
 
 <aside class="panel" id="panel" aria-label="Arten im Kartenausschnitt">
   <button class="handle" id="handle" aria-label="Artenliste größer oder kleiner ziehen"></button>
+  <nav class="tabs" role="tablist" aria-label="Ansicht">
+    <button class="tab" role="tab" id="tabBtnExplore" aria-controls="paneExplore" aria-selected="true">Entdecken</button>
+    <button class="tab" role="tab" id="tabBtnKey" aria-controls="paneKey" aria-selected="false">Bestimmen</button>
+  </nav>
+  <div class="pane" id="paneExplore" role="tabpanel" aria-labelledby="tabBtnExplore">
   <div class="panel-head" id="panelHead">
     <div>
       <div class="eyebrow" id="scope">Kartenausschnitt</div>
@@ -319,6 +368,57 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
       <li><a href="https://my.plantnet.org/" target="_blank" rel="noopener">Pl@ntNet</a> – Pflanzenbestimmung per Foto. The image-based plant species identification service used, is based on the Pl@ntNet recognition API, regularly updated and accessible through the site https://my.plantnet.org/</li>
     </ul>
   </details>
+  </div>
+
+  <!-- Bestimmungsschlüssel: Kategorie → Gruppe → Merkmal → Zeit → Ort, Ergebnis live aus iNaturalist -->
+  <div class="pane" id="paneKey" role="tabpanel" aria-labelledby="tabBtnKey" hidden>
+    <div class="key-head" id="keyHead">
+      <div class="eyebrow">Bestimmungsschlüssel</div>
+      <p class="place">Was hast du gesehen?</p>
+      <div class="where" id="keyWhere"></div>
+    </div>
+    <div class="key-body" id="keyBody">
+      <ol class="steps">
+        <li class="step" id="stCat">
+          <h4><b>1</b>Was ist es?<span class="sel" id="selCat"></span></h4>
+          <div class="cats" id="kCat"></div>
+        </li>
+        <li class="step" id="stSub" aria-disabled="true">
+          <h4><b>2</b>Welche Gruppe?<span class="sel" id="selSub"></span></h4>
+          <div class="chips" id="kSub"><span class="hint">Erst oben eine Kategorie wählen.</span></div>
+        </li>
+        <li class="step" id="stTrait" aria-disabled="true">
+          <h4><b>3</b>Was fällt auf?<span class="sel" id="selTrait"></span></h4>
+          <div id="kTrait"><span class="hint">Merkmale kommen aus iNaturalist, passend zur Gruppe.</span></div>
+        </li>
+        <li class="step" id="stWhen" aria-disabled="true">
+          <h4><b>4</b>Wann im Jahr?<span class="sel" id="selWhen"></span></h4>
+          <div class="chips" id="kWhen"></div>
+        </li>
+        <li class="step" id="stHour" aria-disabled="true">
+          <h4><b>5</b>Zu welcher Tageszeit?<span class="sel" id="selHour"></span></h4>
+          <div class="chips" id="kHour"></div>
+        </li>
+        <li class="step" id="stWhere" aria-disabled="true">
+          <h4><b>6</b>Wo? Umkreis um die Kartenmitte<span class="sel" id="selWhere"></span></h4>
+          <div class="chips" id="kRadius"></div>
+          <div class="checks">
+            <label><input type="checkbox" id="kResearch" checked> nur bestätigte Bestimmungen</label>
+            <label><input type="checkbox" id="kThreat"> nur gefährdete Arten</label>
+          </div>
+        </li>
+      </ol>
+      <section class="key-res" id="keyRes" hidden>
+        <header class="key-res-head">
+          <h3>Passende Arten</h3><span class="total" id="kTotal"></span>
+          <button class="linkbtn" id="kReset">Neu anfangen</button>
+        </header>
+        <p class="note" id="kSummary"></p>
+        <div class="grid" id="kGrid"></div>
+        <button class="btn more" id="kMore" hidden>Weitere Arten laden</button>
+      </section>
+    </div>
+  </div>
 
   <section class="detail" id="detail" hidden aria-live="polite">
     <div class="detail-bar">
@@ -412,7 +512,7 @@ const KINGDOM_COLOR = { Plantae:"var(--plantae)", Fungi:"var(--fungi)" }; // son
 const RANK_DE = { kingdom:"Reich", phylum:"Stamm", subphylum:"Unterstamm", class:"Klasse", subclass:"Unterklasse", order:"Ordnung", suborder:"Unterordnung", superfamily:"Überfamilie", family:"Familie", subfamily:"Unterfamilie", tribe:"Tribus", genus:"Gattung", species:"Art", subspecies:"Unterart", variety:"Varietät" };
 const IUCN = { 10:["LC","Nicht gefährdet","#86b86f"], 20:["NT","Potenziell gefährdet","#c5c45a"], 30:["VU","Gefährdet","#e7ad4f"], 40:["EN","Stark gefährdet","#e0794a"], 50:["CR","Vom Aussterben bedroht","#e04a4a"], 60:["EW","In der Natur ausgestorben","#b07cc0"], 70:["EX","Ausgestorben","#9a9a9a"] };
 
-const state = { group:"all", research:true, lastQuery:null, abort:null, selectedTaxon:null };
+const state = { tab:"explore", group:"all", research:true, lastQuery:null, abort:null, selectedTaxon:null };
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, m => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
 const fmt = n => new Intl.NumberFormat("de-DE").format(n ?? 0);
@@ -426,14 +526,18 @@ async function getJSON(url, signal){
 }
 
 /* ---------------- Karte / Globus ---------------- */
+/* Startansicht: Pinnow bei Schwerin, Umkreis 100 km (radiusKm() ergibt bei diesem Zoom 100) */
+const HOME = { name:"Pinnow (Mecklenburg)", center:[11.548, 53.603], km:100 };
+HOME.zoom = 1 + Math.log2(9000 / HOME.km);
+
 const SAT_TILES = "https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2020_3857/default/g/{z}/{y}/{x}.jpg";
 const GBIF_DENSITY = "https://api.gbif.org/v2/map/occurrence/density/{z}/{x}/{y}@1x.png?style=green.poly&bin=hex&hexPerTile=40";
 
 const map = new maplibregl.Map({
   container: "map",
   style: "https://tiles.openfreemap.org/styles/liberty",
-  center: [11.46, 53.9],
-  zoom: 1.6,
+  center: HOME.center,
+  zoom: HOME.zoom,
   attributionControl: { compact: true }
 });
 map.addControl(new maplibregl.NavigationControl({ visualizePitch:true }), "bottom-right");
@@ -532,7 +636,7 @@ const PAGE = 50, MAX_RANK = 10000 /* iNaturalist liefert höchstens 10.000 Ergeb
 let ctx = null;   // aktuelle Abfrage: Parameter, Seiten-Cache, Stufen
 
 let loadTimer;
-function scheduleLoad(ms){ clearTimeout(loadTimer); loadTimer = setTimeout(() => { loadSpecies(); loadPlaceName(); }, ms); }
+function scheduleLoad(ms){ clearTimeout(loadTimer); loadTimer = setTimeout(() => { state.tab === "key" ? runKey() : loadSpecies(); loadPlaceName(); }, ms); }
 
 function cardHTML({count, taxon:t}){
   const img = photo(t.default_photo?.square_url, "small");
@@ -670,6 +774,7 @@ async function loadPlaceName(){
   }catch(err){
     if (err.name !== "AbortError"){ $("#place").textContent = "Offenes Meer oder unbenannt"; $("#scope").textContent = "Kartenausschnitt"; }
   }
+  updateKeyWhere();
 }
 
 /* ---------------- Ortssuche ---------------- */
@@ -842,7 +947,7 @@ async function loadLocalCount(t){
   try{
     const c = map.getCenter();
     const p = new URLSearchParams({ taxon_id:t.id, per_page:0 });
-    if (!isGlobal()){ p.set("lat", c.lat); p.set("lng", c.lng); p.set("radius", radiusKm()); }
+    if (state.tab === "key" || !isGlobal()){ p.set("lat", c.lat); p.set("lng", c.lng); p.set("radius", state.tab === "key" ? ks.radius : radiusKm()); }
     const d = await getJSON(`${API.inat}/observations?${p}`);
     $("#localCount").textContent = fmt(d.total_results);
   }catch{ const e = $("#localCount"); if (e) e.textContent = "–"; }
@@ -893,7 +998,7 @@ window.addEventListener("resize", () => { if (isMobile()) document.documentEleme
 // Ziehen am Griff oder am Kopfbereich
 (function enableDrag(){
   let startY = 0, startH = 0, moved = false, active = false;
-  const targets = [$("#handle"), $("#panelHead")];
+  const targets = [$("#handle"), $("#panelHead"), $("#keyHead")];
   const down = e => {
     if (!isMobile()) return;
     if (e.target.closest("button:not(#handle), input, label, a")) return; // Bedienelemente bleiben klickbar
@@ -929,9 +1034,9 @@ window.addEventListener("resize", () => { if (isMobile()) document.documentEleme
 })();
 
 // Beim Scrollen in der Liste klappt das Sheet ganz auf
-$("#list").addEventListener("scroll", () => {
-  if (isMobile() && snap !== "full" && $("#list").scrollTop > 30) setSheet("full");
-}, { passive:true });
+["#list", "#keyBody"].forEach(sel => $(sel).addEventListener("scroll", e => {
+  if (isMobile() && snap !== "full" && e.currentTarget.scrollTop > 30) setSheet("full");
+}, { passive:true }));
 
 // Detailansicht auf dem Handy immer bildschirmfüllend, danach zurück zur vorherigen Höhe
 const _open = openDetail, _close = closeDetail;
@@ -1263,6 +1368,358 @@ async function findInatTaxon(sci){
   const plant = results.find(t => t.iconic_taxon_name === "Plantae" && ["species","subspecies","variety","hybrid"].includes(t.rank));
   return plant?.id || null;
 }
+
+/* ================= Bestimmungsschlüssel (Registerkarte „Bestimmen“) =================
+   Sechs Schritte grenzen die Arten im Umkreis ein. Alles kommt live aus iNaturalist:
+   – Kategorie-Zähler: /observations/iconic_taxa_species_counts
+   – Gruppen: wissenschaftliche Namen, zur Laufzeit über /taxa in iNaturalist-IDs übersetzt
+   – Merkmale: /controlled_terms/for_taxon (Lebensstadium, Blüte, Geschlecht, Spuren …)
+   – Monat & Tageszeit: Beobachtungsdatum und -uhrzeit der Fundmeldungen
+   – Ergebnis: /observations/species_counts, Karte: /grid-Kacheln mit denselben Filtern */
+const KEY_CATS = [
+  { id:"Plantae", tid:47126, label:"Pflanze", c:"var(--plantae)", subs:[
+    ["Korbblütler","Asteraceae"],["Rosengewächse","Rosaceae"],["Süßgräser","Poaceae"],["Doldenblütler","Apiaceae"],
+    ["Lippenblütler","Lamiaceae"],["Hahnenfußgewächse","Ranunculaceae"],["Kreuzblütler","Brassicaceae"],["Hülsenfrüchtler","Fabaceae"],
+    ["Orchideen","Orchidaceae"],["Buchen & Eichen","Fagaceae"],["Birkengewächse","Betulaceae"],["Nadelbäume","Pinales"],["Farne","Polypodiopsida"],["Moose","Bryophyta"]] },
+  { id:"Fungi", tid:47170, label:"Pilz & Flechte", c:"var(--fungi)", subs:[
+    ["Blätterpilze","Agaricales"],["Röhrlinge","Boletales"],["Täublinge & Milchlinge","Russulales"],["Porlinge","Polyporales"],
+    ["Schlauchpilze","Ascomycota"],["Flechten","Lecanoromycetes"]] },
+  { id:"Mammalia", tid:40151, label:"Säugetier", c:"var(--animalia)", subs:[
+    ["Raubtiere","Carnivora"],["Paarhufer","Artiodactyla"],["Nagetiere","Rodentia"],["Fledermäuse","Chiroptera"],
+    ["Igel, Maulwürfe & Spitzmäuse","Eulipotyphla"],["Hasen & Kaninchen","Lagomorpha"]] },
+  { id:"Aves", tid:3, label:"Vogel", c:"var(--animalia)", subs:[
+    ["Singvögel","Passeriformes"],["Greifvögel","Accipitriformes"],["Falken","Falconiformes"],["Eulen","Strigiformes"],
+    ["Enten, Gänse & Schwäne","Anseriformes"],["Spechte","Piciformes"],["Watvögel & Möwen","Charadriiformes"],
+    ["Kraniche & Rallen","Gruiformes"],["Tauben","Columbiformes"],["Reiher & Ibisse","Pelecaniformes"]] },
+  { id:"Amphibia", tid:20978, label:"Amphibie", c:"var(--animalia)", subs:[
+    ["Frösche & Kröten","Anura"],["Molche & Salamander","Caudata"]] },
+  { id:"Reptilia", tid:26036, label:"Reptil", c:"var(--animalia)", subs:[
+    ["Schlangen","Serpentes"],["Eidechsen","Lacertidae"],["Schleichen","Anguidae"],["Schildkröten","Testudines"]] },
+  { id:"Actinopterygii", tid:47178, label:"Fisch", c:"var(--animalia)", subs:[
+    ["Karpfenfische","Cypriniformes"],["Barschartige","Perciformes"],["Lachsfische","Salmoniformes"],["Hechte","Esociformes"],["Stichlinge","Gasterosteidae"]] },
+  { id:"Insecta", tid:47158, label:"Insekt", c:"var(--animalia)", subs:[
+    ["Schmetterlinge","Lepidoptera"],["Käfer","Coleoptera"],["Bienen, Wespen & Ameisen","Hymenoptera"],["Fliegen & Mücken","Diptera"],
+    ["Libellen","Odonata"],["Heuschrecken","Orthoptera"],["Wanzen & Zikaden","Hemiptera"],["Netzflügler","Neuroptera"]] },
+  { id:"Arachnida", tid:47119, label:"Spinnentier", c:"var(--animalia)", subs:[
+    ["Webspinnen","Araneae"],["Weberknechte","Opiliones"],["Milben & Zecken","Acari"]] },
+  { id:"Mollusca", tid:47115, label:"Schnecke & Muschel", c:"var(--animalia)", subs:[
+    ["Schnecken","Gastropoda"],["Muscheln","Bivalvia"]] },
+  { id:"Animalia", tid:1, label:"Anderes Tier", c:"var(--animalia)", subs:[
+    ["Krebstiere","Malacostraca"],["Asseln","Isopoda"],["Tausendfüßer","Diplopoda"],["Hundertfüßer","Chilopoda"],["Ringelwürmer","Annelida"]] }
+];
+// Merkmalsnamen deutsch (nach englischem Label der API; unbekannte bleiben englisch)
+const TERM_DE = { "Life Stage":"Lebensstadium", "Sex":"Geschlecht", "Plant Phenology":"Blüte & Frucht", "Flowers and Fruits":"Blüte & Frucht",
+  "Alive or Dead":"Lebend oder tot", "Evidence of Presence":"Nachweis", "Leaves":"Blätter", "Established":"Ansiedlung" };
+const VALUE_DE = { "Adult":"Erwachsen", "Teneral":"Frisch geschlüpft", "Pupa":"Puppe", "Nymph":"Nymphe", "Larva":"Larve / Raupe", "Egg":"Ei",
+  "Juvenile":"Jungtier", "Subimago":"Subimago", "Female":"Weiblich", "Male":"Männlich", "Flowering":"Blühend", "Flowers":"Blühend",
+  "Fruiting":"Mit Früchten", "Fruits or Seeds":"Mit Früchten / Samen", "Flower Budding":"Mit Blütenknospen", "Flower Buds":"Mit Blütenknospen",
+  "No Evidence of Flowering":"Ohne Blüten", "No Flowers or Fruits":"Ohne Blüten & Früchte", "Alive":"Lebend", "Dead":"Tot",
+  "Feather":"Feder", "Organism":"Das Lebewesen selbst", "Scat":"Kot", "Track":"Spur / Fährte", "Bone":"Knochen", "Molt":"Häutung",
+  "Hair":"Haare", "Leafmine":"Blattmine", "Construction":"Bau / Nest / Gespinst", "Gall":"Galle",
+  "Breaking Leaf Buds":"Austreibende Knospen", "Green Leaves":"Grüne Blätter", "Colored Leaves":"Verfärbte Blätter", "No Live Leaves":"Keine lebenden Blätter" };
+const HIDE_VALUES = new Set(["Cannot Be Determined", "Cannot be determined"]);
+const HIDE_TERMS = new Set(["Established"]);
+// Fallback, falls /controlled_terms nicht erreichbar ist (IDs der iNaturalist-Merkmale)
+const TERMS_FALLBACK = {
+  life:{ id:1, label:"Life Stage", values:[[2,"Adult"],[6,"Larva"],[4,"Pupa"],[5,"Nymph"],[7,"Egg"],[8,"Juvenile"]] },
+  sex:{ id:9, label:"Sex", values:[[10,"Female"],[11,"Male"]] },
+  phen:{ id:12, label:"Plant Phenology", values:[[13,"Flowering"],[14,"Fruiting"],[15,"Flower Budding"],[21,"No Evidence of Flowering"]] },
+  leaves:{ id:36, label:"Leaves", values:[[37,"Breaking Leaf Buds"],[38,"Green Leaves"],[39,"Colored Leaves"],[40,"No Live Leaves"]] },
+  evid:{ id:22, label:"Evidence of Presence", values:[[24,"Organism"],[26,"Track"],[25,"Scat"],[23,"Feather"],[27,"Bone"],[28,"Molt"],[30,"Hair"],[32,"Construction"],[31,"Leafmine"],[35,"Gall"]] }
+};
+const FALLBACK_BY_CAT = { Plantae:["phen","leaves"], Fungi:[], Mammalia:["evid","sex","life"], Aves:["sex","life","evid"], Amphibia:["life","sex"],
+  Reptilia:["life","sex","evid"], Actinopterygii:["life"], Insecta:["life","sex","evid"], Arachnida:["life","sex"], Mollusca:["life","evid"], Animalia:["life","evid"] };
+
+const MONTH_DE = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+const NOW_M = new Date().getMonth() + 1;
+const KEY_WHEN = [
+  { id:"any", label:"Ganzjährig", m:null },
+  { id:"now", label:`Jetzt (${MONTH_DE[NOW_M-1]})`, m:[NOW_M] },
+  { id:"spr", label:"Frühling", m:[3,4,5] },
+  { id:"sum", label:"Sommer", m:[6,7,8] },
+  { id:"aut", label:"Herbst", m:[9,10,11] },
+  { id:"win", label:"Winter", m:[12,1,2] }
+];
+const KEY_HOUR = [
+  { id:"any", label:"Egal", h:null },
+  { id:"morn", label:"Morgens", h:[5,6,7,8,9] },
+  { id:"day", label:"Tagsüber", h:[10,11,12,13,14,15,16] },
+  { id:"eve", label:"Abends", h:[17,18,19,20,21] },
+  { id:"night", label:"Nachts", h:[22,23,0,1,2,3,4] }
+];
+const KEY_RADIUS = [5, 10, 25, 50, 100];
+const KEY_PAGE = 24;
+
+const ks = { cat:null, sub:null, term:null, when:"any", hour:"any", radius:HOME.km, research:true, threat:false,
+             lastKey:null, abort:null, page:0, total:0, taxonIds:new Map(), terms:new Map(), catCountsKey:null };
+
+const catOf = () => KEY_CATS.find(c => c.id === ks.cat);
+const pressed = (b, on) => b.setAttribute("aria-pressed", on);
+
+/* --- Registerkarten --- */
+function setTab(name){
+  if (state.tab === name) return;
+  state.tab = name;
+  $("#tabBtnExplore").setAttribute("aria-selected", name === "explore");
+  $("#tabBtnKey").setAttribute("aria-selected", name === "key");
+  $("#paneExplore").hidden = name !== "explore";
+  $("#paneKey").hidden = name !== "key";
+  if ($("#detail").hidden === false) closeDetail();
+  if (name === "key"){
+    setAreaCircle();
+    setKeyOverlay();
+    runKey();
+  } else {
+    setKeyOverlay(true);
+    state.lastQuery = null;      // Kreis & Liste für den Zoom-Radius neu aufbauen
+    loadSpecies();
+  }
+}
+$("#tabBtnExplore").onclick = () => setTab("explore");
+$("#tabBtnKey").onclick = () => setTab("key");
+$(".tabs").addEventListener("keydown", e => {
+  if (e.key === "ArrowRight" || e.key === "ArrowLeft"){ const n = state.tab === "key" ? "explore" : "key"; setTab(n); $(n === "key" ? "#tabBtnKey" : "#tabBtnExplore").focus(); }
+});
+
+/* --- Aufbau der Bedienelemente --- */
+$("#kCat").innerHTML = KEY_CATS.map(c =>
+  `<button class="cat" style="--c:${c.c}" data-cat="${c.id}" aria-pressed="false"><i></i><span class="n">${c.label}</span><span class="c" id="cc-${c.id}"></span></button>`).join("");
+const chipRow = (list, cur, attr) => list.map(x => `<button class="chip" data-${attr}="${x.id}" aria-pressed="${x.id === cur}">${x.label}</button>`).join("");
+$("#kWhen").innerHTML = chipRow(KEY_WHEN, ks.when, "when");
+$("#kHour").innerHTML = chipRow(KEY_HOUR, ks.hour, "hour");
+$("#kRadius").innerHTML = KEY_RADIUS.map(r => `<button class="chip" data-r="${r}" aria-pressed="${r === ks.radius}">${r} km</button>`).join("");
+
+$("#kCat").onclick = e => {
+  const b = e.target.closest(".cat"); if (!b) return;
+  const same = ks.cat === b.dataset.cat;
+  ks.cat = same ? null : b.dataset.cat;
+  ks.sub = null; ks.term = null;
+  document.querySelectorAll("#kCat .cat").forEach(x => pressed(x, x === b && !same));
+  renderSubs(); loadTraits(); refreshSteps(); runKey();
+  if (ks.cat) $("#stSub").scrollIntoView({ block:"nearest", behavior:"smooth" });
+};
+$("#kSub").onclick = async e => {
+  const b = e.target.closest(".chip[data-sub]"); if (!b) return;
+  const sci = b.dataset.sub;
+  if (sci === "" || ks.sub?.sci === sci){ ks.sub = null; }
+  else {
+    const label = b.dataset.label;
+    b.disabled = true;
+    try{
+      const id = await resolveTaxon(sci);
+      if (!id){ b.disabled = false; b.title = "Bei iNaturalist nicht gefunden"; b.style.opacity = .4; return; }
+      ks.sub = { sci, id, label };
+    }catch{ b.disabled = false; return; }
+    b.disabled = false;
+  }
+  ks.term = null;
+  document.querySelectorAll("#kSub .chip").forEach(x => pressed(x, ks.sub ? x.dataset.sub === ks.sub.sci : x.dataset.sub === ""));
+  loadTraits(); refreshSteps(); runKey();
+};
+$("#kTrait").onclick = e => {
+  const b = e.target.closest(".chip[data-term]"); if (!b) return;
+  const t = +b.dataset.term, v = +b.dataset.val;
+  ks.term = (ks.term && ks.term.t === t && ks.term.v === v) ? null : { t, v, label:b.dataset.label, tl:b.dataset.tl };
+  document.querySelectorAll("#kTrait .chip").forEach(x => pressed(x, !!ks.term && +x.dataset.term === ks.term.t && +x.dataset.val === ks.term.v));
+  refreshSteps(); runKey();
+};
+$("#kWhen").onclick = e => { const b = e.target.closest(".chip"); if (!b) return; ks.when = b.dataset.when; document.querySelectorAll("#kWhen .chip").forEach(x => pressed(x, x === b)); refreshSteps(); runKey(); };
+$("#kHour").onclick = e => { const b = e.target.closest(".chip"); if (!b) return; ks.hour = b.dataset.hour; document.querySelectorAll("#kHour .chip").forEach(x => pressed(x, x === b)); refreshSteps(); runKey(); };
+$("#kRadius").onclick = e => {
+  const b = e.target.closest(".chip"); if (!b) return;
+  ks.radius = +b.dataset.r;
+  document.querySelectorAll("#kRadius .chip").forEach(x => pressed(x, x === b));
+  refreshSteps(); fitToRadius(); runKey();
+};
+$("#kResearch").onchange = e => { ks.research = e.target.checked; runKey(); };
+$("#kThreat").onchange = e => { ks.threat = e.target.checked; refreshSteps(); runKey(); };
+$("#kReset").onclick = () => {
+  Object.assign(ks, { cat:null, sub:null, term:null, when:"any", hour:"any", threat:false });
+  $("#kThreat").checked = false;
+  document.querySelectorAll("#kCat .cat").forEach(x => pressed(x, false));
+  document.querySelectorAll("#kWhen .chip").forEach(x => pressed(x, x.dataset.when === "any"));
+  document.querySelectorAll("#kHour .chip").forEach(x => pressed(x, x.dataset.hour === "any"));
+  renderSubs(); loadTraits(); refreshSteps(); runKey();
+  $("#keyBody").scrollTo({ top:0, behavior:"smooth" });
+};
+$("#kGrid").onclick = e => { const c = e.target.closest(".card"); if (c?.dataset.id) openDetail(+c.dataset.id); };
+$("#kMore").onclick = () => loadKeyPage(true);
+
+function renderSubs(){
+  const c = catOf();
+  $("#kSub").innerHTML = !c ? `<span class="hint">Erst oben eine Kategorie wählen.</span>` :
+    `<button class="chip" data-sub="" aria-pressed="true">Alle</button>` +
+    c.subs.map(([label, sci]) => `<button class="chip" data-sub="${esc(sci)}" data-label="${esc(label)}" aria-pressed="false" title="${esc(sci)}">${esc(label)}</button>`).join("");
+}
+
+/* Wissenschaftlicher Name → iNaturalist-Taxon-ID (zwischengespeichert für diese Sitzung) */
+async function resolveTaxon(sci){
+  if (ks.taxonIds.has(sci)) return ks.taxonIds.get(sci);
+  const p = new URLSearchParams({ q:sci, is_active:"true", per_page:"10" });
+  const { results = [] } = await getJSON(`${API.inat}/taxa?${p}`);
+  const hit = results.find(t => t.name.toLowerCase() === sci.toLowerCase());
+  const id = hit?.id || null;
+  ks.taxonIds.set(sci, id);
+  return id;
+}
+
+/* Merkmale passend zur gewählten Gruppe */
+let traitsReq = 0;
+async function loadTraits(){
+  const c = catOf(), box = $("#kTrait"), my = ++traitsReq;
+  if (!c){ box.innerHTML = `<span class="hint">Merkmale kommen aus iNaturalist, passend zur Gruppe.</span>`; return; }
+  const tid = ks.sub?.id || c.tid;
+  box.innerHTML = `<span class="hint">Merkmale werden geladen …</span>`;
+  let terms = ks.terms.get(tid);
+  if (!terms){
+    try{
+      const d = await getJSON(`${API.inat}/controlled_terms/for_taxon?taxon_id=${tid}`);
+      terms = (d.results || []).map(t => ({ id:t.id, label:t.label, values:(t.values || []).map(v => [v.id, v.label]) }));
+    }catch{
+      terms = (FALLBACK_BY_CAT[c.id] || []).map(k => TERMS_FALLBACK[k]);
+    }
+    ks.terms.set(tid, terms);
+  }
+  if (my !== traitsReq) return;
+  terms = terms.filter(t => !HIDE_TERMS.has(t.label));
+  if (!terms.length){ box.innerHTML = `<span class="hint">Für diese Gruppe gibt es bei iNaturalist keine erfassten Merkmale. Weiter mit Schritt 4.</span>`; return; }
+  box.innerHTML = terms.map(t => {
+    const tl = TERM_DE[t.label] || t.label;
+    return `<div class="trait"><span class="trait-label">${esc(tl)}</span><div class="chips">${
+      t.values.filter(([, l]) => !HIDE_VALUES.has(l)).map(([id, l]) => {
+        const vl = VALUE_DE[l] || l;
+        const on = ks.term && ks.term.t === t.id && ks.term.v === id;
+        return `<button class="chip" data-term="${t.id}" data-val="${id}" data-label="${esc(vl)}" data-tl="${esc(tl)}" aria-pressed="${!!on}">${esc(vl)}</button>`;
+      }).join("")}</div></div>`;
+  }).join("") + `<p class="note">Ein Merkmal ist wählbar. Es zählt nur, wenn Beobachter es bei iNaturalist eingetragen haben – das grenzt stark ein.</p>`;
+}
+
+function refreshSteps(){
+  const c = catOf(), on = !!c;
+  ["#stSub","#stTrait","#stWhen","#stHour","#stWhere"].forEach(s => $(s).setAttribute("aria-disabled", !on));
+  $("#stCat").classList.toggle("done", on);
+  $("#stSub").classList.toggle("done", !!ks.sub);
+  $("#stTrait").classList.toggle("done", !!ks.term);
+  $("#stWhen").classList.toggle("done", on && ks.when !== "any");
+  $("#stHour").classList.toggle("done", on && ks.hour !== "any");
+  $("#stWhere").classList.toggle("done", on);
+  $("#selCat").textContent = c?.label || "";
+  $("#selSub").textContent = ks.sub?.label || (on ? "alle" : "");
+  $("#selTrait").textContent = ks.term ? `${ks.term.tl}: ${ks.term.label}` : "";
+  $("#selWhen").textContent = on ? KEY_WHEN.find(x => x.id === ks.when).label : "";
+  $("#selHour").textContent = on && ks.hour !== "any" ? KEY_HOUR.find(x => x.id === ks.hour).label : "";
+  $("#selWhere").textContent = `${ks.radius} km`;
+}
+
+/* --- Abfrage --- */
+function keyParams(withTaxon){
+  const ctr = map.getCenter(), c = catOf();
+  const p = new URLSearchParams({ lat:ctr.lat.toFixed(4), lng:ctr.lng.toFixed(4), radius:ks.radius });
+  if (ks.research) p.set("quality_grade", "research");
+  if (ks.threat) p.set("threatened", "true");
+  const w = KEY_WHEN.find(x => x.id === ks.when).m; if (w) p.set("month", w.join(","));
+  const h = KEY_HOUR.find(x => x.id === ks.hour).h; if (h) p.set("hour", h.join(","));
+  if (withTaxon && c){
+    if (ks.sub) p.set("taxon_id", ks.sub.id); else p.set("iconic_taxa", c.id);
+    if (ks.term){ p.set("term_id", ks.term.t); p.set("term_value_id", ks.term.v); }
+  }
+  return p;
+}
+
+function setAreaCircle(){
+  const c = map.getCenter();
+  map.getSource("area")?.setData(circle(c.lng, c.lat, ks.radius));
+}
+function fitToRadius(){
+  const c = map.getCenter(), dLat = ks.radius / 111.32, dLng = ks.radius / (111.32 * Math.cos(c.lat * Math.PI / 180));
+  map.fitBounds([[c.lng - dLng, c.lat - dLat], [c.lng + dLng, c.lat + dLat]], { padding:40, duration:900 });
+}
+function updateKeyWhere(){
+  const place = $("#place").textContent;
+  $("#keyWhere").textContent = `Umkreis ${ks.radius} km um ${place && place !== "Die ganze Welt" ? place : "die Kartenmitte"}`;
+}
+
+/* Beobachtungen der aktuellen Auswahl als Raster auf dem Globus */
+function setKeyOverlay(remove){
+  if (map.getLayer("keyobs")) map.removeLayer("keyobs");
+  if (map.getSource("keyobs")) map.removeSource("keyobs");
+  if (remove || state.tab !== "key" || !ks.cat || !map.isStyleLoaded()) return;
+  const p = keyParams(true); p.set("color", "#e7ad4f");
+  map.addSource("keyobs", { type:"raster", tileSize:256, tiles:[`${API.inat}/grid/{z}/{x}/{y}.png?${p}`],
+    attribution:'<a href="https://www.inaturalist.org" target="_blank">iNaturalist</a>' });
+  map.addLayer({ id:"keyobs", type:"raster", source:"keyobs", paint:{ "raster-opacity":0.85 } });
+}
+
+let keyTimer;
+function runKey(){ clearTimeout(keyTimer); keyTimer = setTimeout(doRunKey, 350); }
+async function doRunKey(){
+  if (state.tab !== "key") return;
+  setAreaCircle(); updateKeyWhere(); refreshSteps();
+  loadCatCounts();
+  const key = keyParams(true).toString() + "|" + ks.cat;
+  if (key === ks.lastKey) return;
+  ks.lastKey = key;
+  setKeyOverlay();
+  if (!ks.cat){ $("#keyRes").hidden = true; return; }
+  $("#keyRes").hidden = false;
+  ks.page = 0;
+  await loadKeyPage(false);
+}
+
+async function loadKeyPage(append){
+  ks.abort?.abort(); ks.abort = new AbortController();
+  const signal = ks.abort.signal, grid = $("#kGrid"), more = $("#kMore");
+  const p = keyParams(true);
+  p.set("locale", "de"); p.set("preferred_place_id", "7207");
+  p.set("per_page", KEY_PAGE); p.set("page", ks.page + 1);
+  if (!append){ grid.innerHTML = skeletons(6); $("#kTotal").textContent = ""; more.hidden = true; }
+  else { more.disabled = true; more.textContent = "Lädt …"; }
+  $("#kSummary").textContent = summaryText();
+  try{
+    const d = await getJSON(`${API.inat}/observations/species_counts?${p}`, signal);
+    ks.page++; ks.total = d.total_results;
+    $("#kTotal").textContent = `${fmt(d.total_results)} Art${d.total_results === 1 ? "" : "en"}`;
+    const html = d.results.map(r => cardHTML(r).replace(/ Beobachtung(en)? hier/, m => m.replace(" hier", " passend"))).join("");
+    if (!append) grid.innerHTML = html || `<div class="state" style="grid-column:1/-1">Keine Art passt auf diese Auswahl. Lass ein Merkmal weg, wähle „Ganzjährig“ oder vergrößere den Umkreis.</div>`;
+    else grid.insertAdjacentHTML("beforeend", html);
+    const shown = Math.min(ks.page * KEY_PAGE, d.total_results);
+    more.hidden = shown >= Math.min(d.total_results, MAX_RANK) || !d.results.length;
+    more.disabled = false; more.textContent = `Weitere Arten laden · noch ${fmt(d.total_results - shown)}`;
+  }catch(err){
+    if (err.name === "AbortError") return;
+    ks.lastKey = null;
+    if (!append) grid.innerHTML = `<div class="state" style="grid-column:1/-1">Arten konnten nicht geladen werden (${esc(err.message)}).</div>`;
+    else { more.disabled = false; more.textContent = "Laden fehlgeschlagen – erneut versuchen"; }
+  }
+}
+
+function summaryText(){
+  const parts = [catOf()?.label, ks.sub?.label, ks.term ? `${ks.term.tl.toLowerCase()} ${ks.term.label.toLowerCase()}` : null,
+    ks.when !== "any" ? KEY_WHEN.find(x => x.id === ks.when).label.toLowerCase() : null,
+    ks.hour !== "any" ? KEY_HOUR.find(x => x.id === ks.hour).label.toLowerCase() : null,
+    ks.threat ? "gefährdet" : null].filter(Boolean);
+  return `${parts.join(" · ")} – im Umkreis von ${ks.radius} km, sortiert nach Häufigkeit der passenden Beobachtungen. Das oberste Ergebnis ist am wahrscheinlichsten.`;
+}
+
+/* Artenzahl je Kategorie im Umkreis (eine Anfrage für alle Kacheln) */
+let catAbort;
+async function loadCatCounts(){
+  const p = keyParams(false), key = p.toString();
+  if (key === ks.catCountsKey) return;
+  ks.catCountsKey = key;
+  catAbort?.abort(); catAbort = new AbortController();
+  KEY_CATS.forEach(c => { const el = $(`#cc-${c.id}`); if (el) el.textContent = "…"; });
+  try{
+    const d = await getJSON(`${API.inat}/observations/iconic_taxa_species_counts?${p}`, catAbort.signal);
+    const by = Object.fromEntries((d.results || []).map(r => [r.taxon?.name, r.count]));
+    KEY_CATS.forEach(c => { const el = $(`#cc-${c.id}`); if (el) el.textContent = by[c.id] != null ? `${fmt(by[c.id])} Arten hier` : "keine hier"; });
+  }catch(err){
+    if (err.name === "AbortError") return;
+    ks.catCountsKey = null;
+    KEY_CATS.forEach(c => { const el = $(`#cc-${c.id}`); if (el) el.textContent = ""; });
+  }
+}
+refreshSteps();
 
 updateFilterLabel();
 applyLayout();

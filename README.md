@@ -123,3 +123,16 @@ Danach die Seite neu laden.
 *The image-based plant species identification service used, is based on the Pl@ntNet recognition API, regularly updated and accessible through the site https://my.plantnet.org/*
 
 Für eine kommerzielle Nutzung müssten iNaturalist, Pl@ntNet und das Satellitenbild ersetzt oder gesondert geklärt werden.
+
+## Registerkarte „Bestimmen“
+
+Ein Bestimmungsschlüssel in sechs Schritten, alles live aus iNaturalist:
+
+1. **Was ist es?** – Pflanze, Pilz, Säugetier, Vogel, Amphibie, Reptil, Fisch, Insekt, Spinnentier, Weichtier oder anderes Tier (mit Artenzahl im Umkreis)
+2. **Welche Gruppe?** – z. B. Frösche & Kröten, Korbblütler, Greifvögel (Name wird zur Laufzeit in eine iNaturalist-ID übersetzt)
+3. **Was fällt auf?** – Merkmale aus `/controlled_terms/for_taxon`: Lebensstadium, Blüte & Frucht, Geschlecht, Spuren …
+4. **Wann im Jahr?** – Monat der Beobachtungen
+5. **Tageszeit** – Uhrzeit der Beobachtungen
+6. **Wo?** – Umkreis 5–100 km um die Kartenmitte, optional nur gefährdete Arten
+
+Das Ergebnis sind die passenden Arten, sortiert nach Anzahl passender Beobachtungen; die Karte zeigt, wo diese Beobachtungen liegen. Startansicht ist Pinnow (Mecklenburg) mit 100 km Umkreis.
