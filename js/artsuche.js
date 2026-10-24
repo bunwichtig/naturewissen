@@ -3,7 +3,15 @@
 import { esc, debounce, photoSize, freePhoto, commonName, groupColor } from "./util.js";
 import { inat, INAT_DE, PRIO, isAbort } from "./api.js";
 
-const RANK_DE = { kingdom:"Reich", phylum:"Stamm", class:"Klasse", order:"Ordnung", family:"Familie", genus:"Gattung", species:"Art", subspecies:"Unterart", variety:"Varietät", hybrid:"Hybride" };
+const RANK_DE = { kingdom:"Reich", phylum:"Stamm", subphylum:"Unterstamm", class:"Klasse", subclass:"Unterklasse", superorder:"Überordnung", order:"Ordnung",
+  suborder:"Unterordnung", infraorder:"Teilordnung", superfamily:"Überfamilie", family:"Familie", subfamily:"Unterfamilie", tribe:"Tribus",
+  genus:"Gattung", subgenus:"Untergattung", section:"Sektion", complex:"Artkomplex", species:"Art", subspecies:"Unterart", variety:"Varietät", hybrid:"Hybride" };
+
+// Reihenfolge: Name beginnt mit dem Gesuchten vor allem anderen, dann Arten vor höheren Gruppen, dann häufig beobachtet
+const score = (t, q) => {
+  const n = commonName(t).toLowerCase(), s = t.name.toLowerCase(); q = q.toLowerCase();
+  return (n === q || s === q ? 0 : n.startsWith(q) || s.startsWith(q) ? 1 : 2) * 10 + (["species","subspecies","variety","hybrid"].includes(t.rank) ? 0 : 1);
+};
 
 export function initArtsuche(openDetail){
   for (const form of document.querySelectorAll("form.taxsearch")){
@@ -24,9 +32,10 @@ export function initArtsuche(openDetail){
       if (q.length < 2){ box.hidden = true; return; }
       abort?.abort(); abort = new AbortController();
       try{
-        const d = await inat("/taxa/autocomplete", { q, per_page:8, is_active:"true", ...INAT_DE }, { signal:abort.signal, prio:PRIO.high });
+        const d = await inat("/taxa/autocomplete", { q, per_page:12, is_active:"true", ...INAT_DE }, { signal:abort.signal, prio:PRIO.high });
         if (input.value.trim() !== q) return;
-        list = d.results || []; active = -1; render();
+        list = (d.results || []).map((t, i) => [t, i]).sort((a, b) => score(a[0], q) - score(b[0], q) || a[1] - b[1]).map(x => x[0]).slice(0, 8);
+        active = -1; render();
       }catch(err){ if (!isAbort(err)){ box.innerHTML = `<li class="muted">Die Suche ist gerade nicht erreichbar.</li>`; box.hidden = false; } }
     }, 300);
     const pick = i => {
