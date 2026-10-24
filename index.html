@@ -229,7 +229,7 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
   .pill{padding:6px 10px;font-size:12px}
   .loc-row{flex:1 1 auto;min-width:0}
   .loc{padding:4px 10px 4px 4px}
-  .loc-txt span{display:none}
+  .loc-txt span{font-size:10px;overflow:hidden;text-overflow:ellipsis}
   .loc-dock{bottom:min(calc(var(--sheet-h) + 12px),calc(100% - 160px));padding:0 64px}
   .maplibregl-ctrl-bottom-right{bottom:calc(var(--sheet-h) + 4px)}
   .maplibregl-ctrl-bottom-left,.maplibregl-ctrl-bottom-right .maplibregl-ctrl-attrib{display:none}
@@ -448,7 +448,7 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
   </nav>
   <div class="pane" id="paneExplore" role="tabpanel" aria-labelledby="tabBtnExplore">
   <div class="panel-head" id="panelHead">
-    <div>
+    <div class="here" hidden>   <!-- Ort steht nur noch in der Ortsanzeige auf der Karte -->
       <div class="eyebrow" id="scope">Kartenausschnitt</div>
       <p class="place" id="place">Die ganze Welt</p>
       <div class="where" id="where"></div>
@@ -485,7 +485,7 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
     <div class="key-head" id="comboHead">
       <div class="eyebrow">Kombiniert aus iNaturalist &amp; GBIF</div>
       <p class="place">Was lebt hier wirklich?</p>
-      <div class="where" id="cWhere"></div>
+      <div class="where" id="cWhere" hidden></div>
     </div>
     <div class="key-body" id="comboBody">
       <div class="combo-top">
@@ -506,7 +506,7 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
     <div class="key-head" id="keyHead">
       <div class="eyebrow">Bestimmungsschlüssel</div>
       <p class="place">Was hast du gesehen?</p>
-      <div class="where" id="keyWhere"></div>
+      <div class="where" id="keyWhere" hidden></div>
     </div>
     <div class="key-body" id="keyBody">
       <ol class="steps">
@@ -555,7 +555,7 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
     <div class="key-head" id="lookHead">
       <div class="eyebrow">Bestimmen nach Aussehen</div>
       <p class="place">Wie sah es aus?</p>
-      <div class="where" id="lookWhere"></div>
+      <div class="where" id="lookWhere" hidden></div>
     </div>
     <div class="key-body" id="lookBody">
       <div id="lookForm"></div>
@@ -760,9 +760,21 @@ $("#locFold").onclick = () => { locPref.fold = !locPref.fold; applyLoc(); };
 $("#locMove").onclick = () => { locPref.top = !locPref.top; applyLoc(); };
 applyLoc();
 
+/* Umkreis des aktiven Reiters */
+function currentRadius(){
+  if (state.tab === "key" || state.tab === "look") return ks.radius;
+  if (state.tab === "combo") return Math.min(radiusKm(), 250);
+  return isGlobal() && !state.pin ? null : radiusKm();
+}
 function updateReadout(){
-  const c = searchCenter();
-  $("#readout").textContent = `${c.lat.toFixed(3)}° ${c.lat>=0?"N":"S"} · ${c.lng.toFixed(3)}° ${c.lng>=0?"O":"W"}${state.pin ? " · festgesetzt" : ` · Zoom ${map.getZoom().toFixed(1)}`}`;
+  const c = searchCenter(), r = currentRadius();
+  let region = $("#scope").textContent;
+  if (["Kartenausschnitt","Globus"].includes(region)) region = "";
+  const small = isMobile();   // Handy: nur Umkreis und Bundesland, eine Zeile
+  $("#readout").textContent = [r ? `Umkreis ${fmt(r)} km` : "weltweit",
+    small ? region.split(" · ")[0] : region,
+    small ? null : `${c.lat.toFixed(2)}° ${c.lat>=0?"N":"S"}, ${c.lng.toFixed(2)}° ${c.lng>=0?"O":"W"}`,
+    state.pin ? "festgesetzt" : null].filter(Boolean).join(" · ");
 }
 
 function circle(lng, lat, km, steps = 72){
@@ -1279,7 +1291,7 @@ function applyLayout(){
     map.easeTo({ padding:{ top:0, bottom:0, left:0, right:0 }, duration:0 });
   }
 }
-mq.addEventListener("change", applyLayout);
+mq.addEventListener("change", () => { applyLayout(); updateReadout(); });
 window.addEventListener("resize", () => { if (isMobile()) document.documentElement.style.setProperty("--sheet-h", Math.round(SNAPS[snap] * vh()) + "px"); });
 
 // Ziehen am Griff oder am Kopfbereich
@@ -1763,7 +1775,7 @@ $(".tabs").addEventListener("keydown", e => {
   const i = TABS.findIndex(t => t[0] === state.tab), n = TABS[(i + (e.key === "ArrowRight" ? 1 : TABS.length - 1)) % TABS.length];
   setTab(n[0]); $(n[1]).focus();
 });
-function syncRadiusChips(){ document.querySelectorAll("[data-r]").forEach(x => x.setAttribute("aria-pressed", +x.dataset.r === ks.radius)); }
+function syncRadiusChips(){ document.querySelectorAll("[data-r]").forEach(x => x.setAttribute("aria-pressed", +x.dataset.r === ks.radius)); updateReadout(); }
 
 /* --- Aufbau der Bedienelemente --- */
 $("#kCat").innerHTML = KEY_CATS.map(c =>
@@ -1935,6 +1947,7 @@ function fitToRadius(){
 }
 function updateKeyWhere(){
   const place = $("#place").textContent;
+  updateReadout();
   $("#keyWhere").textContent = $("#lookWhere").textContent = `Umkreis ${ks.radius} km um ${place && place !== "Die ganze Welt" ? place : "die Kartenmitte"}`;
 }
 
