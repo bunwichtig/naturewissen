@@ -71,10 +71,18 @@ button,input{font:inherit;color:inherit}
 .pill{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:7px 12px;font-size:13px;cursor:pointer;color:var(--muted)}
 .pill[aria-pressed="true"]{color:var(--night);background:var(--pollen);border-color:var(--pollen)}
 
-/* Koordinaten-Anzeige */
-.readout{position:fixed;left:max(16px,env(safe-area-inset-left,0px));bottom:calc(34px + env(safe-area-inset-bottom,0px));z-index:5;
-  font:12px/1.4 var(--f-data);color:var(--muted);background:rgba(10,15,14,.7);padding:6px 10px;border-radius:8px;font-variant-numeric:tabular-nums}
-.readout b{color:var(--ink);font-weight:500}
+/* Ortsanzeige: schwebt rechts unter der Suche; Pin setzt den Suchort fest */
+.loc-row{flex:1 1 100%;display:flex;justify-content:flex-end;pointer-events:none!important}
+.loc{pointer-events:auto;display:flex;align-items:center;gap:9px;max-width:100%;background:rgba(16,24,22,.88);border:1px solid var(--line);border-radius:12px;padding:5px 12px 5px 5px;
+  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);box-shadow:0 6px 20px rgba(0,0,0,.3)}
+.loc.pinned{border-color:var(--pollen)}
+.pin{flex:0 0 auto;width:32px;height:32px;border-radius:9px;display:grid;place-items:center;background:var(--panel-2);border:1px solid var(--line);color:var(--muted);cursor:pointer;padding:0}
+.pin svg{width:17px;height:17px}
+.pin[aria-pressed="true"]{background:var(--pollen);border-color:var(--pollen);color:var(--night)}
+.loc-txt{display:grid;min-width:0}
+.loc-txt b{font:600 13px/1.2 var(--f-body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.loc-txt span{font:11px/1.3 var(--f-data);color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.pin-mark{width:16px;height:16px;border-radius:50%;background:var(--pollen);border:3px solid var(--night);box-shadow:0 0 0 2px var(--pollen)}
 
 /* Panel */
 .panel{position:fixed;top:0;right:0;bottom:0;width:var(--panel-w);z-index:6;background:var(--panel);border-left:1px solid var(--line);
@@ -156,6 +164,14 @@ button,input{font:inherit;color:inherit}
 .tax .n i{font-family:var(--f-sci)}
 .prose{font-size:14px;line-height:1.6;max-width:65ch;margin:0}
 .actions{display:flex;gap:8px;flex-wrap:wrap}
+.miniglobe{display:grid;grid-template-columns:112px 1fr;gap:14px;align-items:center;width:100%;text-align:left;background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:10px;cursor:pointer;color:var(--ink)}
+.miniglobe:hover{border-color:var(--pollen)}
+.miniglobe[aria-pressed="true"]{border-color:var(--pollen);box-shadow:inset 0 0 0 1px var(--pollen)}
+.mg-map{display:block;width:112px;height:112px;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 35% 30%,#1b2b26,#0a0f0e 70%);pointer-events:none}
+.mg-map .maplibregl-canvas{outline:none}
+.mg-txt{display:grid;gap:3px;font-size:13px;color:var(--muted)}
+.mg-txt b{color:var(--ink);font:600 15px var(--f-body)}
+.mg-txt small{font-size:10px;margin-top:4px}
 .btn{background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:13px;cursor:pointer;text-decoration:none;color:var(--ink)}
 .btn.primary{background:var(--pollen);color:var(--night);border-color:var(--pollen);font-weight:600}
 .placeholder{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
@@ -178,7 +194,9 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
   .search{flex:1;min-width:0}
   .search input{width:100%;padding:7px 12px}
   .pill{padding:6px 10px;font-size:12px}
-  .readout{display:none}
+  .loc-row{flex:1 1 auto;min-width:0}
+  .loc{padding:4px 10px 4px 4px}
+  .loc-txt span{display:none}
   .maplibregl-ctrl-bottom-right{bottom:calc(var(--sheet-h) + 4px)}
   .maplibregl-ctrl-bottom-left,.maplibregl-ctrl-bottom-right .maplibregl-ctrl-attrib{display:none}
 
@@ -207,6 +225,14 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
 .tab small{display:block;font:500 10px/1.2 var(--f-body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
 .chip.empty{opacity:.35;cursor:not-allowed}
 .pane{flex:1;min-height:0;display:flex;flex-direction:column}
+/* Vergrößern: PC halbe Bildschirmbreite, Handy vollflächig */
+.grow{margin-left:auto;align-self:center;width:30px;height:30px;flex:0 0 auto;display:grid;place-items:center;padding:0;border-radius:8px;
+  background:var(--panel-2);border:1px solid var(--line);color:var(--muted);cursor:pointer}
+.grow:hover{color:var(--ink);border-color:var(--pollen)}
+.grow svg{width:15px;height:15px}
+.grow .g-out,.grow[aria-pressed="true"] .g-in{display:none}
+.grow[aria-pressed="true"] .g-out{display:block}
+@media (min-width:821px){ :root.wide{--panel-w:50vw} }
 
 /* Bestimmungsschlüssel */
 .key-head{padding:14px 20px 12px;border-bottom:1px solid var(--line)}
@@ -245,7 +271,8 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
 #lSummary .note{margin:0 0 8px}
 .matchlist{display:flex;gap:4px;flex-wrap:wrap;margin:0 0 8px}
 .matchlist span{font-size:11px;padding:3px 7px;border-radius:4px;background:var(--panel-2);border:1px solid var(--line);color:var(--muted)}
-.key-res-head{position:sticky;top:0;z-index:1;background:var(--panel);display:flex;align-items:center;gap:10px;padding:14px 0 6px}
+.key-body .tier-head{top:0}
+.key-res-head{display:flex;align-items:center;gap:10px;padding:14px 0 6px}
 .key-res-head h3{font:700 17px/1.1 var(--f-display);margin:0}
 .key-res-head .linkbtn{margin-left:auto;font-size:12px;color:var(--muted)}
 #kSummary{margin:0 0 12px}
@@ -258,7 +285,7 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
 
 /* Fotobestimmung (Pl@ntNet): Vollbild-Dialog auf dem Handy, Karte in der Mitte am Desktop */
 /* Kleiner Kamera-Knopf links unten; Beschriftung klappt bei Hover/Fokus aus */
-.idf-fab{position:fixed;z-index:5;left:max(16px,env(safe-area-inset-left,0px));bottom:calc(72px + env(safe-area-inset-bottom,0px));
+.idf-fab{position:fixed;z-index:5;left:max(16px,env(safe-area-inset-left,0px));bottom:calc(34px + env(safe-area-inset-bottom,0px));
   display:inline-flex;align-items:center;height:34px;padding:0 9px;gap:0;border-radius:999px;cursor:pointer;
   background:rgba(16,24,22,.85);border:1px solid var(--line);color:var(--muted);font-size:12px;
   transition:gap .2s,color .2s,border-color .2s}
@@ -334,9 +361,16 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
     <button class="pill" id="tgSat" aria-pressed="false" title="Satellitenbild (Sentinel-2 cloudless)">Satellit</button>
     <button class="pill" id="tgDensity" aria-pressed="true" title="Alle Fundmeldungen aus GBIF als Dichtekarte">Fund­dichte</button>
   </div>
+  <div class="loc-row">
+    <div class="loc" id="loc">
+      <button class="pin" id="pinBtn" aria-pressed="false" title="Ort festsetzen: Die Suche bleibt hier, auch wenn du die Karte verschiebst">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z"/><circle cx="12" cy="10" r="2.2"/></svg>
+      </button>
+      <div class="loc-txt"><b id="locName">–</b><span id="readout">–</span></div>
+    </div>
+  </div>
 </header>
 
-<div class="readout" id="readout">–</div>
 
 <button class="idf-fab" id="tgIdentify" title="Pflanze per Foto bestimmen (Pl@ntNet)" aria-label="Pflanze per Foto bestimmen">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
@@ -348,6 +382,10 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
     <button class="tab" role="tab" id="tabBtnExplore" aria-controls="paneExplore" aria-selected="true"><small>Arten</small>Entdecken</button>
     <button class="tab" role="tab" id="tabBtnKey" aria-controls="paneKey" aria-selected="false"><small>Bestimmen</small>biologisch</button>
     <button class="tab" role="tab" id="tabBtnLook" aria-controls="paneLook" aria-selected="false"><small>Bestimmen</small>nach Aussehen</button>
+    <button class="grow" id="growBtn" aria-pressed="false" title="Liste vergrößern" aria-label="Liste vergrößern">
+      <svg class="g-in" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+      <svg class="g-out" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg>
+    </button>
   </nav>
   <div class="pane" id="paneExplore" role="tabpanel" aria-labelledby="tabBtnExplore">
   <div class="panel-head" id="panelHead">
@@ -427,8 +465,7 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
           <button class="linkbtn" id="kReset">Neu anfangen</button>
         </header>
         <p class="note" id="kSummary"></p>
-        <div class="grid" id="kGrid"></div>
-        <button class="btn more" id="kMore" hidden>Weitere Arten laden</button>
+        <div id="kTiers"></div>
       </section>
     </div>
   </div>
@@ -448,8 +485,7 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
           <button class="linkbtn" id="lReset">Alles abwählen</button>
         </header>
         <div id="lSummary"><p class="note">Tippe oben an, was dir aufgefallen ist. Schon ein Merkmal reicht für den Anfang; jedes weitere grenzt ein.</p></div>
-        <div class="grid" id="lGrid"></div>
-        <button class="btn more" id="lMore" hidden>Weitere Arten laden</button>
+        <div id="lTiers"></div>
       </section>
     </div>
   </div>
@@ -546,7 +582,7 @@ const KINGDOM_COLOR = { Plantae:"var(--plantae)", Fungi:"var(--fungi)" }; // son
 const RANK_DE = { kingdom:"Reich", phylum:"Stamm", subphylum:"Unterstamm", class:"Klasse", subclass:"Unterklasse", order:"Ordnung", suborder:"Unterordnung", superfamily:"Überfamilie", family:"Familie", subfamily:"Unterfamilie", tribe:"Tribus", genus:"Gattung", species:"Art", subspecies:"Unterart", variety:"Varietät" };
 const IUCN = { 10:["LC","Nicht gefährdet","#86b86f"], 20:["NT","Potenziell gefährdet","#c5c45a"], 30:["VU","Gefährdet","#e7ad4f"], 40:["EN","Stark gefährdet","#e0794a"], 50:["CR","Vom Aussterben bedroht","#e04a4a"], 60:["EW","In der Natur ausgestorben","#b07cc0"], 70:["EX","Ausgestorben","#9a9a9a"] };
 
-const state = { tab:"explore", group:"all", research:true, lastQuery:null, abort:null, selectedTaxon:null };
+const state = { pin:null, tab:"explore", group:"all", research:true, lastQuery:null, abort:null, selectedTaxon:null };
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, m => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
 const fmt = n => new Intl.NumberFormat("de-DE").format(n ?? 0);
@@ -618,9 +654,22 @@ function radiusKm(){
 }
 const isGlobal = () => map.getZoom() < 3;
 
+/* Suchort: Kartenmitte – oder der festgesetzte Pin */
+function searchCenter(){ return state.pin || map.getCenter(); }
+const pinMarker = (() => { const el = document.createElement("div"); el.className = "pin-mark"; return new maplibregl.Marker({ element:el }); })();
+function setPin(lngLat){
+  state.pin = lngLat ? { lng:lngLat.lng, lat:lngLat.lat } : null;
+  if (state.pin) pinMarker.setLngLat(state.pin).addTo(map); else pinMarker.remove();
+  $("#pinBtn").setAttribute("aria-pressed", !!state.pin);
+  $("#pinBtn").title = state.pin ? "Pin lösen: Die Suche folgt wieder der Kartenmitte" : "Ort festsetzen: Die Suche bleibt hier, auch wenn du die Karte verschiebst";
+  $("#loc").classList.toggle("pinned", !!state.pin);
+  updateReadout(); scheduleLoad(0);
+}
+$("#pinBtn").onclick = () => setPin(state.pin ? null : map.getCenter());
+
 function updateReadout(){
-  const c = map.getCenter();
-  $("#readout").innerHTML = `<b>${c.lat.toFixed(3)}°</b> ${c.lat>=0?"N":"S"} · <b>${c.lng.toFixed(3)}°</b> ${c.lng>=0?"O":"W"} · Zoom ${map.getZoom().toFixed(1)}`;
+  const c = searchCenter();
+  $("#readout").textContent = `${c.lat.toFixed(3)}° ${c.lat>=0?"N":"S"} · ${c.lng.toFixed(3)}° ${c.lng>=0?"O":"W"}${state.pin ? " · festgesetzt" : ` · Zoom ${map.getZoom().toFixed(1)}`}`;
 }
 
 function circle(lng, lat, km, steps = 72){
@@ -666,22 +715,21 @@ const TIERS = [
   { id:"t4", label:"Selten",          bars:2, to:0.75 },
   { id:"t5", label:"Sehr selten",     bars:1, to:1.00 }
 ];
-const PAGE = 50, MAX_RANK = 10000 /* iNaturalist liefert höchstens 10.000 Ergebnisse */, FIRST = 6, MORE = 12;
-let ctx = null;   // aktuelle Abfrage: Parameter, Seiten-Cache, Stufen
+const PAGE = 50, MAX_RANK = 10000 /* iNaturalist liefert höchstens 10.000 Ergebnisse */, FIRST = 2, MORE = 2;
 
 let loadTimer;
 function scheduleLoad(ms){ clearTimeout(loadTimer); loadTimer = setTimeout(() => {
     state.tab === "key" ? runKey() : state.tab === "look" ? runLook() : loadSpecies();
     loadPlaceName(); }, ms); }
 
-function cardHTML({count, taxon:t}){
+function cardHTML({count, taxon:t}, suffix = "hier"){
   const img = photo(t.default_photo?.square_url, "small");
   return `<button class="card" data-id="${t.id}" style="--c:${groupColor(t)}">
     ${img ? `<img src="${esc(img)}" alt="" loading="lazy">` : `<div class="noimg"></div>`}
     <div class="meta">
       <span class="cn">${esc(t.preferred_common_name || t.name)}</span>
       ${t.preferred_common_name ? `<span class="sn">${esc(t.name)}</span>` : ""}
-      <span class="ct">${fmt(count)} Beobachtung${count === 1 ? "" : "en"} hier</span>
+      <span class="ct">${fmt(count)} Beobachtung${count === 1 ? "" : "en"} ${suffix}</span>
     </div></button>`;
 }
 const skeletons = n => Array.from({length:n}, () => `<div class="card"><div class="noimg skel"></div><div class="meta"><div class="cn skel" style="height:14px;border-radius:4px"></div></div></div>`).join("");
@@ -740,110 +788,118 @@ async function updateGroupAvailability(params){
   }
 }
 
+/* Häufigkeitsstufen-Liste, wiederverwendet in allen drei Registerkarten.
+   Pro Stufe zuerst FIRST Arten, jedes Aufklappen holt MORE weitere. */
+function makeTierList(box, prefix, { suffix = "hier", emptyHTML, onTotal = () => {}, tooMany = "" } = {}){
+  const L = { ctx:null };
+  const gid = t => `${prefix}-grid-${t.id}`;
+  async function fill(my, t, howMany, replace){
+    const grid = document.getElementById(gid(t)), btn = box.querySelector(`.more[data-tier="${t.id}"]`);
+    const count = Math.min(howMany, t.end - (t.start + t.shown));
+    if (count <= 0) return;
+    if (!replace){ btn.disabled = true; btn.textContent = "Lädt …"; }
+    const items = await fetchRange(my, t.start + t.shown, count);
+    if (L.ctx !== my) return;
+    const html = items.map(r => cardHTML(r, suffix)).join("");
+    if (replace) grid.innerHTML = html; else grid.insertAdjacentHTML("beforeend", html);
+    if (replace && items.length){
+      const hi = items[0].count;
+      document.getElementById(`${prefix}-range-${t.id}`).textContent = `bis ${fmt(hi)} Beobachtung${hi === 1 ? "" : "en"} je Art`;
+    }
+    t.shown += items.length;
+    const left = t.end - t.start - t.shown;
+    btn.hidden = left <= 0 || !items.length;
+    btn.disabled = false;
+    btn.textContent = `${Math.min(MORE, left)} weitere anzeigen · noch ${fmt(left)}`;
+  }
+  L.load = async (params, signal) => {
+    const my = L.ctx = { params, pages:new Map(), signal, tiers:[] };
+    box.innerHTML = `<section class="tier"><div class="grid">${skeletons(4)}</div></section>`;
+    onTotal(null);
+    try{
+      const first = await getPage(my, 1);
+      if (L.ctx !== my) return;
+      const total = first.total_results;
+      onTotal(total);
+      if (!total){ box.innerHTML = emptyHTML; return; }
+      const n = Math.min(total, MAX_RANK);
+      let prev = 0;
+      my.tiers = TIERS.map(t => {
+        const endR = t.to === 1 ? n : Math.min(n, Math.max(prev + 1, Math.round(t.to * n)));
+        const tier = { ...t, start:prev, end:endR, shown:0 };
+        prev = endR; return tier;
+      }).filter(t => t.end > t.start);
+      box.innerHTML = my.tiers.map(t => `
+        <section class="tier">
+          <header class="tier-head">
+            ${barsHTML(t.bars)}<h3>${t.label}</h3>
+            <span class="tier-meta">${fmt(t.end - t.start)} Art${t.end - t.start === 1 ? "" : "en"} · Rang ${fmt(t.start + 1)}–${fmt(t.end)}</span>
+          </header>
+          <p class="tier-range" id="${prefix}-range-${t.id}"></p>
+          <div class="grid" id="${gid(t)}">${skeletons(Math.min(FIRST, t.end - t.start))}</div>
+          <button class="btn more" data-tier="${t.id}" hidden>Weitere anzeigen</button>
+        </section>`).join("") + (total > MAX_RANK ? `<p class="tier-note">${fmt(total)} Arten – iNaturalist liefert nur die ersten ${fmt(MAX_RANK)}; die Stufen beziehen sich auf diese. ${tooMany}</p>` : "");
+      for (const t of my.tiers){   // nacheinander füllen, schont das Anfragelimit
+        await fill(my, t, FIRST, true);
+        if (L.ctx !== my) return;
+      }
+    }catch(err){
+      if (err.name === "AbortError" || L.ctx !== my) return;
+      L.ctx = null;
+      box.innerHTML = `<div class="state">Arten konnten nicht geladen werden (${esc(err.message)}). Prüfe die Internetverbindung; iNaturalist erlaubt etwa eine Anfrage pro Sekunde.</div>`;
+      throw err;
+    }
+  };
+  box.addEventListener("click", async e => {
+    const card = e.target.closest(".card");
+    if (card?.dataset.id) return openDetail(+card.dataset.id);
+    const btn = e.target.closest(".more[data-tier]");
+    if (!btn || !L.ctx) return;
+    const my = L.ctx, t = my.tiers.find(x => x.id === btn.dataset.tier);
+    try{ await fill(my, t, MORE, false); }
+    catch{ if (L.ctx === my){ btn.disabled = false; btn.textContent = "Laden fehlgeschlagen – erneut versuchen"; } }
+  });
+  return L;
+}
+
+const exploreList = makeTierList($("#tiers"), "ex", {
+  emptyHTML:`<div class="state">Hier wurden noch keine Arten dieser Gruppe gemeldet. Zoom heraus oder wähle eine andere Gruppe.</div>`,
+  onTotal:n => $("#total").textContent = n == null ? "" : `${fmt(n)} Arten`,
+  tooMany:"Zoom hinein für eine vollständige Einteilung." });
+
 async function loadSpecies(){
-  const c = map.getCenter(), r = radiusKm(), g = GROUPS.find(x => x.id === state.group);
+  const c = searchCenter(), r = radiusKm(), g = GROUPS.find(x => x.id === state.group);
   const params = new URLSearchParams({ iconic_taxa:g.taxa, locale:"de", preferred_place_id:"7207" /* Deutschland für dt. Namen */ });
   if (state.research) params.set("quality_grade","research");
-  if (!isGlobal()){ params.set("lat", c.lat.toFixed(4)); params.set("lng", c.lng.toFixed(4)); params.set("radius", r); }
+  const glob = isGlobal() && !state.pin;
+  if (!glob){ params.set("lat", c.lat.toFixed(4)); params.set("lng", c.lng.toFixed(4)); params.set("radius", r); }
 
-  map.getSource("area")?.setData(isGlobal() ? { type:"FeatureCollection", features:[] } : circle(c.lng, c.lat, r));
+  map.getSource("area")?.setData(glob ? { type:"FeatureCollection", features:[] } : circle(c.lng, c.lat, r));
   updateGroupAvailability(params);
-  $("#where").textContent = isGlobal() ? "weltweit" : `Umkreis ${fmt(r)} km um ${c.lat.toFixed(2)}°, ${c.lng.toFixed(2)}°`;
+  $("#where").textContent = glob ? "weltweit" : `Umkreis ${fmt(r)} km um ${c.lat.toFixed(2)}°, ${c.lng.toFixed(2)}°`;
 
   const key = params.toString();
   if (key === state.lastQuery) return;
   state.lastQuery = key;
   state.abort?.abort(); state.abort = new AbortController();
-  const my = ctx = { params, pages:new Map(), signal:state.abort.signal, tiers:[] };
-  const box = $("#tiers");
-  box.innerHTML = `<section class="tier"><div class="grid">${skeletons(6)}</div></section>`;
-  $("#total").textContent = "";
   $("#list").scrollTop = 0;
-
-  try{
-    const first = await getPage(my, 1);
-    if (ctx !== my) return;
-    const total = first.total_results;
-    $("#total").textContent = `${fmt(total)} Arten`;
-    if (!total){ box.innerHTML = `<div class="state">Hier wurden noch keine Arten dieser Gruppe gemeldet. Zoom heraus oder wähle eine andere Gruppe.</div>`; return; }
-
-    // Rangbereiche je Stufe
-    const n = Math.min(total, MAX_RANK);
-    let prev = 0;
-    my.tiers = TIERS.map(t => {
-      const endR = t.to === 1 ? n : Math.min(n, Math.max(prev + 1, Math.round(t.to * n)));
-      const tier = { ...t, start:prev, end:endR, shown:0 };
-      prev = endR; return tier;
-    }).filter(t => t.end > t.start);
-
-    box.innerHTML = my.tiers.map(t => `
-      <section class="tier" id="tier-${t.id}">
-        <header class="tier-head">
-          ${barsHTML(t.bars)}<h3>${t.label}</h3>
-          <span class="tier-meta">${fmt(t.end - t.start)} Arten · Rang ${fmt(t.start + 1)}–${fmt(t.end)}</span>
-        </header>
-        <p class="tier-range" id="range-${t.id}"></p>
-        <div class="grid" id="grid-${t.id}">${skeletons(Math.min(FIRST, t.end - t.start))}</div>
-        <button class="btn more" data-tier="${t.id}" hidden>Weitere Arten laden</button>
-      </section>`).join("") +
-      (total > MAX_RANK ? `<p class="tier-note">Hier gibt es ${fmt(total)} Arten. iNaturalist liefert nur die ersten ${fmt(MAX_RANK)}; die Stufen beziehen sich auf diese. Zoom hinein für eine vollständige Einteilung.</p>` : "");
-
-    // Stufen nacheinander füllen (schont das Anfragelimit der API)
-    for (const t of my.tiers){
-      await fillTier(my, t, FIRST, true);
-      if (ctx !== my) return;
-    }
-  }catch(err){
-    if (err.name === "AbortError" || ctx !== my) return;
-    state.lastQuery = null;
-    box.innerHTML = `<div class="state">Arten konnten nicht geladen werden (${esc(err.message)}). Prüfe die Internetverbindung; iNaturalist erlaubt etwa eine Anfrage pro Sekunde.</div>`;
-  }
+  try{ await exploreList.load(params, state.abort.signal); }catch{ state.lastQuery = null; }
 }
-
-async function fillTier(my, t, howMany, replace){
-  const grid = $(`#grid-${t.id}`), btn = document.querySelector(`.more[data-tier="${t.id}"]`);
-  const count = Math.min(howMany, t.end - (t.start + t.shown));
-  if (count <= 0) return;
-  if (!replace){ btn.disabled = true; btn.textContent = "Lädt …"; grid.insertAdjacentHTML("beforeend", `<span class="pending" hidden></span>`); }
-  const items = await fetchRange(my, t.start + t.shown, count);
-  if (ctx !== my) return;
-  const html = items.map(cardHTML).join("");
-  if (replace) grid.innerHTML = html; else { grid.querySelector(".pending")?.remove(); grid.insertAdjacentHTML("beforeend", html); }
-  if (replace && items.length){
-    const hi = items[0].count;
-    $(`#range-${t.id}`).textContent = `bis ${fmt(hi)} Beobachtung${hi === 1 ? "" : "en"} je Art`;
-  }
-  t.shown += items.length;
-  const left = t.end - t.start - t.shown;
-  btn.hidden = left <= 0 || !items.length;
-  btn.disabled = false;
-  btn.textContent = `Weitere Arten laden · noch ${fmt(left)}`;
-}
-
-$("#tiers").onclick = async e => {
-  const card = e.target.closest(".card");
-  if (card?.dataset.id) return openDetail(+card.dataset.id);
-  const btn = e.target.closest(".more[data-tier]");
-  if (!btn || !ctx) return;
-  const my = ctx, t = my.tiers.find(x => x.id === btn.dataset.tier);
-  try{ await fillTier(my, t, MORE, false); }
-  catch(err){ if (ctx === my){ btn.disabled = false; btn.textContent = "Laden fehlgeschlagen – erneut versuchen"; } }
-};
 
 /* ---------------- Ortsname (Nominatim, gedrosselt) ---------------- */
 let placeAbort;
 async function loadPlaceName(){
-  if (isGlobal()){ $("#place").textContent = "Die ganze Welt"; $("#scope").textContent = "Globus"; return; }
-  const z = map.getZoom(), c = map.getCenter();
+  if (isGlobal() && !state.pin){ $("#place").textContent = $("#locName").textContent = "Die ganze Welt"; $("#scope").textContent = "Globus"; updateKeyWhere(); return; }
+  const z = map.getZoom(), c = searchCenter();
   const nz = z < 5 ? 3 : z < 7 ? 5 : z < 10 ? 8 : 10;
   placeAbort?.abort(); placeAbort = new AbortController();
   try{
     const d = await getJSON(`${API.nominatim}/reverse?format=jsonv2&lat=${c.lat}&lon=${c.lng}&zoom=${nz}&accept-language=de`, placeAbort.signal);
     const a = d.address || {};
-    $("#place").textContent = d.name || a.state || a.country || "Unbenannte Gegend";
+    $("#place").textContent = $("#locName").textContent = d.name || a.state || a.country || "Unbenannte Gegend";
     $("#scope").textContent = [a.state !== d.name ? a.state : null, a.country !== d.name ? a.country : null].filter(Boolean).join(" · ") || "Kartenausschnitt";
   }catch(err){
-    if (err.name !== "AbortError"){ $("#place").textContent = "Offenes Meer oder unbenannt"; $("#scope").textContent = "Kartenausschnitt"; }
+    if (err.name !== "AbortError"){ $("#place").textContent = $("#locName").textContent = "Offenes Meer oder unbenannt"; $("#scope").textContent = "Kartenausschnitt"; }
   }
   updateKeyWhere();
 }
@@ -866,6 +922,7 @@ $("#searchResults").onclick = e => {
   const b = e.target.closest("button[data-bb]"); if (!b) return;
   const [s, n, w, ea] = b.dataset.bb.split(",").map(Number);
   map.fitBounds([[w, s], [ea, n]], { padding:60, maxZoom:11, duration:1800 });
+  if (state.pin) setPin({ lng:(w + ea) / 2, lat:(s + n) / 2 });   // festgesetzter Ort wandert zum Suchergebnis
   $("#searchResults").hidden = true; $("#searchInput").blur();
 };
 $("#searchForm").onsubmit = e => { e.preventDefault(); $("#searchResults").querySelector("button")?.click(); };
@@ -874,7 +931,33 @@ $("#searchForm").onsubmit = e => { e.preventDefault(); $("#searchResults").query
 $("#back").onclick = closeDetail;
 document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#detail").hidden) closeDetail(); });
 
+/* Kleiner, langsam drehender Globus mit der Funddichte der Art (iNaturalist-Raster) */
+let miniMap = null, miniSpin = 0;
+function makeMiniGlobe(taxonId){
+  dropMiniGlobe();
+  const c = searchCenter();
+  try{
+    miniMap = new maplibregl.Map({
+      container:"miniMap", interactive:false, attributionControl:false, center:[c.lng, c.lat], zoom:0.15,
+      style:{ version:8, sources:{
+          sat:{ type:"raster", tiles:[SAT_TILES], tileSize:256, maxzoom:6 },
+          obs:{ type:"raster", tiles:[`${API.inat}/grid/{z}/{x}/{y}.png?taxon_id=${taxonId}&color=%23e7ad4f${state.research ? "&quality_grade=research" : ""}`], tileSize:256 } },
+        layers:[ { id:"bg", type:"background", paint:{ "background-color":"#0a0f0e" } },
+          { id:"sat", type:"raster", source:"sat", paint:{ "raster-opacity":0.7, "raster-saturation":-0.5, "raster-brightness-max":0.7 } },
+          { id:"obs", type:"raster", source:"obs" } ] }
+    });
+    miniMap.on("style.load", () => miniMap.setProjection({ type:"globe" }));
+    if (!window.matchMedia("(prefers-reduced-motion:reduce)").matches){
+      let lng = c.lng;
+      const step = () => { if (!miniMap) return; lng = (lng + 0.12) % 360; miniMap.setCenter([lng > 180 ? lng - 360 : lng, c.lat * 0.6]); miniSpin = requestAnimationFrame(step); };
+      miniMap.once("load", () => { miniSpin = requestAnimationFrame(step); });
+    }
+  }catch{ $("#miniMap").textContent = ""; }
+}
+function dropMiniGlobe(){ cancelAnimationFrame(miniSpin); miniMap?.remove(); miniMap = null; }
+
 function closeDetail(){
+  dropMiniGlobe();
   $("#detail").hidden = true;
   setSpeciesOverlay(null);
 }
@@ -927,9 +1010,11 @@ function renderDetail(t){
         <div class="fact"><b id="gbifCount">…</b><span>Fundmeldungen (GBIF)</span></div>
         <div class="fact"><b id="localCount">…</b><span>im Kartenausschnitt</span></div>
       </div>
-      <div class="actions">
-        <button class="btn primary" id="showRange" aria-pressed="false">Verbreitung auf dem Globus zeigen</button>
-      </div>
+      <button class="miniglobe" id="showRange" aria-pressed="false" aria-label="Funddichte groß auf der Karte zeigen">
+        <span class="mg-map" id="miniMap"></span>
+        <span class="mg-txt"><b>Funddichte weltweit</b><span id="mgHint">Antippen: groß auf der Karte zeigen</span>
+          <small>Funde: iNaturalist · Satellitenbild: Sentinel-2 cloudless by EOX</small></span>
+      </button>
     </div>
 
     <div class="d-sec">
@@ -968,10 +1053,11 @@ function renderDetail(t){
     $("#heroCredit").textContent = p.attribution || "";
     document.querySelectorAll("#thumbs button").forEach(x => x.setAttribute("aria-pressed", x === b));
   });
+  makeMiniGlobe(t.id);
   $("#showRange").onclick = e => {
     const on = e.currentTarget.getAttribute("aria-pressed") !== "true";
     e.currentTarget.setAttribute("aria-pressed", on);
-    e.currentTarget.textContent = on ? "Verbreitung ausblenden" : "Verbreitung auf dem Globus zeigen";
+    $("#mgHint").textContent = on ? "Wird groß angezeigt – antippen zum Ausblenden" : "Antippen: groß auf der Karte zeigen";
     setSpeciesOverlay(on ? t.id : null);
     if (on){
       if (isMobile()) setSheet("peek");
@@ -1016,7 +1102,7 @@ async function loadGbif(t){
 
 async function loadLocalCount(t){
   try{
-    const c = map.getCenter();
+    const c = searchCenter();
     const p = new URLSearchParams({ taxon_id:t.id, per_page:0 });
     if (state.tab !== "explore" || !isGlobal()){ p.set("lat", c.lat); p.set("lng", c.lng); p.set("radius", state.tab !== "explore" ? ks.radius : radiusKm()); }
     const d = await getJSON(`${API.inat}/observations?${p}`);
@@ -1051,7 +1137,19 @@ function setSheet(name){
   const pad = Math.round(Math.min(SNAPS[name], SNAPS.mid) * vh());
   map.easeTo({ padding:{ bottom:pad, top:0, left:0, right:0 }, duration:280 });
   $("#handle").setAttribute("aria-label", name === "full" ? "Artenliste verkleinern" : "Artenliste vergrößern");
+  syncGrow();
 }
+
+function syncGrow(){
+  const on = isMobile() ? snap === "full" : document.documentElement.classList.contains("wide");
+  const b = $("#growBtn"); b.setAttribute("aria-pressed", on);
+  b.title = b.ariaLabel = on ? "Liste verkleinern" : (isMobile() ? "Liste bildschirmfüllend" : "Liste auf halbe Breite vergrößern");
+}
+$("#growBtn").onclick = () => {
+  if (isMobile()){ setSheet(snap === "full" ? "mid" : "full"); return; }
+  document.documentElement.classList.toggle("wide");
+  map.resize(); syncGrow();
+};
 
 function applyLayout(){
   if (isMobile()){
@@ -1059,6 +1157,7 @@ function applyLayout(){
     setSheet(snap);
   } else {
     document.documentElement.style.removeProperty("--sheet-h");
+    syncGrow();
     setFiltersOpen(true);
     map.easeTo({ padding:{ top:0, bottom:0, left:0, right:0 }, duration:0 });
   }
@@ -1609,8 +1708,9 @@ $("#kReset").onclick = () => {
   renderSubs(); loadTraits(); refreshSteps(); runKey();
   $("#keyBody").scrollTo({ top:0, behavior:"smooth" });
 };
-$("#kGrid").onclick = e => { const c = e.target.closest(".card"); if (c?.dataset.id) openDetail(+c.dataset.id); };
-$("#kMore").onclick = () => loadKeyPage(true);
+const keyList = makeTierList($("#kTiers"), "kt", { suffix:"passend",
+  emptyHTML:`<div class="state">Keine Art passt auf diese Auswahl. Lass ein Merkmal weg, wähle „Ganzjährig“ oder vergrößere den Umkreis.</div>`,
+  onTotal:n => $("#kTotal").textContent = n == null ? "" : `${fmt(n)} Art${n === 1 ? "" : "en"}` });
 
 function renderSubs(){
   const c = catOf();
@@ -1680,7 +1780,7 @@ function refreshSteps(){
 
 /* --- Abfrage --- */
 function keyParams(withTaxon){
-  const ctr = map.getCenter(), c = catOf();
+  const ctr = searchCenter(), c = catOf();
   const p = new URLSearchParams({ lat:ctr.lat.toFixed(4), lng:ctr.lng.toFixed(4), radius:ks.radius });
   if (ks.research) p.set("quality_grade", "research");
   if (ks.threat) p.set("threatened", "true");
@@ -1694,11 +1794,11 @@ function keyParams(withTaxon){
 }
 
 function setAreaCircle(){
-  const c = map.getCenter();
+  const c = searchCenter();
   map.getSource("area")?.setData(circle(c.lng, c.lat, ks.radius));
 }
 function fitToRadius(){
-  const c = map.getCenter(), dLat = ks.radius / 111.32, dLng = ks.radius / (111.32 * Math.cos(c.lat * Math.PI / 180));
+  const c = searchCenter(), dLat = ks.radius / 111.32, dLng = ks.radius / (111.32 * Math.cos(c.lat * Math.PI / 180));
   map.fitBounds([[c.lng - dLng, c.lat - dLat], [c.lng + dLng, c.lat + dLat]], { padding:40, duration:900 });
 }
 function updateKeyWhere(){
@@ -1729,35 +1829,15 @@ async function doRunKey(){
   setKeyOverlay();
   if (!ks.cat){ $("#keyRes").hidden = true; return; }
   $("#keyRes").hidden = false;
-  ks.page = 0;
-  await loadKeyPage(false);
+  await loadKeyPage();
 }
 
-async function loadKeyPage(append){
+async function loadKeyPage(){
   ks.abort?.abort(); ks.abort = new AbortController();
-  const signal = ks.abort.signal, grid = $("#kGrid"), more = $("#kMore");
   const p = keyParams(true);
   p.set("locale", "de"); p.set("preferred_place_id", "7207");
-  p.set("per_page", KEY_PAGE); p.set("page", ks.page + 1);
-  if (!append){ grid.innerHTML = skeletons(6); $("#kTotal").textContent = ""; more.hidden = true; }
-  else { more.disabled = true; more.textContent = "Lädt …"; }
   $("#kSummary").textContent = summaryText();
-  try{
-    const d = await getJSON(`${API.inat}/observations/species_counts?${p}`, signal);
-    ks.page++; ks.total = d.total_results;
-    $("#kTotal").textContent = `${fmt(d.total_results)} Art${d.total_results === 1 ? "" : "en"}`;
-    const html = d.results.map(r => cardHTML(r).replace(/ Beobachtung(en)? hier/, m => m.replace(" hier", " passend"))).join("");
-    if (!append) grid.innerHTML = html || `<div class="state" style="grid-column:1/-1">Keine Art passt auf diese Auswahl. Lass ein Merkmal weg, wähle „Ganzjährig“ oder vergrößere den Umkreis.</div>`;
-    else grid.insertAdjacentHTML("beforeend", html);
-    const shown = Math.min(ks.page * KEY_PAGE, d.total_results);
-    more.hidden = shown >= Math.min(d.total_results, MAX_RANK) || !d.results.length;
-    more.disabled = false; more.textContent = `Weitere Arten laden · noch ${fmt(d.total_results - shown)}`;
-  }catch(err){
-    if (err.name === "AbortError") return;
-    ks.lastKey = null;
-    if (!append) grid.innerHTML = `<div class="state" style="grid-column:1/-1">Arten konnten nicht geladen werden (${esc(err.message)}).</div>`;
-    else { more.disabled = false; more.textContent = "Laden fehlgeschlagen – erneut versuchen"; }
-  }
+  try{ await keyList.load(p, ks.abort.signal); }catch{ ks.lastKey = null; }
 }
 
 function summaryText(){
@@ -1934,7 +2014,7 @@ const SEC_OF_SURFACE = { blatt:"pflanze", pilz:"pilz" };   // alle anderen Oberf
 const LOOK_DIRECT = 25;   // bis zu so vielen Gruppen einzeln abfragen, darüber grob nach Klasse/Reich
 const LOOK_HINT = `<p class="note">Tippe oben an, was dir aufgefallen ist. Schon ein Merkmal reicht für den Anfang; jedes weitere grenzt ein.</p>`;
 
-const ls = { sel:{}, lastKey:null, abort:null, page:0, matches:[] };
+const ls = { sel:{}, lastKey:null, abort:null, matches:[] };
 
 function lookMatches(sel){
   return LOOK_DB.filter(e => Object.entries(sel).every(([k, v]) => {
@@ -1979,8 +2059,9 @@ $("#lookForm").onclick = e => {
   runLook();
 };
 $("#lReset").onclick = () => { ls.sel = {}; renderLook(); runLook(); $("#lookBody").scrollTo({ top:0, behavior:"smooth" }); };
-$("#lGrid").onclick = e => { const c = e.target.closest(".card"); if (c?.dataset.id) openDetail(+c.dataset.id); };
-$("#lMore").onclick = () => loadLookPage(true);
+const lookList = makeTierList($("#lTiers"), "lk", {
+  emptyHTML:`<div class="state">Im Umkreis wurde dazu nichts gemeldet. Lass ein Merkmal weg oder vergrößere den Umkreis.</div>`,
+  onTotal:n => $("#lTotal").textContent = n == null ? "" : `${fmt(n)} Art${n === 1 ? "" : "en"}` });
 
 /* Viele Namen → IDs, höchstens 3 Anfragen gleichzeitig; IDs ändern sich nicht und werden auf dem Gerät gemerkt */
 const ID_STORE = "pn-taxon-ids";
@@ -1995,7 +2076,7 @@ async function resolveMany(names){
 }
 
 async function lookParams(){
-  const ctr = map.getCenter(), m = ls.matches;
+  const ctr = searchCenter(), m = ls.matches;
   const p = new URLSearchParams({ lat:ctr.lat.toFixed(4), lng:ctr.lng.toFixed(4), radius:ks.radius, quality_grade:"research" });
   if (m.length <= LOOK_DIRECT){
     const ids = await resolveMany(m.map(e => e.sci));
@@ -2024,7 +2105,7 @@ function runLook(){ clearTimeout(lookTimer); lookTimer = setTimeout(doRunLook, 4
 async function doRunLook(){
   if (state.tab !== "look") return;
   setAreaCircle(); updateKeyWhere();
-  const ctr = map.getCenter();
+  const ctr = searchCenter();
   const key = JSON.stringify(ls.sel) + `|${ctr.lat.toFixed(4)},${ctr.lng.toFixed(4)},${ks.radius}`;
   if (key === ls.lastKey) return;
   ls.lastKey = key;
@@ -2032,42 +2113,29 @@ async function doRunLook(){
   ls.matches = anyLook ? lookMatches(ls.sel) : [];
   if (!anyLook){
     ls.abort?.abort(); setLookOverlay(true);
-    $("#lTotal").textContent = ""; $("#lGrid").innerHTML = ""; $("#lMore").hidden = true; $("#lSummary").innerHTML = LOOK_HINT;
+    lookList.ctx = null; $("#lTotal").textContent = ""; $("#lTiers").innerHTML = ""; $("#lSummary").innerHTML = LOOK_HINT;
     return;
   }
-  ls.page = 0;
-  await loadLookPage(false);
+  await loadLookPage();
 }
 
-async function loadLookPage(append){
+async function loadLookPage(){
   ls.abort?.abort(); ls.abort = new AbortController();
-  const signal = ls.abort.signal, grid = $("#lGrid"), more = $("#lMore"), m = ls.matches;
-  if (!append){
-    grid.innerHTML = skeletons(6); $("#lTotal").textContent = ""; more.hidden = true;
-    const names = m.slice(0, 14).map(e => `<span>${esc(e.label)}</span>`).join("") + (m.length > 14 ? `<span>+ ${m.length - 14} weitere</span>` : "");
-    $("#lSummary").innerHTML = `<p class="note">Passt zu ${m.length} Gruppe${m.length === 1 ? "" : "n"}:</p><div class="matchlist">${names}</div><p class="note">${
-      m.length > LOOK_DIRECT ? "Noch sehr allgemein – ein, zwei weitere Merkmale machen das Ergebnis deutlich genauer." : "Sortiert nach Häufigkeit im Umkreis: oben steht, was hier am wahrscheinlichsten ist."}</p>`;
-  } else { more.disabled = true; more.textContent = "Lädt …"; }
+  const signal = ls.abort.signal, m = ls.matches;
+  const names = m.slice(0, 14).map(e => `<span>${esc(e.label)}</span>`).join("") + (m.length > 14 ? `<span>+ ${m.length - 14} weitere</span>` : "");
+  $("#lSummary").innerHTML = `<p class="note">Passt zu ${m.length} Gruppe${m.length === 1 ? "" : "n"}:</p><div class="matchlist">${names}</div><p class="note">${
+    m.length > LOOK_DIRECT ? "Noch sehr allgemein – ein, zwei weitere Merkmale machen das Ergebnis deutlich genauer." : "Oben stehen die Arten, die hier am häufigsten gemeldet werden – also am wahrscheinlichsten sind."}</p>`;
+  $("#lTiers").innerHTML = `<section class="tier"><div class="grid">${skeletons(4)}</div></section>`;
   try{
     const p = await lookParams();
     if (signal.aborted) return;
-    if (!p){ grid.innerHTML = `<div class="state" style="grid-column:1/-1">Die passenden Gruppen sind bei iNaturalist gerade nicht erreichbar.</div>`; return; }
-    if (!append) setLookOverlay(false, p);
-    p.set("locale", "de"); p.set("preferred_place_id", "7207"); p.set("per_page", KEY_PAGE); p.set("page", ls.page + 1);
-    const d = await getJSON(`${API.inat}/observations/species_counts?${p}`, signal);
-    ls.page++;
-    $("#lTotal").textContent = `${fmt(d.total_results)} Art${d.total_results === 1 ? "" : "en"}`;
-    const html = d.results.map(cardHTML).join("");
-    if (!append) grid.innerHTML = html || `<div class="state" style="grid-column:1/-1">Im Umkreis wurde dazu nichts gemeldet. Lass ein Merkmal weg oder vergrößere den Umkreis.</div>`;
-    else grid.insertAdjacentHTML("beforeend", html);
-    const shown = Math.min(ls.page * KEY_PAGE, d.total_results);
-    more.hidden = shown >= Math.min(d.total_results, MAX_RANK) || !d.results.length;
-    more.disabled = false; more.textContent = `Weitere Arten laden · noch ${fmt(d.total_results - shown)}`;
+    if (!p){ $("#lTiers").innerHTML = `<div class="state">Die passenden Gruppen sind bei iNaturalist gerade nicht erreichbar.</div>`; ls.lastKey = null; return; }
+    setLookOverlay(false, p);
+    p.set("locale", "de"); p.set("preferred_place_id", "7207");
+    await lookList.load(p, signal);
   }catch(err){
     if (err.name === "AbortError") return;
     ls.lastKey = null;
-    if (!append) grid.innerHTML = `<div class="state" style="grid-column:1/-1">Arten konnten nicht geladen werden (${esc(err.message)}).</div>`;
-    else { more.disabled = false; more.textContent = "Laden fehlgeschlagen – erneut versuchen"; }
   }
 }
 renderLook();
