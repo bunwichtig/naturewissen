@@ -80,6 +80,9 @@ td.name i{font:italic 15px/1.3 var(--f-sci);color:var(--muted)}
 .tags{display:flex;flex-wrap:wrap;gap:4px}
 .tag{font-size:12px;line-height:1;padding:4px 7px;border-radius:5px;background:var(--panel-2);border:1px solid var(--line);white-space:nowrap}
 .tag small{color:var(--muted);font-size:inherit}
+.dv{color:var(--plantae);font-size:9px;margin-left:2px;vertical-align:1px}
+.rules li>span{display:block}
+td.beleg a{display:block}
 td.beleg{white-space:nowrap;font-size:13px}
 td.beleg span{display:block;color:var(--muted);font:11px/1.4 var(--f-data)}
 .empty{padding:20px;color:var(--muted)}
@@ -169,6 +172,20 @@ footer{color:var(--muted);font-size:14px;border-top:1px solid var(--line);paddin
       <div class="proof"><a href="https://s2maps.eu" target="_blank" rel="noopener">s2maps.eu</a><a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.de" target="_blank" rel="noopener">CC BY-NC-SA 4.0</a></div>
     </article>
 
+    <article class="src">
+      <div class="src-head"><h3>EIVE 1.0 – Zeigerwerte für Europa</h3><span class="lic">CC BY 4.0</span></div>
+      <p><b>Liefert:</b> den Ort bei Pflanzen in der Merkmalstabelle (Wasser, Ufer, Wald, Wiese, Siedlung) aus den Zeigerwerten für Feuchte, Licht und Nährstoffe von 14.835 Pflanzenarten.</p>
+      <p><b>Lizenz:</b> Dengler, J., Jansen, F. et al. (2023): Ecological Indicator Values for Europe (EIVE) 1.0. Vegetation Classification and Survey. Daten unter CC BY 4.0. Fest in die Tabelle übernommen, nicht live abgefragt.</p>
+      <div class="proof"><a href="https://zenodo.org/records/7534792" target="_blank" rel="noopener">Datensatz bei Zenodo</a><a href="https://creativecommons.org/licenses/by/4.0/deed.de" target="_blank" rel="noopener">CC BY 4.0</a></div>
+    </article>
+
+    <article class="src">
+      <div class="src-head"><h3>AVONET – Merkmale aller Vögel</h3><span class="lic">CC BY 4.0</span></div>
+      <p><b>Liefert:</b> Größe und Ort bei Vögeln in der Merkmalstabelle, aus Gewicht, Hauptlebensraum und Lebensweise von 10.661 Vogelarten.</p>
+      <p><b>Lizenz:</b> Tobias, J. A. et al. (2022): AVONET: morphological, ecological and geographical data for all birds. Ecology Letters 25: 581–597. Daten unter CC BY 4.0. Fest in die Tabelle übernommen, nicht live abgefragt.</p>
+      <div class="proof"><a href="https://figshare.com/s/b990722d72a26b5bfead" target="_blank" rel="noopener">Datensatz bei Figshare</a><a href="https://doi.org/10.1111/ele.13898" target="_blank" rel="noopener">Artikel</a><a href="https://creativecommons.org/licenses/by/4.0/deed.de" target="_blank" rel="noopener">CC BY 4.0</a></div>
+    </article>
+
   </div>
 </section>
 
@@ -189,10 +206,21 @@ footer{color:var(--muted);font-size:14px;border-top:1px solid var(--line);paddin
   </div>
 </section>
 
+<section aria-labelledby="h-daten" id="daten">
+  <div class="eyebrow">Aus Daten berechnet</div>
+  <h2 id="h-daten">Größe und Ort aus echten Datensätzen</h2>
+  <p>Für Pflanzen und Vögel kommen Ort und Größe zusätzlich aus Messdaten. Berechnet wurde je Gruppe mit den Arten, die in Deutschland bei iNaturalist bestätigt beobachtet wurden; häufig beobachtete Arten zählen mehr. Ein Wert kommt in die Tabelle, wenn er auf mindestens 15 % der Beobachtungen zutrifft (Größe: 10 %) und für mindestens die Hälfte der Beobachtungen Daten vorliegen.</p>
+  <ul class="rules">
+    <li><span><b>Pflanzen (EIVE):</b> Feuchte ab 8,5 von 10 = im Wasser, ab 6,5 = Ufer und Feuchtes. Licht bis 4,5 = Wald. Licht ab 6,5 bei mittlerer Feuchte = Wiese und Feld. Viele Nährstoffe (ab 7,5) bei Licht und mittlerer Feuchte = Garten und Siedlung. Bäume gelten immer auch als Wald.</span></li>
+    <li><span><b>Vögel (AVONET):</b> Die Länge wird aus dem Gewicht geschätzt (Länge in cm ≈ 5,3 × Kubikwurzel des Gewichts in g). Das trifft kleine Vögel gut und unterschätzt langbeinige wie Reiher. Hauptlebensraum: Wald und Gehölz = Wald, Gebüsch, Grasland, Fels = Wiese und Feld, Feuchtgebiet, Fluss, Küste = Ufer, Meer und schwimmende Lebensweise = Wasser, vom Menschen geprägt = Garten und Siedlung.</span></li>
+    <li><span><b>Ergänzung, kein Ersatz:</b> Ein Merkmal passt, wenn es im Wikipedia-Artikel der Gruppe steht oder aus den Daten folgt. Werte aus Daten sind in der Tabelle mit ● markiert. Von 230 berechneten Werten bestätigten 189 die bisherige Tabelle, 41 kamen neu hinzu.</span></li>
+  </ul>
+</section>
+
 <section aria-labelledby="h-tab" id="merkmale">
   <div class="eyebrow">Merkmalstabelle</div>
   <h2 id="h-tab">Merkmale fürs Bestimmen, mit Beleg</h2>
-  <p>Keine freie Datenquelle beschreibt Lebewesen so, wie man sie draußen sieht: Fell, Zahl der Beine, Größe, Wuchs oder Pilzform. Diese Tabelle fasst deshalb die typischen Merkmale jeder Gruppe zusammen. Jede Zeile verweist auf den Wikipedia-Artikel, in dem man sie nachlesen kann. Die Tabelle selbst steht unter CC BY-SA 4.0.</p>
+  <p>Keine freie Datenquelle beschreibt Lebewesen so, wie man sie draußen sieht: Fell, Zahl der Beine, Größe, Wuchs oder Pilzform. Diese Tabelle fasst deshalb die typischen Merkmale jeder Gruppe zusammen. Jede Zeile verweist auf den Wikipedia-Artikel, in dem man sie nachlesen kann; mit ● markierte Werte kommen aus EIVE oder AVONET (siehe oben). Die Tabelle selbst steht unter CC BY-SA 4.0.</p>
   <div class="tools">
     <input id="q" type="search" placeholder="Suchen, z. B. Biene, Kiefer, Fabaceae" aria-label="Tabelle durchsuchen">
     <span class="count" id="count"></span>
@@ -210,7 +238,7 @@ footer{color:var(--muted);font-size:14px;border-top:1px solid var(--line);paddin
 </div>
 
 <script type="module">
-import { MERKMALE, GRUPPEN, BELEG } from "./daten/merkmale.js";
+import { MERKMALE, GRUPPEN, BELEG, DATEN } from "./daten/merkmale.js";
 
 const REICH = [
   ["alle","Alle",null],
@@ -239,13 +267,14 @@ kBox.addEventListener("click", e => {
 
 function rowHTML(g){
   const tags = Object.entries(g.a).map(([k, set]) =>
-    `<span class="tag"><small>${esc(LABEL[k])}</small> ${[...set].map(v => esc(VALUE[k]?.[v] ?? v)).join(", ")}</span>`).join("");
+    `<span class="tag"><small>${esc(LABEL[k])}</small> ${[...set].map(v => esc(VALUE[k]?.[v] ?? v) + (g.d?.[k]?.has(v) ? `<b class="dv" title="aus Daten">●</b>` : "")).join(", ")}</span>`).join("");
+  const d = DATEN[g.sci];
   const t = BELEG[g.sci];
   const url = "https://de.wikipedia.org/wiki/" + encodeURIComponent(t.replace(/ /g, "_"));
   return `<tr>
     <td class="name"><b><span class="kd" style="background:${colorOf(g)}"></span>${esc(g.label)}</b><i>${esc(g.sci)}</i></td>
     <td><div class="tags">${tags}</div></td>
-    <td class="beleg"><a href="${url}" target="_blank" rel="noopener">${esc(t)}</a><span>Wikipedia · CC BY-SA 4.0</span></td>
+    <td class="beleg"><a href="${url}" target="_blank" rel="noopener">${esc(t)}</a><span>Wikipedia · CC BY-SA 4.0</span>${d ? `<a href="#daten">● ${d.q}</a><span>${d.n} Arten · ${d.cov} % der Beobachtungen</span>` : ""}</td>
   </tr>`;
 }
 
