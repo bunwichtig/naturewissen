@@ -84,7 +84,7 @@ async function checkGbifMore(signal){
     const n = d.facets?.[0]?.counts?.length || 0;
     if (signal.aborted || n < lastTotal * 1.5 || n - lastTotal < 5) return;
     const box = $("#gbifMore");
-    box.innerHTML = `<b>GBIF kennt hier ${fmt(n)} ${esc(g.label)}-Arten, iNaturalist nur ${fmt(lastTotal)}.</b> GBIF sammelt auch Kartierungen, Zählungen und Museumsfunde. <button class="btn primary" type="button">Alle zusammen zeigen</button>`;
+    box.innerHTML = `<b>${esc(g.label)}: GBIF kennt hier ${fmt(n)} Arten, iNaturalist nur ${fmt(lastTotal)}.</b> GBIF sammelt auch Kartierungen, Zählungen und Museumsfunde. <button class="btn primary" type="button">Alle zusammen zeigen</button>`;
     box.querySelector("button").onclick = () => { $("#combo").checked = true; set({ combo:true }); };
     box.hidden = false;
   }catch{}
