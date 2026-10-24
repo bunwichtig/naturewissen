@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pure Nature · Quellen</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600&family=Newsreader:ital,opsz,wght@1,6..72,400&family=JetBrains+Mono:wght@400&display=swap">
+<style>
+/* Feldbuch bei Nacht – gleiche Farben und Schriften wie die Karte.
+   Layout: eine Lesespalte; oben Grundsatz, dann Quellen als Karteikarten, unten die Merkmalstabelle zum Durchsuchen. */
+:root{
+  --night:#0a0f0e; --panel:#101816; --panel-2:#16211e; --line:#24332e;
+  --ink:#e6ede4; --muted:#8b9d94; --pollen:#e7ad4f;
+  --plantae:#86b86f; --animalia:#d98a5f; --fungi:#c79ad0; --warn:#e7ad4f;
+  --f-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --f-body:"Figtree","Segoe UI",system-ui,sans-serif;
+  --f-sci:"Newsreader",Georgia,"Times New Roman",serif;
+  --f-data:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{background:var(--night)}
+body{margin:0;background:var(--night);color:var(--ink);font:16px/1.55 var(--f-body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+a{color:var(--ink);text-decoration-color:var(--pollen);text-underline-offset:3px}
+a:hover{color:var(--pollen)}
+:focus-visible{outline:2px solid var(--pollen);outline-offset:2px}
+[hidden]{display:none!important}
+.wrap{max-width:860px;margin:0 auto;padding-block:max(20px,env(safe-area-inset-top,0px)) 64px;display:grid;gap:44px}
+
+header{display:grid;gap:14px}
+.back{display:inline-flex;align-items:center;gap:8px;font:600 14px/1 var(--f-body);color:var(--muted);text-decoration:none;
+  border:1px solid var(--line);border-radius:999px;padding:9px 14px;justify-self:start;background:var(--panel)}
+.back:hover{color:var(--ink);border-color:var(--pollen)}
+h1{font:700 clamp(30px,6vw,46px)/1.02 var(--f-display);letter-spacing:-.02em;margin:0;text-wrap:balance}
+.lead{margin:0;color:var(--muted);max-width:62ch}
+.lead strong{color:var(--ink);font-weight:600}
+
+h2{font:700 22px/1.15 var(--f-display);margin:0;letter-spacing:-.01em;text-wrap:balance}
+.eyebrow{font:600 11px/1 var(--f-body);letter-spacing:.14em;text-transform:uppercase;color:var(--pollen)}
+section{display:grid;gap:16px}
+section>p{margin:0;max-width:65ch;color:var(--muted)}
+
+/* Grundsätze */
+.rules{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.rules li{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:baseline;padding:12px 14px;
+  background:var(--panel);border:1px solid var(--line);border-radius:10px}
+.rules li::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--plantae);transform:translateY(-2px)}
+.rules li.nc::before{background:var(--warn)}
+
+/* Quellen */
+.sources{display:grid;gap:12px}
+.src{display:grid;gap:8px;padding:16px;background:var(--panel);border:1px solid var(--line);border-radius:12px}
+.src-head{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:baseline;justify-content:space-between}
+.src h3{font:700 18px/1.2 var(--f-display);margin:0}
+.lic{font:12px/1 var(--f-data);padding:5px 8px;border-radius:6px;border:1px solid var(--line);color:var(--plantae);white-space:nowrap}
+.lic.nc{color:var(--warn)}
+.src p{margin:0;color:var(--muted)}
+.src p b{color:var(--ink);font-weight:600}
+.proof{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px}
+
+/* Merkmalstabelle */
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.tools input{flex:1 1 220px;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 13px;color:var(--ink);font:inherit}
+.tools input::placeholder{color:var(--muted)}
+.chipbtn{border:1px solid var(--line);background:var(--panel);color:var(--muted);border-radius:999px;padding:8px 12px;font:500 14px/1 var(--f-body);cursor:pointer}
+.chipbtn[aria-pressed="true"]{color:var(--night);background:var(--ink);border-color:var(--ink)}
+.count{font:13px/1 var(--f-data);color:var(--muted);font-variant-numeric:tabular-nums}
+.legend{font-size:14px;color:var(--muted);display:grid;gap:4px}
+.legend b{color:var(--ink);font-weight:600}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:14px}
+th,td{text-align:left;vertical-align:top;padding:10px 12px;border-bottom:1px solid var(--line)}
+th{font:600 11px/1.2 var(--f-body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);background:var(--panel-2);position:sticky;top:0}
+tr:last-child td{border-bottom:0}
+td.name b{display:block;font-weight:600}
+td.name i{font:italic 15px/1.3 var(--f-sci);color:var(--muted)}
+.kd{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;transform:translateY(-1px)}
+.tags{display:flex;flex-wrap:wrap;gap:4px}
+.tag{font-size:12px;line-height:1;padding:4px 7px;border-radius:5px;background:var(--panel-2);border:1px solid var(--line);white-space:nowrap}
+.tag small{color:var(--muted);font-size:inherit}
+td.beleg{white-space:nowrap;font-size:13px}
+td.beleg span{display:block;color:var(--muted);font:11px/1.4 var(--f-data)}
+.empty{padding:20px;color:var(--muted)}
+footer{color:var(--muted);font-size:14px;border-top:1px solid var(--line);padding-top:16px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <a class="back" href="./">← Zurück zur Karte</a>
+  <h1>Quellen &amp; Lizenzen</h1>
+  <p class="lead">Pure Nature speichert selbst <strong>keine Funddaten</strong>. Alles, was die Karte zeigt, kommt live aus freien Quellen. Hier steht für jede Quelle, unter welcher Lizenz sie genutzt wird und wo man das nachprüfen kann. Darunter steht die Merkmalstabelle fürs Bestimmen, jede Zeile mit ihrem Beleg.</p>
+</header>
+
+<section aria-labelledby="h-rules">
+  <div class="eyebrow">Grundsätze</div>
+  <h2 id="h-rules">Was „frei nutzbar“ hier heißt</h2>
+  <ul class="rules">
+    <li>Jede Quelle ist ohne Bezahlung und ohne Vertrag nutzbar. Wo ein eigener Schlüssel nötig ist (Pl@ntNet), ist er kostenlos.</li>
+    <li>Jedes Foto und jeder Text wird mit Urheber und Lizenz angezeigt, so wie die jeweilige Lizenz es verlangt.</li>
+    <li>Fotos ohne freie Lizenz („alle Rechte vorbehalten“) werden nicht gezeigt.</li>
+    <li class="nc">Einige Inhalte sind nur <b>nicht-kommerziell</b> frei (Lizenzen mit „NC“, z.&nbsp;B. das Satellitenbild und viele Naturfotos). Pure Nature ist ein privates, nicht-kommerzielles Projekt und hält das ein. Wer die Seite kommerziell nutzen will, muss diese Inhalte weglassen.</li>
+    <li>Die Seite fragt die Dienste nur so oft ab, wie deren Regeln erlauben, und merkt sich auf dem Gerät nur Kleinigkeiten (Pl@ntNet-Schlüssel, Einstellungen, schon nachgeschlagene Namen).</li>
+  </ul>
+</section>
+
+<section aria-labelledby="h-src">
+  <div class="eyebrow">Datenquellen</div>
+  <h2 id="h-src">Woher die Daten kommen</h2>
+  <div class="sources">
+
+    <article class="src">
+      <div class="src-head"><h3>iNaturalist</h3><span class="lic nc">CC0 · CC BY · CC BY-NC</span></div>
+      <p><b>Liefert:</b> Arten in der Umgebung nach Häufigkeit, Fotos, Fundorte, Namen, Merkmale wie Lebensstadium oder Blüte, Verbreitungskarte.</p>
+      <p><b>Lizenz:</b> Jede Beobachtung und jedes Foto hat die Lizenz, die der Fotograf gewählt hat; sie steht am Foto. Die Abfrage ist kostenlos, empfohlen sind höchstens etwa 1 Anfrage pro Sekunde.</p>
+      <div class="proof"><a href="https://www.inaturalist.org/pages/terms" target="_blank" rel="noopener">Nutzungsbedingungen</a><a href="https://www.inaturalist.org/pages/api+recommended+practices" target="_blank" rel="noopener">Regeln für die Abfrage</a></div>
+    </article>
+
+    <article class="src">
+      <div class="src-head"><h3>GBIF</h3><span class="lic nc">CC0 · CC BY · CC BY-NC</span></div>
+      <p><b>Liefert:</b> Fundmeldungen aus Museen, Kartierungen und Zählungen (Schalter „genauer rechnen“) und die Dichtekarte als Waben.</p>
+      <p><b>Lizenz:</b> GBIF lässt für Fundmeldungen nur diese drei Creative-Commons-Lizenzen zu. Angegeben wird GBIF als Quelle mit Link zum Datensatz.</p>
+      <div class="proof"><a href="https://www.gbif.org/terms" target="_blank" rel="noopener">Nutzungsbedingungen</a><a href="https://www.gbif.org/terms/data-user" target="_blank" rel="noopener">Vereinbarung für Datennutzer</a></div>
+    </article>
+
+    <article class="src">
+      <div class="src-head"><h3>Wikipedia (deutsch)</h3><span class="lic">CC BY-SA 4.0</span></div>
+      <p><b>Liefert:</b> Beschreibung, Lebensraum und Nahrung im Steckbrief sowie die Belege für die Merkmalstabelle unten.</p>
+      <p><b>Lizenz:</b> Texte dürfen mit Namensnennung und unter gleicher Lizenz weitergegeben werden. Der Steckbrief verlinkt den Artikel.</p>
+      <div class="proof"><a href="https://de.wikipedia.org/wiki/Wikipedia:Lizenzbestimmungen" target="_blank" rel="noopener">Lizenzbestimmungen</a><a href="https://creativecommons.org/licenses/by-sa/4.0/deed.de" target="_blank" rel="noopener">CC BY-SA 4.0</a></div>
+    </article>
+
+    <article class="src">
+      <div class="src-head"><h3>Pl@ntNet</h3><span class="lic">kostenlos, eigener Schlüssel</span></div>
+      <p><b>Liefert:</b> Bestimmung von Pflanzen per Foto.</p>
+      <p><b>Lizenz:</b> Kostenlos bis 500 Bestimmungen am Tag mit einem persönlichen Schlüssel. Die Quelle wird beim Ergebnis genannt.</p>
+      <div class="proof"><a href="https://my.plantnet.org/terms_of_use" target="_blank" rel="noopener">Nutzungsbedingungen</a></div>
+    </article>
+
+    <article class="src">
+      <div class="src-head"><h3>Nominatim &amp; OpenStreetMap</h3><span class="lic">ODbL</span></div>
+      <p><b>Liefert:</b> Ortssuche und den Ortsnamen zur Kartenmitte.</p>
+      <p><b>Lizenz:</b> OpenStreetMap-Daten unter der Open Database License. Erlaubt ist höchstens 1 Anfrage pro Sekunde, keine Suche schon beim Tippen; die Seite sucht deshalb erst nach dem Absenden.</p>
+      <div class="proof"><a href="https://operations.osmfoundation.org/policies/nominatim/" target="_blank" rel="noopener">Nutzungsregeln</a><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OSM-Urheberrecht</a></div>
+    </article>
+
+    <article class="src">
+      <div class="src-head"><h3>OpenFreeMap</h3><span class="lic">kostenlos · OSM / OpenMapTiles</span></div>
+      <p><b>Liefert:</b> das Kartenbild.</p>
+      <p><b>Lizenz:</b> Kostenlos ohne Schlüssel und ohne Grenze für Kartenaufrufe. Die Karte nennt OpenMapTiles und OpenStreetMap unten rechts.</p>
+      <div class="proof"><a href="https://openfreemap.org" target="_blank" rel="noopener">openfreemap.org</a><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OSM-Urheberrecht</a></div>
+    </article>
+
+    <article class="src">
+      <div class="src-head"><h3>Sentinel-2 cloudless (EOX)</h3><span class="lic nc">CC BY-NC-SA 4.0</span></div>
+      <p><b>Liefert:</b> das Satellitenbild.</p>
+      <p><b>Lizenz:</b> Nur nicht-kommerziell, mit Namensnennung. Enthält veränderte Copernicus-Sentinel-Daten.</p>
+      <div class="proof"><a href="https://s2maps.eu" target="_blank" rel="noopener">s2maps.eu</a><a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.de" target="_blank" rel="noopener">CC BY-NC-SA 4.0</a></div>
+    </article>
+
+  </div>
+</section>
+
+<section aria-labelledby="h-code">
+  <div class="eyebrow">Programmteile</div>
+  <h2 id="h-code">Was die Seite zum Laufen braucht</h2>
+  <div class="sources">
+    <article class="src">
+      <div class="src-head"><h3>MapLibre GL JS</h3><span class="lic">BSD-3-Clause</span></div>
+      <p><b>Liefert:</b> den Globus und die Karte.</p>
+      <div class="proof"><a href="https://github.com/maplibre/maplibre-gl-js/blob/main/LICENSE.txt" target="_blank" rel="noopener">Lizenztext</a></div>
+    </article>
+    <article class="src">
+      <div class="src-head"><h3>Schriften</h3><span class="lic">SIL Open Font License</span></div>
+      <p><b>Liefert:</b> Bricolage Grotesque, Figtree, Newsreader und JetBrains Mono.</p>
+      <div class="proof"><a href="https://openfontlicense.org" target="_blank" rel="noopener">Open Font License</a></div>
+    </article>
+  </div>
+</section>
+
+<section aria-labelledby="h-tab" id="merkmale">
+  <div class="eyebrow">Merkmalstabelle</div>
+  <h2 id="h-tab">Merkmale fürs Bestimmen, mit Beleg</h2>
+  <p>Keine freie Datenquelle beschreibt Lebewesen so, wie man sie draußen sieht: Fell, Zahl der Beine, Größe, Wuchs oder Pilzform. Diese Tabelle fasst deshalb die typischen Merkmale jeder Gruppe zusammen. Jede Zeile verweist auf den Wikipedia-Artikel, in dem man sie nachlesen kann. Die Tabelle selbst steht unter CC BY-SA 4.0.</p>
+  <div class="tools">
+    <input id="q" type="search" placeholder="Suchen, z. B. Biene, Kiefer, Fabaceae" aria-label="Tabelle durchsuchen">
+    <span class="count" id="count"></span>
+  </div>
+  <div class="tools" id="kingdoms" role="group" aria-label="Nach Reich filtern"></div>
+  <div class="legend" id="legend"></div>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Gruppe</th><th>Merkmale</th><th>Beleg</th></tr></thead>
+      <tbody id="rows"><tr><td colspan="3" class="empty">Tabelle wird geladen …</td></tr></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>Stand der Prüfung: 24. Oktober 2026. Alle Beleg-Artikel wurden an diesem Tag auf Wikipedia gefunden. Fehler gefunden? Im Repo <a href="https://github.com/bunwichtig/naturewissen" target="_blank" rel="noopener">bunwichtig/naturewissen</a> melden.</footer>
+</div>
+
+<script type="module">
+import { MERKMALE, GRUPPEN, BELEG } from "./daten/merkmale.js";
+
+const REICH = [
+  ["alle","Alle",null],
+  ["tier","Tiere","var(--animalia)", g => !["Plantae","Fungi","Protozoa"].includes(g.icon)],
+  ["pflanze","Pflanzen","var(--plantae)", g => g.icon === "Plantae"],
+  ["pilz","Pilze","var(--fungi)", g => g.icon === "Fungi" || g.icon === "Protozoa"]
+];
+const colorOf = g => g.icon === "Plantae" ? "var(--plantae)" : (g.icon === "Fungi" || g.icon === "Protozoa") ? "var(--fungi)" : "var(--animalia)";
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
+
+// Klartext je Merkmal und Wert
+const LABEL = {}, VALUE = {};
+const SHORT = { s:"Oberfläche", l:"Beine", w:"Flügel", z:"Größe", g:"Wuchs", b:"Blätter", f:"Form", h:"Ort" };
+for (const q of MERKMALE){ LABEL[q.id] = SHORT[q.id] || q.label; VALUE[q.id] = Object.fromEntries(q.opts); }
+
+document.getElementById("legend").innerHTML = MERKMALE.map(q =>
+  `<div><b>${esc(SHORT[q.id])}:</b> ${q.opts.map(o => esc(o[1])).join(" · ")}</div>`).join("");
+
+let reich = "alle";
+const kBox = document.getElementById("kingdoms");
+kBox.innerHTML = REICH.map(([id, name]) => `<button class="chipbtn" type="button" data-k="${id}" aria-pressed="${id === reich}">${name}</button>`).join("");
+kBox.addEventListener("click", e => {
+  const b = e.target.closest("[data-k]"); if (!b) return;
+  reich = b.dataset.k;
+  kBox.querySelectorAll("[data-k]").forEach(x => x.setAttribute("aria-pressed", x === b));
+  render();
+});
+
+function rowHTML(g){
+  const tags = Object.entries(g.a).map(([k, set]) =>
+    `<span class="tag"><small>${esc(LABEL[k])}</small> ${[...set].map(v => esc(VALUE[k]?.[v] ?? v)).join(", ")}</span>`).join("");
+  const t = BELEG[g.sci];
+  const url = "https://de.wikipedia.org/wiki/" + encodeURIComponent(t.replace(/ /g, "_"));
+  return `<tr>
+    <td class="name"><b><span class="kd" style="background:${colorOf(g)}"></span>${esc(g.label)}</b><i>${esc(g.sci)}</i></td>
+    <td><div class="tags">${tags}</div></td>
+    <td class="beleg"><a href="${url}" target="_blank" rel="noopener">${esc(t)}</a><span>Wikipedia · CC BY-SA 4.0</span></td>
+  </tr>`;
+}
+
+const q = document.getElementById("q");
+function render(){
+  const term = q.value.trim().toLowerCase();
+  const test = REICH.find(r => r[0] === reich)[3];
+  const list = GRUPPEN.filter(g => (!test || test(g)) &&
+    (!term || (g.label + " " + g.sci + " " + BELEG[g.sci]).toLowerCase().includes(term)));
+  document.getElementById("rows").innerHTML = list.length ? list.map(rowHTML).join("")
+    : `<tr><td colspan="3" class="empty">Keine Gruppe passt zu „${esc(q.value)}“.</td></tr>`;
+  document.getElementById("count").textContent = `${list.length} von ${GRUPPEN.length} Gruppen`;
+}
+q.addEventListener("input", render);
+render();
+</script>
+</body>
+</html>
