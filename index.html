@@ -309,6 +309,12 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
 .combo-top{display:grid;gap:10px;padding:14px 0 4px}
 .combo-how summary{cursor:pointer;font-size:12px;color:var(--muted)}
 .combo-how p{margin-top:6px}
+.cmp{position:sticky;top:0;z-index:2;display:grid;grid-template-columns:72px 1fr auto;gap:12px;align-items:center;background:var(--panel);padding:10px 0;border-bottom:1px solid var(--line)}
+.cmp img{width:72px;height:72px;object-fit:cover;border-radius:10px;display:block;cursor:zoom-in}
+.cmp img.big{width:100%;height:auto;max-height:50vh;object-fit:contain;grid-column:1/-1;cursor:zoom-out}
+.cmp b{display:block;font-size:14px}
+#paneIdent .look-sec{gap:10px}
+#paneIdent .look-sec>h4{flex-wrap:wrap}
 .look-sec{padding:14px 0;border-bottom:1px solid var(--line);display:grid;gap:12px}
 .look-sec>h4{margin:0;font:700 15px/1.1 var(--f-display);letter-spacing:-.01em;display:flex;align-items:baseline;gap:8px}
 .look-sec>h4 small{font:400 12px var(--f-body);color:var(--muted)}
@@ -438,6 +444,7 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
   <button class="handle" id="handle" aria-label="Artenliste größer oder kleiner ziehen"></button>
   <nav class="tabs" role="tablist" aria-label="Ansicht">
     <button class="tab" role="tab" id="tabBtnExplore" aria-controls="paneExplore" aria-selected="true"><small>Arten</small>Entdecken</button>
+    <button class="tab" role="tab" id="tabBtnIdent" aria-controls="paneIdent" aria-selected="false"><small>Tiere &amp; Pflanzen</small>Erkennen</button>
     <button class="tab" role="tab" id="tabBtnCombo" aria-controls="paneCombo" aria-selected="false"><small>Arten entdecken</small>Kombi</button>
     <button class="tab" role="tab" id="tabBtnKey" aria-controls="paneKey" aria-selected="false"><small>Bestimmen</small>biologisch</button>
     <button class="tab" role="tab" id="tabBtnLook" aria-controls="paneLook" aria-selected="false"><small>Bestimmen</small>nach Aussehen</button>
@@ -478,6 +485,35 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
       <li><a href="https://my.plantnet.org/" target="_blank" rel="noopener">Pl@ntNet</a> – Pflanzenbestimmung per Foto. The image-based plant species identification service used, is based on the Pl@ntNet recognition API, regularly updated and accessible through the site https://my.plantnet.org/</li>
     </ul>
   </details>
+  </div>
+
+  <!-- Erkennen: Pflanzen per Foto (Pl@ntNet), Tiere per Foto + Merkmale -->
+  <div class="pane" id="paneIdent" role="tabpanel" aria-labelledby="tabBtnIdent" hidden>
+    <div class="key-head" id="identHead">
+      <div class="eyebrow">Tiere &amp; Pflanzen erkennen</div>
+      <p class="place">Mach ein Foto</p>
+    </div>
+    <div class="key-body" id="identBody">
+      <section class="look-sec">
+        <h4>Pflanze<small>Foto genügt – Pl@ntNet erkennt die Art</small></h4>
+        <button class="btn primary big" id="identPlant">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-3px;margin-right:6px"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Pflanze fotografieren</button>
+        <p class="note">Blüte, Blatt, Frucht oder Rinde – mehrere Fotos verschiedener Teile machen es sicherer.</p>
+      </section>
+      <section class="look-sec">
+        <h4>Tier<small>Foto + ein paar Merkmale</small></h4>
+        <p class="note">Eine freie automatische Tier-Erkennung gibt es nicht ohne Benutzerkonto. Darum: Foto machen, dann nach Aussehen eingrenzen – dein Foto bleibt dabei als Vergleichsbild oben stehen. Es wird nirgends hochgeladen.</p>
+        <label class="btn primary big file" id="identAnimalBtn">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-3px;margin-right:6px"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Tier fotografieren
+          <input type="file" accept="image/*" capture="environment" id="identAnimal">
+        </label>
+        <button class="btn big" id="identNoPhoto">Ohne Foto weiter zu den Merkmalen</button>
+      </section>
+      <section class="look-sec">
+        <h4>In der Nähe<small>was hier häufig vorkommt</small></h4>
+        <p class="note">Die Fotos auf der Karte zeigen die häufigsten Tiere und Pflanzen im Umkreis – oft ist das Gesuchte schon dabei. Antippen öffnet den Steckbrief.</p>
+      </section>
+    </div>
   </div>
 
   <!-- Arten entdecken · Kombi: iNaturalist und GBIF konservativ gemittelt -->
@@ -558,6 +594,11 @@ h3.h{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase
       <div class="where" id="lookWhere" hidden></div>
     </div>
     <div class="key-body" id="lookBody">
+      <div class="cmp" id="cmp" hidden>
+        <img id="cmpImg" alt="Dein Foto zum Vergleich">
+        <div><b>Dein Foto</b><span class="note">Vergleiche es mit den Arten unten.</span></div>
+        <button class="loc-btn" id="cmpClose" title="Vergleichsfoto entfernen" aria-label="Vergleichsfoto entfernen">✕</button>
+      </div>
       <div id="lookForm"></div>
       <section class="key-res" id="lookRes">
         <header class="key-res-head">
@@ -1297,7 +1338,7 @@ window.addEventListener("resize", () => { if (isMobile()) document.documentEleme
 // Ziehen am Griff oder am Kopfbereich
 (function enableDrag(){
   let startY = 0, startH = 0, moved = false, active = false;
-  const targets = [$("#handle"), $("#panelHead"), $("#keyHead"), $("#lookHead"), $("#comboHead")];
+  const targets = [$("#handle"), $("#panelHead"), $("#keyHead"), $("#lookHead"), $("#comboHead"), $("#identHead")];
   const down = e => {
     if (!isMobile()) return;
     if (e.target.closest("button:not(#handle), input, label, a")) return; // Bedienelemente bleiben klickbar
@@ -1333,7 +1374,7 @@ window.addEventListener("resize", () => { if (isMobile()) document.documentEleme
 })();
 
 // Beim Scrollen in der Liste klappt das Sheet ganz auf
-["#list", "#keyBody", "#lookBody", "#comboBody"].forEach(sel => $(sel).addEventListener("scroll", e => {
+["#list", "#keyBody", "#lookBody", "#comboBody", "#identBody"].forEach(sel => $(sel).addEventListener("scroll", e => {
   if (isMobile() && snap !== "full" && e.currentTarget.scrollTop > 30) setSheet("full");
 }, { passive:true }));
 
@@ -1756,7 +1797,7 @@ const catOf = () => KEY_CATS.find(c => c.id === ks.cat);
 const pressed = (b, on) => b.setAttribute("aria-pressed", on);
 
 /* --- Registerkarten --- */
-const TABS = [["explore","#tabBtnExplore","#paneExplore"],["combo","#tabBtnCombo","#paneCombo"],["key","#tabBtnKey","#paneKey"],["look","#tabBtnLook","#paneLook"]];
+const TABS = [["explore","#tabBtnExplore","#paneExplore"],["ident","#tabBtnIdent","#paneIdent"],["combo","#tabBtnCombo","#paneCombo"],["key","#tabBtnKey","#paneKey"],["look","#tabBtnLook","#paneLook"]];
 function setTab(name){
   if (state.tab === name) return;
   state.tab = name;
@@ -1767,7 +1808,8 @@ function setTab(name){
   if (name === "key"){ setAreaCircle(); ks.lastKey = null; runKey(); }
   else if (name === "look"){ setAreaCircle(); ls.lastKey = null; runLook(); }
   else if (name === "combo"){ cs.lastKey = null; runCombo(); }
-  else { state.lastQuery = null; loadSpecies(); }   // Kreis & Liste für den Zoom-Radius neu aufbauen
+  else if (name === "ident"){ state.lastQuery = null; loadSpecies(); }   // Karte zeigt die häufigsten Arten wie bei „Entdecken“
+  else if (name === "explore"){ state.lastQuery = null; loadSpecies(); }   // Kreis & Liste für den Zoom-Radius neu aufbauen
 }
 TABS.forEach(([id, btn]) => $(btn).onclick = () => setTab(id));
 $(".tabs").addEventListener("keydown", e => {
@@ -2299,7 +2341,7 @@ const PIN_ANIMALS = ["Mammalia","Aves","Reptilia","Amphibia","Actinopterygii","I
 const PIN_GROUPS = ["Plantae","Fungi", ...PIN_ANIMALS];
 const PIN_PX = 54;            // Mindestabstand der Mittelpunkte in Pixeln (Foto 46 px + Luft)
 const ZONE_GRID = 5;          // 5 × 5 Zonen über den Umkreis
-const ZONE_MAX = 3;           // höchstens so viele Zonen-Fotos zusätzlich
+const ZONE_MAX = 4;           // höchstens so viele Zonen-Fotos zusätzlich, abwechselnd Tier / Pflanze
 const pins = { markers:[], key:null, abort:null, pool:null, sample:null, extra:0, params:null, radius:0 };
 const iconOf = t => t?.iconic_taxon_name || "Animalia";
 
@@ -2310,8 +2352,8 @@ function pickPins(pool, radius, extra){
   let out = [];
   if (radius <= 100){
     const animals = pool.filter(r => PIN_ANIMALS.includes(iconOf(r.taxon))), plants = by("Plantae");
-    out = [...animals.slice(0, 3), ...plants.slice(0, 2)];
-    if (out.length < 5) out = [...out, ...pool.filter(r => !out.includes(r))].slice(0, 5);
+    out = [...animals.slice(0, 6), ...plants.slice(0, 3)];   // 9 häufigste: 2/3 Tiere, 1/3 Pflanzen
+    if (out.length < 9) out = [...out, ...pool.filter(r => !out.includes(r))].slice(0, 9);
   }
   const per = radius <= 100 ? extra * 2 : 2 + extra * 2;
   if (per){ const top = [...out]; PIN_GROUPS.forEach(g => by(g).filter(r => !top.includes(r)).slice(0, per).forEach(r => out.push(r))); }
@@ -2337,16 +2379,25 @@ function zonePicks(sample, c, radius, taken){
   const N = sample.length, cands = [];
   zones.forEach((Z, z) => {
     if (Z.n < 4) return;   // zu wenig Daten für eine Aussage
-    let best = null;
+    const best = {};   // je Zone die typischste Pflanze und das typischste Tier
     Z.sp.forEach(([k, o], id) => {
       if (k < 2 || taken.has(id)) return;
       const lift = (k / Z.n) / (all.get(id) / N);   // wie viel häufiger als im ganzen Umkreis
-      const score = lift * Math.sqrt(k);
-      if (lift >= 1.8 && (!best || score > best.score)) best = { score, o, id };
+      const score = lift * Math.sqrt(k), kind = iconOf(o.taxon) === "Plantae" ? "p" : "a";
+      if (lift >= 1.8 && (!best[kind] || score > best[kind].score)) best[kind] = { score, o, id, kind };
     });
-    if (best) cands.push(best);
+    Object.values(best).forEach(b => cands.push(b));
   });
-  return cands.sort((a, b) => b.score - a.score).slice(0, ZONE_MAX);
+  // abwechselnd Tier und Pflanze, jeweils die auffälligste zuerst; keine Art doppelt
+  const a = cands.filter(c => c.kind === "a").sort((x, y) => y.score - x.score), pl = cands.filter(c => c.kind === "p").sort((x, y) => y.score - x.score);
+  const out = [], used = new Set();
+  while (out.length < ZONE_MAX && (a.length || pl.length)){
+    for (const arr of [a, pl]){
+      while (arr.length && used.has(arr[0].id)) arr.shift();
+      if (arr.length && out.length < ZONE_MAX){ const c = arr.shift(); used.add(c.id); out.push(c); }
+    }
+  }
+  return out;
 }
 
 function pinEl(t, obsPhoto, zone){
@@ -2570,6 +2621,21 @@ async function doRunCombo(){
     $("#cTiers").innerHTML = `<div class="state">Daten konnten nicht geladen werden (${esc(err.message)}).</div>`;
   }
 }
+
+/* ================= Erkennen ================= */
+$("#identPlant").onclick = () => openIdentify();
+let cmpUrl = null;
+function setCompare(file){
+  if (cmpUrl) URL.revokeObjectURL(cmpUrl);
+  cmpUrl = file ? URL.createObjectURL(file) : null;   // bleibt nur im Browser, wird nicht hochgeladen
+  $("#cmp").hidden = !cmpUrl;
+  if (cmpUrl) $("#cmpImg").src = cmpUrl;
+}
+function toLook(){ setTab("look"); $("#lookBody").scrollTop = 0; if (isMobile()) setSheet("full"); }
+$("#identAnimal").onchange = e => { const f = e.target.files?.[0]; if (!f) return; setCompare(f); e.target.value = ""; toLook(); };
+$("#identNoPhoto").onclick = () => toLook();
+$("#cmpClose").onclick = () => setCompare(null);
+$("#cmpImg").onclick = e => e.currentTarget.classList.toggle("big");
 
 updateFilterLabel();
 applyLayout();

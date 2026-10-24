@@ -145,10 +145,14 @@ Die Zuordnung „Merkmal → Tier-/Pflanzengruppe“ steht als Tabelle `LOOK_DB`
 
 ## Fotos auf der Karte
 
-Statt einer Dichtekarte stehen runde Fotos der Lebewesen an echten Fundorten (jüngste Beobachtung mit Foto aus iNaturalist). Bis 100 km Umkreis sind es die 5 häufigsten Arten (3 Tiere, 2 Pflanzen), bei größerem Umkreis je 2 pro Gruppe. Der kleine Knopf „+ Fotos“ ergänzt je Gruppe 2 weitere. Antippen öffnet den Steckbrief. Die Fotos folgen dem aktiven Reiter und seinen Filtern.
+Statt einer Dichtekarte stehen runde Fotos der Lebewesen an echten Fundorten (jüngste Beobachtung mit Foto aus iNaturalist). Bis 100 km Umkreis sind es die 9 häufigsten Arten (6 Tiere, 3 Pflanzen), bei größerem Umkreis je 2 pro Gruppe. Der kleine Knopf „+ Fotos“ ergänzt je Gruppe 2 weitere. Antippen öffnet den Steckbrief. Die Fotos folgen dem aktiven Reiter und seinen Filtern.
 
 ## Registerkarte „Arten entdecken · Kombi“
 
 Kombiniert zwei unabhängige Quellen konservativ: iNaturalist (bestätigte Beobachtungen) und GBIF (Fundmeldungen aus vielen Datenbanken). Je Quelle zählt der Anteil einer Art an ihrer Gruppe (Vögel unter Vögeln …), damit große Vogelzähl-Datensätze nicht alles überlagern. Die Rangfolge ergibt das geometrische Mittel beider Anteile; Arten, die nur eine Quelle kennt, bleiben sichtbar, werden aber stark abgewertet (für die fehlende Quelle zählt die Hälfte des kleinsten gemessenen Anteils). Abgeglichen werden bis zu 1.500 iNaturalist- und 1.000 GBIF-Arten.
 
 Auf der Karte stehen zusätzlich gestrichelte Zonen-Fotos: Arten, die an einer Stelle (z. B. an einem See) deutlich häufiger sind als im ganzen Umkreis. Fotos rücken zur Seite, damit sie sich nicht überdecken.
+
+## Registerkarte „Tiere & Pflanzen · Erkennen“
+
+Pflanzen per Foto über Pl@ntNet. Tiere per Foto + Merkmale: Das Foto bleibt nur im Browser und steht als Vergleichsbild über dem Reiter „nach Aussehen“ (eine freie Tier-Erkennung ohne Benutzerkonto gibt es nicht).
