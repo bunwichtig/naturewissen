@@ -11,7 +11,7 @@ Zwei Bereiche, die auf denselben Ort, dieselbe Artenliste und denselben Steckbri
 - **Entdecken – Was lebt hier?** Arten im Umkreis nach Häufigkeit (iNaturalist), filterbar nach Gruppe. Schalter „genauer rechnen“ nimmt die Fundmeldungen von GBIF dazu.
 - **Bestimmen – Was habe ich gesehen?**
   - *Mit Foto:* Pflanzen automatisch über Pl@ntNet. Für Tiere und Pilze gibt es keinen frei nutzbaren Foto-Erkenner; das eigene Foto bleibt dann als Vergleich stehen.
-  - *Nach Merkmalen:* Oberfläche, Beine, Flügel, Größe, Wuchs, Blätter, Pilzform, Ort und Zeit. Grundlage ist die Merkmalstabelle mit 241 Gruppen; jede Zeile hat einen Beleg (Wikipedia-Artikel), nachzulesen auf der Quellen-Seite. Ort bei Pflanzen und Größe und Ort bei Vögeln kommen zusätzlich aus den Datensätzen EIVE 1.0 und AVONET (beide CC BY 4.0), berechnet für die in Deutschland beobachteten Arten.
+  - *Nach Merkmalen:* Oberfläche, Beine, Flügel, Größe, Wuchs, Blätter, Pilzform, Ort und Zeit. Grundlage ist die Merkmalstabelle mit 241 Gruppen; jede Zeile hat einen Beleg (Wikipedia-Artikel), nachzulesen auf der Quellen-Seite. Größe, Ort und Pilzform kommen zusätzlich aus Messdaten (EIVE, AVONET, FISHMORPH, Amniote, EltonTraits, europäische Amphibien nach Trochet et al., FungalTraits), berechnet für die in Deutschland beobachteten Arten. Herkunft und Lizenz jedes Datensatzes stehen auf der Quellen-Seite.
 - **Steckbrief:** Fotos mit Urheber und Lizenz, Gefährdung, Zahlen, Jahreszeit (Funde je Monat), Beschreibung aus Wikipedia, Verwechslungsarten, Systematik, Verbreitung auf der Karte.
 - **Karte:** Globus (MapLibre, OpenFreeMap), Satellitenbild (EOX), Waben mit der Funddichte (GBIF), Umkreis.
 

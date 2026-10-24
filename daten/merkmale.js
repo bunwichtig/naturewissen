@@ -39,12 +39,14 @@ export const GRUPPEN = [
   ["Mäuse & Ratten","Muridae","Mammalia","s:fell l:4 w:0 z:2,3 h:wd,wi,ga"],
   ["Wühlmäuse & Hamster","Cricetidae","Mammalia","s:fell l:4 w:0 z:2,3 h:wi,ga,uf"],
   ["Biber","Castoridae","Mammalia","s:fell l:4 w:0 z:5 h:uf,wa"],
+  ["Nutria","Myocastor","Mammalia","s:fell l:4 w:0 z:4,5 h:uf,wa"],
   ["Igel","Erinaceidae","Mammalia","s:fell l:4 w:0 z:3,4 h:ga,wd"],
   ["Maulwürfe","Talpidae","Mammalia","s:fell l:4 w:0 z:3 h:wi,ga"],
   ["Spitzmäuse","Soricidae","Mammalia","s:fell l:4 w:0 z:2,3 h:wd,wi,ga,uf"],
   ["Fledermäuse","Chiroptera","Mammalia","s:fell l:2,4 w:1 z:2,3 h:wd,ga,uf"],
   ["Robben","Phocidae","Mammalia","s:fell l:0,4 w:0 z:5,6 h:wa"],
   ["Schweinswale","Phocoenidae","Mammalia","s:haut l:0 w:0 z:5,6 h:wa"],
+  ["Delfine","Delphinidae","Mammalia","s:haut l:0 w:0 z:6 h:wa"],
 
   // ── Vögel: Singvögel einzeln ──
   ["Meisen","Paridae","Aves","s:feder l:2 w:1 z:3 h:wd,ga"],
@@ -106,10 +108,30 @@ export const GRUPPEN = [
   ["Laubfrösche","Hylidae","Amphibia","s:haut l:4 w:0 z:2 h:uf,wd"],
   ["Unken","Bombinatoridae","Amphibia","s:haut l:4 w:0 z:2 h:uf,wa"],
   ["Knoblauchkröten","Pelobatidae","Amphibia","s:haut l:4 w:0 z:2 h:wi,ga"],
+  ["Geburtshelferkröten","Alytidae","Amphibia","s:haut l:4 w:0 z:2 h:wd,ga,uf"],
   ["Molche & Salamander","Salamandridae","Amphibia","s:haut l:4 w:0 z:2,3 h:wa,uf,wd"],
 
   // ── Fische ──
-  ["Karpfenfische (Plötze, Brasse, Karpfen)","Cyprinidae","Actinopterygii","s:schuppe l:0 w:0 z:2,3,4,5 h:wa"],
+  ["Karpfen & Karauschen","Cyprinidae","Actinopterygii","s:schuppe l:0 w:0 z:3,4,5 h:wa"],
+  ["Weißfische (Plötze, Brasse, Döbel, Rotfeder, Ukelei)","Leuciscidae","Actinopterygii","s:schuppe l:0 w:0 z:3,4 h:wa"],
+  ["Schleien","Tincidae","Actinopterygii","s:schuppe l:0 w:0 z:4 h:wa"],
+  ["Gründlinge","Gobionidae","Actinopterygii","s:schuppe l:0 w:0 z:3 h:wa"],
+  ["Bitterlinge","Acheilognathidae","Actinopterygii","s:schuppe l:0 w:0 z:3 h:wa"],
+  ["Steinbeißer & Schlammpeitzger","Cobitidae","Actinopterygii","s:schuppe,haut l:0 w:0 z:3 h:wa"],
+  ["Bachschmerlen","Nemacheilidae","Actinopterygii","s:haut l:0 w:0 z:3 h:wa"],
+  ["Groppen","Cottidae","Actinopterygii","s:haut l:0 w:0 z:3 h:wa"],
+  ["Sonnenbarsche","Centrarchidae","Actinopterygii","s:schuppe l:0 w:0 z:3,4 h:wa"],
+  ["Echte Welse (Wels)","Siluridae","Actinopterygii","s:haut l:0 w:0 z:5,6 h:wa"],
+  ["Katzenwelse (Zwergwels)","Ictaluridae","Actinopterygii","s:haut l:0 w:0 z:3,4 h:wa"],
+  ["Quappen","Lotidae","Actinopterygii","s:haut l:0 w:0 z:4,5 h:wa"],
+  ["Störe","Acipenseridae","Actinopterygii","s:haut,panzer l:0 w:0 z:5,6 h:wa"],
+  ["Stinte","Osmeridae","Actinopterygii","s:schuppe l:0 w:0 z:3 h:wa"],
+  ["Aalmuttern","Zoarcidae","Actinopterygii","s:haut l:0 w:0 z:3,4 h:wa"],
+  ["Seenadeln & Seepferdchen","Syngnathidae","Actinopterygii","s:panzer l:0 w:0 z:3,4 h:wa"],
+  ["Lippfische","Labridae","Actinopterygii","s:schuppe l:0 w:0 z:3,4 h:wa"],
+  ["Hornhechte","Belonidae","Actinopterygii","s:schuppe l:0 w:0 z:4,5 h:wa"],
+  ["Steinbutte","Scophthalmidae","Actinopterygii","s:haut l:0 w:0 z:4,5 h:wa"],
+  ["Meeräschen","Mugilidae","Actinopterygii","s:schuppe l:0 w:0 z:4,5 h:wa"],
   ["Echte Barsche (Barsch, Zander)","Percidae","Actinopterygii","s:schuppe l:0 w:0 z:3,4,5 h:wa"],
   ["Hechte","Esocidae","Actinopterygii","s:schuppe l:0 w:0 z:4,5 h:wa"],
   ["Lachsfische (Forelle, Lachs)","Salmonidae","Actinopterygii","s:schuppe l:0 w:0 z:3,4,5 h:wa"],
@@ -306,6 +328,28 @@ export const GRUPPEN = [
 // Beleg je Gruppe: Titel des deutschen Wikipedia-Artikels (geprüft am 24.10.2026; alle wissenschaftlichen Namen auch bei iNaturalist gefunden).
 // Link: https://de.wikipedia.org/wiki/<Titel>
 export const BELEG = {
+  "Leuciscidae": "Weißfische",
+  "Tincidae": "Schleie",
+  "Gobionidae": "Gründlingsverwandte",
+  "Acheilognathidae": "Bitterlinge (Fische)",
+  "Cobitidae": "Steinbeißer (Familie)",
+  "Nemacheilidae": "Bachschmerlen",
+  "Cottidae": "Groppen",
+  "Centrarchidae": "Sonnenbarsche",
+  "Siluridae": "Echte Welse",
+  "Ictaluridae": "Katzenwelse",
+  "Lotidae": "Quappen",
+  "Acipenseridae": "Störe",
+  "Osmeridae": "Stinte",
+  "Zoarcidae": "Aalmuttern",
+  "Syngnathidae": "Seenadeln",
+  "Labridae": "Lippfische",
+  "Belonidae": "Hornhechte",
+  "Scophthalmidae": "Steinbutte",
+  "Mugilidae": "Meeräschen",
+  "Myocastor": "Nutria",
+  "Delphinidae": "Delfine",
+  "Alytidae": "Alytidae",
   "Cervidae": "Hirsche",
   "Bovidae": "Hornträger",
   "Suidae": "Echte Schweine",
@@ -552,6 +596,11 @@ export const BELEG = {
 // Werte aus echten Datensätzen (berechnet am 24.10.2026, siehe quellen.html#daten):
 //   Pflanzen, Ort: EIVE 1.0 (Dengler et al. 2023, CC BY 4.0) – Zeigerwerte für Feuchte, Licht und Nährstoffe
 //   Vögel, Größe und Ort: AVONET (Tobias et al. 2022, CC BY 4.0) – Gewicht, Lebensraum, Lebensweise
+//   Fische, Größe: FISHMORPH (Brosse et al. 2021, CC BY 4.0) – Höchstlänge (übliche Größe = 60 %)
+//   Säugetiere, Größe und Ort: Amniote Life-History Database (Myhrvold et al. 2015) und EltonTraits 1.0 (Wilman et al. 2014), beide ohne Nutzungsbeschränkung
+//   Reptilien, Größe: Amniote Life-History Database
+//   Amphibien, Größe und Ort: Trochet et al. 2014, europäische Amphibien (Biodiversity Data Journal, CC BY 4.0)
+//   Pilze, Form und Ort: FungalTraits 1.2 (Põlme et al. 2020), laut Autoren zur öffentlichen Nutzung
 // Je Gruppe zählen die in Deutschland bei iNaturalist bestätigt beobachteten Arten, gewichtet nach Zahl der Beobachtungen.
 // n = Arten mit Werten, cov = Anteil der Beobachtungen, für die es Werte gibt (in %).
 // Die Werte ergänzen die Tabelle: Ein Merkmal passt, wenn es im Wikipedia-Artikel steht ODER aus den Daten folgt.
@@ -669,15 +718,82 @@ export const DATEN = {
   "Podicipedidae": { q:"AVONET", z:"4", h:"wa,uf", n:5, cov:100 },
   "Gaviidae": { q:"AVONET", z:"5", h:"wa,uf", n:4, cov:100 },
   "Phasianidae": { q:"AVONET", z:"4", h:"ga", n:17, cov:100 },
+  "Cyprinidae": { q:"FISHMORPH", z:"3,4,5", n:6, cov:100 },
+  "Percidae": { q:"FISHMORPH", z:"4", n:4, cov:100 },
+  "Esocidae": { q:"FISHMORPH", z:"5", n:1, cov:100 },
+  "Salmonidae": { q:"FISHMORPH", z:"4,5", n:7, cov:100 },
+  "Gasterosteidae": { q:"FISHMORPH", z:"3", n:2, cov:92 },
+  "Anguillidae": { q:"FISHMORPH", z:"5", n:1, cov:100 },
+  "Gobiidae": { q:"FISHMORPH", z:"3", n:3, cov:77 },
+  "Leuciscidae": { q:"FISHMORPH", z:"4", n:15, cov:96 },
+  "Tincidae": { q:"FISHMORPH", z:"4", n:1, cov:100 },
+  "Gobionidae": { q:"FISHMORPH", z:"3", n:2, cov:99 },
+  "Cobitidae": { q:"FISHMORPH", z:"3", n:2, cov:100 },
+  "Nemacheilidae": { q:"FISHMORPH", z:"3", n:1, cov:89 },
+  "Acheilognathidae": { q:"FISHMORPH", z:"3", n:1, cov:100 },
+  "Cottidae": { q:"FISHMORPH", z:"3", n:1, cov:87 },
+  "Centrarchidae": { q:"FISHMORPH", z:"4", n:1, cov:100 },
+  "Siluridae": { q:"FISHMORPH", z:"6", n:1, cov:100 },
+  "Lotidae": { q:"FISHMORPH", z:"5", n:1, cov:100 },
+  "Ictaluridae": { q:"FISHMORPH", z:"4", n:2, cov:100 },
+  "Acipenseridae": { q:"FISHMORPH", z:"5,6", n:5, cov:100 },
+  "Osmeridae": { q:"FISHMORPH", z:"4", n:1, cov:100 },
+  "Mugilidae": { q:"FISHMORPH", z:"4", n:1, cov:100 },
+  "Actinopterygii": { q:"FISHMORPH", z:"3,4,5", n:72, cov:90 },
+  "Sciuridae": { q:"Amniote + EltonTraits", z:"4", h:"wd", n:2, cov:100 },
+  "Cervidae": { q:"Amniote + EltonTraits", z:"6", n:5, cov:100 },
+  "Leporidae": { q:"Amniote + EltonTraits", z:"4,5", n:3, cov:100 },
+  "Erinaceidae": { q:"Amniote + EltonTraits", z:"4", n:1, cov:100 },
+  "Canidae": { q:"Amniote + EltonTraits", z:"5", n:3, cov:100 },
+  "Myocastor": { q:"Amniote + EltonTraits", z:"4", n:1, cov:100 },
+  "Castoridae": { q:"Amniote + EltonTraits", z:"5", n:1, cov:100 },
+  "Talpidae": { q:"Amniote + EltonTraits", z:"3", n:1, cov:100 },
+  "Procyonidae": { q:"Amniote + EltonTraits", z:"5", n:1, cov:100 },
+  "Suidae": { q:"Amniote + EltonTraits", z:"6", n:1, cov:100 },
+  "Mustelidae": { q:"Amniote + EltonTraits", z:"4,5", n:8, cov:100 },
+  "Phocidae": { q:"Amniote + EltonTraits", z:"6", h:"wa", n:2, cov:100 },
+  "Muridae": { q:"Amniote + EltonTraits", z:"3,4", n:6, cov:100 },
+  "Bovidae": { q:"Amniote + EltonTraits", z:"5,6", n:3, cov:100 },
+  "Gliridae": { q:"Amniote + EltonTraits", z:"3", h:"wd", n:3, cov:100 },
+  "Chiroptera": { q:"Amniote + EltonTraits", z:"2,3", n:14, cov:100 },
+  "Soricidae": { q:"Amniote + EltonTraits", z:"3", n:5, cov:100 },
+  "Felidae": { q:"Amniote + EltonTraits", z:"5", n:3, cov:100 },
+  "Phocoenidae": { q:"Amniote + EltonTraits", z:"6", h:"wa", n:1, cov:100 },
+  "Delphinidae": { q:"Amniote + EltonTraits", z:"6", h:"wa", n:2, cov:100 },
+  "Bufonidae": { q:"Trochet et al. 2014", z:"3", h:"uf,wd,ga", n:2, cov:96 },
+  "Ranidae": { q:"Trochet et al. 2014", z:"3", h:"wa,uf,wd,wi,ga", n:6, cov:100 },
+  "Salamandridae": { q:"Trochet et al. 2014", z:"3", h:"wa,uf,wd,wi,ga", n:5, cov:72 },
+  "Bombinatoridae": { q:"Trochet et al. 2014", z:"2", h:"uf,wd", n:2, cov:100 },
+  "Pelobatidae": { q:"Trochet et al. 2014", z:"3", h:"uf,wi,ga", n:1, cov:100 },
+  "Hylidae": { q:"Trochet et al. 2014", z:"2", h:"uf,wd,wi,ga", n:1, cov:100 },
+  "Alytidae": { q:"Trochet et al. 2014", z:"2", h:"uf,wd,wi", n:1, cov:100 },
+  "Lacertidae": { q:"Amniote", z:"3", n:6, cov:100 },
+  "Anguidae": { q:"Amniote", z:"3", n:1, cov:100 },
+  "Lecanoromycetes": { q:"FungalTraits", f:"kruste", n:97, cov:99 },
+  "Agaricales": { q:"FungalTraits", h:"wd,wi", f:"hut", n:95, cov:98 },
+  "Polyporales": { q:"FungalTraits", h:"wd", f:"konsole", n:36, cov:97 },
+  "Auriculariales": { q:"FungalTraits", h:"wd", f:"gallert", n:6, cov:99 },
+  "Xylariales": { q:"FungalTraits", h:"wd", f:"kruste", n:12, cov:97 },
+  "Boletales": { q:"FungalTraits", h:"wd", f:"hut", n:34, cov:100 },
+  "Phallales": { q:"FungalTraits", h:"wi", f:"hut,kugel", n:5, cov:100 },
+  "Pezizales": { q:"FungalTraits", h:"wd,wi", f:"becher", n:19, cov:97 },
+  "Russulales": { q:"FungalTraits", h:"wd", f:"hut,konsole", n:13, cov:100 },
+  "Cantharellales": { q:"FungalTraits", h:"wd", f:"hut,koralle", n:8, cov:100 },
+  "Geastrales": { q:"FungalTraits", h:"wd", f:"kugel", n:3, cov:100 },
+  "Hymenochaetales": { q:"FungalTraits", h:"wd", f:"hut,konsole,kruste", n:17, cov:100 },
+  "Pucciniales": { q:"FungalTraits", f:"kruste", n:17, cov:100 },
 };
 
+// Zählt mit, wie viele berechnete Werte die Tabelle bestätigen und wie viele neu dazukommen (für quellen.html)
+export const STATS = { total:0, confirmed:0, added:0 };
 for (const g of GRUPPEN){
   const d = DATEN[g.sci];
   g.d = {};
   if (!d) continue;
-  for (const k of ["h", "z"]){
+  for (const k of ["h", "z", "f"]){
     if (!d[k]) continue;
     g.d[k] = new Set(d[k].split(","));
+    for (const v of g.d[k]){ STATS.total++; g.a[k]?.has(v) ? STATS.confirmed++ : STATS.added++; }
     g.a[k] = new Set([...(g.a[k] || []), ...g.d[k]]);
   }
 }
