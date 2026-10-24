@@ -84,14 +84,14 @@ function render(t){
         ${t.extinct ? `<span class="badge">ausgestorben</span>` : ""}
       </div>
       <div class="facts">
-        <div class="fact"><b id="fLocal">…</b><span>Beobachtungen im Umkreis</span></div>
+        ${state.placeSet ? `<div class="fact"><b id="fLocal">…</b><span>Beobachtungen um ${esc(state.place)}</span></div>` : ""}
         <div class="fact"><b>${fmt(t.observations_count)}</b><span>Beobachtungen weltweit</span></div>
         <div class="fact"><b id="fGbif">…</b><span>Fundmeldungen bei GBIF</span></div>
       </div>
       <button class="btn primary range-btn" id="showRange" aria-expanded="false">Verbreitungsgebiet zeigen</button>
       <div class="range" id="rangeBox" hidden>
         <div class="range-map" id="rangeMap"></div>
-        <p class="note"><span class="lg-range"></span> Fundorte bei iNaturalist · <span class="lg-here"></span> ${esc(state.place)}</p>
+        <p class="note"><span class="lg-range"></span> Fundorte bei iNaturalist${state.placeSet ? ` · <span class="lg-here"></span> ${esc(state.place)}` : ""}</p>
       </div>
     </div>
 
@@ -145,6 +145,7 @@ function render(t){
 
 async function loadLocal(t, signal){
   try{
+    if (!state.placeSet) return;
     const d = await inat("/observations", { taxon_id:t.id, ...whereParams(), per_page:0 }, { signal });
     $("#fLocal").textContent = fmt(d.total_results);
   }catch(err){ if (!isAbort(err) && $("#fLocal")) $("#fLocal").textContent = "–"; }
@@ -155,8 +156,8 @@ async function loadSeason(t, signal){
   const box = () => $("#season");
   try{
     const q = { taxon_id:t.id, date_field:"observed", interval:"month_of_year", verifiable:"true" };
-    let d = await inat("/observations/histogram", { ...q, ...whereParams() }, { signal, prio:PRIO.low });
-    let vals = Object.values(d.results?.month_of_year || {}), where = "im Umkreis";
+    let d = await inat("/observations/histogram", state.placeSet ? { ...q, ...whereParams() } : q, { signal, prio:PRIO.low });
+    let vals = Object.values(d.results?.month_of_year || {}), where = state.placeSet ? "im Umkreis" : "weltweit";
     if (vals.reduce((a, b) => a + b, 0) < 12){
       d = await inat("/observations/histogram", q, { signal, prio:PRIO.low });
       vals = Object.values(d.results?.month_of_year || {}); where = "weltweit";

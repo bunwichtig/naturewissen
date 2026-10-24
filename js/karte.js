@@ -15,8 +15,8 @@ export function showRangeMap(box, taxonId){
   map = new maplibregl.Map({
     container:box,
     style:"https://tiles.openfreemap.org/styles/liberty",
-    center:[c.lng, c.lat],
-    zoom:3.2,
+    center:state.placeSet ? [c.lng, c.lat] : [12, 50],
+    zoom:state.placeSet ? 3.2 : 2.2,
     attributionControl:{ compact:true },
     cooperativeGestures:true,         // am Handy scrollt die Seite weiter; Karte mit zwei Fingern bewegen
     locale:{
@@ -36,6 +36,7 @@ export function showRangeMap(box, taxonId){
     map.addSource("range", { type:"raster", tileSize:256, tiles:[`${API.inat}/grid/{z}/{x}/{y}.png?${q}`], attribution:ATTR_INAT });
     map.addLayer({ id:"range", type:"raster", source:"range", paint:{ "raster-opacity":0.9 } });
   });
+  if (!state.placeSet) return;   // Art ohne Ort gesucht: Karte ohne Markierung, Mitte Europa
   const el = document.createElement("div"); el.className = "here-mark"; el.title = state.place;
   new maplibregl.Marker({ element:el }).setLngLat([c.lng, c.lat]).addTo(map);
 }

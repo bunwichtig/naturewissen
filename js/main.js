@@ -3,6 +3,7 @@
 import { $, $$, fmt, esc } from "./util.js";
 import { state, set, on, RADII } from "./state.js";
 import { initOrt } from "./ort.js";
+import { initArtsuche } from "./artsuche.js";
 import { initEntdecken, load as loadEntdecken, setDetailOpener as exOpener } from "./entdecken.js";
 import { initBestimmen, onEnter as enterBestimmen, setDetailOpener as beOpener } from "./bestimmen.js";
 import { initSteckbrief, openDetail, closeDetail, setDetailHooks } from "./steckbrief.js";
@@ -13,6 +14,7 @@ initOrt();
 initEntdecken();
 initBestimmen();
 initSteckbrief();
+initArtsuche(openDetail);
 
 /* ---------- Startseite oder Ergebnis ---------- */
 function showApp(){

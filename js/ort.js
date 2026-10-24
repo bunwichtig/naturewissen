@@ -16,7 +16,7 @@ export function choose(o){
 
 export function initOrt(){
   // Suchfelder: oben in der Kopfleiste und groß auf der Startseite
-  for (const form of document.querySelectorAll("form.search")){
+  for (const form of document.querySelectorAll("form.search:not(.taxsearch)")){
     const input = form.querySelector("input"), box = form.querySelector("ul");
     form.addEventListener("submit", async e => {
       e.preventDefault();
