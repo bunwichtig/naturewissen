@@ -124,6 +124,17 @@ button,input{font:inherit;color:inherit}
 .tier+.tier{border-top:1px solid var(--line);padding-top:4px}
 .tier-head{position:sticky;top:-14px;z-index:1;display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--panel);padding:12px 0 6px}
 .tier-head h3{font:700 17px/1.1 var(--f-display);margin:0;letter-spacing:-.01em}
+.tier-tog{display:inline-flex;align-items:center;gap:6px;background:none;border:0;padding:0;margin:0;font:inherit;color:inherit;cursor:pointer}
+.tier-tog .chev{font-size:12px;color:var(--muted);transition:transform .2s}
+.tier-tog:hover .chev{color:var(--pollen)}
+.tier.collapsed .tier-tog .chev{transform:rotate(-90deg)}
+/* Halb eingeklappt: oberer Streifen der Karten bleibt sichtbar und blendet aus */
+.tier.collapsed{padding-bottom:10px}
+.tier.collapsed .grid{max-height:72px;overflow:hidden;cursor:pointer;
+  -webkit-mask-image:linear-gradient(#000 15%,transparent);mask-image:linear-gradient(#000 15%,transparent)}
+.tier.collapsed .grid .card{pointer-events:none}
+.tier.collapsed .tier-range,.tier.collapsed .more{display:none}
+@media (prefers-reduced-motion:reduce){.tier-tog .chev{transition:none}}
 .tier-meta{margin-left:auto;font:11px var(--f-data);color:var(--muted);font-variant-numeric:tabular-nums}
 .tier-range{margin:-4px 0 4px;font-size:12px;color:var(--muted)}
 .tier-range:empty{display:none}
@@ -791,7 +802,7 @@ async function updateGroupAvailability(params){
 /* Häufigkeitsstufen-Liste, wiederverwendet in allen drei Registerkarten.
    Pro Stufe zuerst FIRST Arten, jedes Aufklappen holt MORE weitere. */
 function makeTierList(box, prefix, { suffix = "hier", emptyHTML, onTotal = () => {}, tooMany = "" } = {}){
-  const L = { ctx:null };
+  const L = { ctx:null, closed:new Set() };   // eingeklappte Stufen bleiben beim Neuladen eingeklappt
   const gid = t => `${prefix}-grid-${t.id}`;
   async function fill(my, t, howMany, replace){
     const grid = document.getElementById(gid(t)), btn = box.querySelector(`.more[data-tier="${t.id}"]`);
@@ -830,9 +841,9 @@ function makeTierList(box, prefix, { suffix = "hier", emptyHTML, onTotal = () =>
         prev = endR; return tier;
       }).filter(t => t.end > t.start);
       box.innerHTML = my.tiers.map(t => `
-        <section class="tier">
+        <section class="tier${L.closed.has(t.id) ? " collapsed" : ""}" data-sec="${t.id}">
           <header class="tier-head">
-            ${barsHTML(t.bars)}<h3>${t.label}</h3>
+            ${barsHTML(t.bars)}<h3><button class="tier-tog" data-tog="${t.id}" aria-expanded="${!L.closed.has(t.id)}" title="Stufe ein- oder ausklappen">${t.label}<span class="chev" aria-hidden="true">▾</span></button></h3>
             <span class="tier-meta">${fmt(t.end - t.start)} Art${t.end - t.start === 1 ? "" : "en"} · Rang ${fmt(t.start + 1)}–${fmt(t.end)}</span>
           </header>
           <p class="tier-range" id="${prefix}-range-${t.id}"></p>
@@ -850,7 +861,18 @@ function makeTierList(box, prefix, { suffix = "hier", emptyHTML, onTotal = () =>
       throw err;
     }
   };
+  const toggle = (id, open) => {
+    const sec = box.querySelector(`.tier[data-sec="${id}"]`); if (!sec) return;
+    open = open ?? sec.classList.contains("collapsed");
+    sec.classList.toggle("collapsed", !open);
+    sec.querySelector(".tier-tog").setAttribute("aria-expanded", open);
+    open ? L.closed.delete(id) : L.closed.add(id);
+  };
   box.addEventListener("click", async e => {
+    const tog = e.target.closest(".tier-tog");
+    if (tog) return toggle(tog.dataset.tog);
+    const shut = e.target.closest(".tier.collapsed");
+    if (shut){ e.preventDefault(); return toggle(shut.dataset.sec, true); }   // Tippen auf den Rest klappt wieder auf
     const card = e.target.closest(".card");
     if (card?.dataset.id) return openDetail(+card.dataset.id);
     const btn = e.target.closest(".more[data-tier]");
