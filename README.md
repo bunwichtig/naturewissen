@@ -6,16 +6,12 @@ Zeigt auf einem Globus, welche Tiere, Pflanzen und Pilze an einem Ort leben, und
 
 ## Aufbau
 
-Zwei Bereiche, die auf denselben Ort, dieselbe Artenliste und denselben Steckbrief bauen:
+1. **Ort suchen** (oder eigenen Standort verwenden), Umkreis wählen: 5 bis 250 km.
+2. **Entdecken – Was lebt hier?** Arten im Umkreis nach Häufigkeit (iNaturalist), filterbar nach Gruppe. „Genauer rechnen“ nimmt die Fundmeldungen von GBIF dazu; kennt GBIF deutlich mehr Arten (z. B. bei Fischen), bietet die Seite das von selbst an.
+3. **Bestimmen – Was habe ich gesehen?** Mit Foto (Pflanzen über Pl@ntNet) oder nach Merkmalen (Merkmalstabelle mit Belegen und Messdaten, siehe Quellen-Seite).
+4. **Steckbrief** als Seitenleiste: Fotos mit Urheber und Lizenz, Gefährdung, Zahlen, Jahreszeit, Beschreibung aus Wikipedia, Verwechslungsarten, Systematik. Auf Knopfdruck die **Verbreitungskarte** (Fundorte bei iNaturalist auf einem Globus, der gesuchte Ort markiert).
 
-- **Entdecken – Was lebt hier?** Arten im Umkreis nach Häufigkeit (iNaturalist), filterbar nach Gruppe. Schalter „genauer rechnen“ nimmt die Fundmeldungen von GBIF dazu.
-- **Bestimmen – Was habe ich gesehen?**
-  - *Mit Foto:* Pflanzen automatisch über Pl@ntNet. Für Tiere und Pilze gibt es keinen frei nutzbaren Foto-Erkenner; das eigene Foto bleibt dann als Vergleich stehen.
-  - *Nach Merkmalen:* Oberfläche, Beine, Flügel, Größe, Wuchs, Blätter, Pilzform, Ort und Zeit. Grundlage ist die Merkmalstabelle mit 241 Gruppen; jede Zeile hat einen Beleg (Wikipedia-Artikel), nachzulesen auf der Quellen-Seite. Größe, Ort und Pilzform kommen zusätzlich aus Messdaten (EIVE, AVONET, FISHMORPH, Amniote, EltonTraits, europäische Amphibien nach Trochet et al., FungalTraits), berechnet für die in Deutschland beobachteten Arten. Herkunft und Lizenz jedes Datensatzes stehen auf der Quellen-Seite.
-- **Steckbrief:** Fotos mit Urheber und Lizenz, Gefährdung, Zahlen, Jahreszeit (Funde je Monat), Beschreibung aus Wikipedia, Verwechslungsarten, Systematik, Verbreitung auf der Karte.
-- **Karte:** Globus (MapLibre, OpenFreeMap), Satellitenbild (EOX), Waben mit der Funddichte (GBIF), Umkreis.
-
-Der **Umkreis folgt dem Zoom** und gilt für alle Bereiche gleich (5 bis 250 km). Start: Pinnow bei Schwerin, 30 km.
+Eine Karte erscheint nur im Steckbrief. Die zuletzt gesuchten Orte merkt sich die Seite auf dem Gerät.
 
 ## Regeln, die die Seite einhält
 
@@ -32,10 +28,11 @@ Der **Umkreis folgt dem Zoom** und gilt für alle Bereiche gleich (5 bis 250 km)
 | `index.html` | Gerüst der Seite |
 | `quellen.html` | Quellen, Lizenzen, Merkmalstabelle mit Belegen |
 | `css/app.css`, `css/fonts.css` | Gestaltung, Schriften |
-| `js/main.js` | Einstieg, Panel, Handy-Blatt |
+| `js/main.js` | Einstieg, Startseite, Umkreis, Bereiche, Seitenleiste |
 | `js/state.js` | gemeinsamer Zustand (Ort, Umkreis, Gruppe …) |
 | `js/api.js` | alle Abfragen mit Warteschlangen und Zwischenspeicher |
-| `js/karte.js` | Globus, Ebenen, Ortssuche |
+| `js/ort.js` | Ortssuche, Standort, zuletzt gesuchte Orte |
+| `js/karte.js` | Verbreitungskarte im Steckbrief |
 | `js/liste.js` | Artenliste in Häufigkeitsstufen |
 | `js/entdecken.js` | Bereich Entdecken inkl. „genauer rechnen“ |
 | `js/bestimmen.js` | Bereich Bestimmen: Foto und Merkmale |

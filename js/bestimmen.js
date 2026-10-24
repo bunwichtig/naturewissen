@@ -266,6 +266,7 @@ function renderMerkmale(){
 let mkTimer;
 function runMerkmale(){ clearTimeout(mkTimer); mkTimer = setTimeout(doRun, 350); }
 async function doRun(){
+  if (!state.placeSet) return;
   if (state.mode !== "bestimmen" || bs.way !== "merkmale") return;
   const any = Object.keys(bs.sel).length > 0;
   const key = JSON.stringify([bs.sel, bs.now, bs.bloom, whereParams()]);

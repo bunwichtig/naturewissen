@@ -3,8 +3,9 @@
 
 export const HOME = { name:"Pinnow", center:[11.548, 53.603], km:30 };
 
-// Umkreis folgt dem Zoom, für alle Bereiche gleich: grob die halbe sichtbare Breite, zwischen 5 und 250 km.
+// Umkreis um den gesuchten Ort, für alle Bereiche gleich, zwischen 5 und 250 km.
 export const RADIUS_MIN = 5, RADIUS_MAX = 250;
+export const RADII = [5, 10, 30, 50, 100, 250];   // Auswahl für den Umkreis um den gesuchten Ort
 export const radiusForZoom = z => Math.round(Math.min(RADIUS_MAX, Math.max(RADIUS_MIN, 9000 / Math.pow(2, z - 1))));
 export const zoomForRadius = km => 1 + Math.log2(9000 / km);
 
@@ -31,6 +32,7 @@ export const state = {
   center:{ lng:HOME.center[0], lat:HOME.center[1] },
   radius:HOME.km,
   place:HOME.name,
+  placeSet:false,            // erst nach Suche, Standort oder „zuletzt gesucht“
   group:"all",
   research:true,             // nur bestätigte Funde
   combo:false,               // genauer rechnen mit GBIF

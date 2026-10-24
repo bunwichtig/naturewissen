@@ -56,6 +56,7 @@ function params(){
 }
 
 export function load(){
+  if (!state.placeSet) return;
   const p = params();
   const key = p.toString() + "|" + state.combo;
   if (key === lastKey) return;

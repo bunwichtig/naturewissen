@@ -3,7 +3,7 @@
 import { $, $$, esc, fmt, plural, photoSize, isFree, licName, groupColor, commonName } from "./util.js";
 import { API, INAT_DE, PRIO, inat, getJSON, isAbort } from "./api.js";
 import { state, set, whereParams } from "./state.js";
-import { setSpeciesOverlay, map } from "./karte.js";
+import { showRangeMap, closeRangeMap } from "./karte.js";
 import { cardHTML } from "./liste.js";
 
 const RANK_DE = { kingdom:"Reich", phylum:"Stamm", class:"Klasse", order:"Ordnung", family:"Familie", genus:"Gattung", species:"Art", subspecies:"Unterart", variety:"Varietät", hybrid:"Hybride" };
@@ -26,7 +26,7 @@ export function initSteckbrief(){
 export function closeDetail(){
   abort?.abort();
   $("#detail").hidden = true;
-  setSpeciesOverlay(null);
+  closeRangeMap();
   set({ detail:null });
   onClose();
 }
@@ -88,7 +88,11 @@ function render(t){
         <div class="fact"><b>${fmt(t.observations_count)}</b><span>Beobachtungen weltweit</span></div>
         <div class="fact"><b id="fGbif">…</b><span>Fundmeldungen bei GBIF</span></div>
       </div>
-      <button class="btn" id="showRange" aria-pressed="false">Verbreitung auf der Karte zeigen</button>
+      <button class="btn primary range-btn" id="showRange" aria-expanded="false">Verbreitungsgebiet zeigen</button>
+      <div class="range" id="rangeBox" hidden>
+        <div class="range-map" id="rangeMap"></div>
+        <p class="note"><span class="lg-range"></span> Fundorte bei iNaturalist · <span class="lg-here"></span> ${esc(state.place)}</p>
+      </div>
     </div>
 
     <div class="d-sec">
@@ -130,11 +134,12 @@ function render(t){
     $$("#thumbs button").forEach(x => x.setAttribute("aria-pressed", x === b));
   });
   $("#showRange").onclick = e => {
-    const on = e.currentTarget.getAttribute("aria-pressed") !== "true";
-    e.currentTarget.setAttribute("aria-pressed", on);
-    e.currentTarget.textContent = on ? "Verbreitung ausblenden" : "Verbreitung auf der Karte zeigen";
-    setSpeciesOverlay(on ? t.id : null);
-    if (on) map.easeTo({ zoom:Math.min(map.getZoom(), 4), duration:1200 });
+    const btn = e.currentTarget, open = btn.getAttribute("aria-expanded") !== "true";
+    btn.setAttribute("aria-expanded", open);
+    btn.textContent = open ? "Verbreitungsgebiet ausblenden" : "Verbreitungsgebiet zeigen";
+    $("#rangeBox").hidden = !open;
+    if (open){ showRangeMap($("#rangeMap"), t.id); $("#rangeBox").scrollIntoView({ block:"nearest", behavior:"smooth" }); }
+    else closeRangeMap();
   };
 }
 
