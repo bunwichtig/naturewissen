@@ -29,6 +29,7 @@ p{color:var(--muted);margin:0 0 28px}
 @keyframes blink{40%{opacity:1}}
 @media (prefers-reduced-motion:reduce){.dots i{animation:none;opacity:.6}}
 .btns{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.warn{color:var(--pollen);border:1px dashed var(--pollen);border-radius:12px;padding:12px 16px;font-size:15px}
 a.btn{font-weight:600;font-size:14px;text-decoration:none;color:var(--ink);border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:11px 16px}
 a.btn.primary{background:var(--pollen);border-color:var(--pollen);color:var(--night)}
 a.btn:hover{border-color:var(--pollen)}
@@ -39,10 +40,12 @@ a:focus-visible{outline:2px solid var(--pollen);outline-offset:3px}
 <main>
   <span class="tape">WORK IN PROGRESS</span>
   <h1>V<span>2</span></h1>
-  <p>Hier entsteht eine neue Fassung von Pure Nature. Noch gibt es nichts zu sehen.</p>
+  <p>Hier entsteht eine neue Fassung von Pure Nature. Als Erstes gibt es die <b style="color:var(--ink)">Datenbank</b>: alle Quellen, Abfragen, Datensätze und Lücken zum Nachschlagen.</p>
+  <p class="warn">Achtung: Das ist noch in Arbeit. Inhalte und Aufbau können sich jederzeit ändern, manches fehlt noch.</p>
   <div class="dots" aria-hidden="true"><i></i><i></i><i></i></div>
   <div class="btns">
-    <a class="btn primary" href="../dev/">Zur Dev-Fassung</a>
+    <a class="btn primary" href="datenbank.html">Verstanden, trotzdem ansehen →</a>
+    <a class="btn" href="../dev/">Zur Dev-Fassung</a>
     <a class="btn" href="../">← Alle Fassungen</a>
   </div>
 </main>
