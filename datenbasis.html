@@ -44,6 +44,7 @@ a{color:var(--pollen);text-underline-offset:3px}
 .wiptag{font:400 11px/1 var(--f-data);color:var(--night);padding:4px 7px;border-radius:4px;background:repeating-linear-gradient(135deg,var(--pollen) 0 8px,#c98f34 8px 16px)}
 .wipnote{display:flex;gap:12px;align-items:flex-start;border:1px dashed var(--pollen);border-radius:14px;padding:14px 16px;margin:0 0 18px;color:var(--ink);font-size:15px}
 .wipnote b{color:var(--pollen)}
+.stamp{display:block;font:400 12px/1.4 var(--f-data);color:var(--muted);margin:0 0 10px}
 .stand{font:400 12px/1.4 var(--f-data);color:var(--muted);margin:-16px 0 8px;letter-spacing:.02em}
 .bar{margin-inline:calc(-1 * max(16px,env(safe-area-inset-left,0px)));padding-inline:max(16px,env(safe-area-inset-left,0px));position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:color-mix(in srgb,var(--night) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
 .bar-in{padding-block:14px;display:grid;gap:12px}
@@ -134,11 +135,13 @@ mark{background:color-mix(in srgb,var(--pollen) 35%,transparent);color:inherit;b
   <h2>Datenbasis 2</h2>
   <p>Die erweiterte Datenbasis: alle Wuchsformen der Pflanzen, Moose, Systematik über alle Ebenen, mehr Merkmale für Insekten und Spinnen. Sie steckt in der Dev-Fassung.</p>
   <ul><li><b>7</b> Live-Abfragen</li><li><b>11</b> Datensätze</li><li><b>6</b> Neuerungen</li></ul>
+  <span class="stamp" data-path="datenbasis/2.html">Zuletzt geändert: 25. Oktober 2026, 01:41 Uhr</span>
   <span class="go">Öffnen →</span></a><a class="ver" href="datenbasis/1.html">
   <span class="tag">V1 · Archiv</span>
   <h2>Datenbasis 1</h2>
   <p>Die Datenbasis, mit der die erste Version gebaut wurde. Sie bleibt unverändert.</p>
   <ul><li><b>6</b> Live-Abfragen</li><li><b>10</b> Datensätze</li><li><b>0</b> Neuerungen</li></ul>
+  <span class="stamp" data-path="datenbasis/1.html">Zuletzt geändert: 25. Oktober 2026, 01:41 Uhr</span>
   <span class="go">Öffnen →</span></a></div>
 </section>
 <section id="p-datenbank" role="tabpanel" aria-labelledby="t-datenbank" hidden>
@@ -501,5 +504,6 @@ $("#list").addEventListener("click", e => {
   const j = e.target.closest("[data-jump]"); if (j) { e.preventDefault(); history.replaceState(null,"","#"+j.dataset.jump); jump(j.dataset.jump); }
 });
 </script>
+<script src="stand.js" defer></script>
 </body>
 </html>

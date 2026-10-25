@@ -37,7 +37,9 @@ h1 span{color:var(--pollen)}
 .v.wip .tag{background:repeating-linear-gradient(135deg,var(--pollen) 0 8px,#c98f34 8px 16px)}
 .v h2{font:700 30px/1.1 var(--f-display);margin:14px 0 6px}
 .v p{margin:0;color:var(--muted);font-size:15px}
-.go{display:inline-block;margin-top:16px;font-weight:600;color:var(--pollen)}
+.go{display:inline-block;margin-top:12px;font-weight:600;color:var(--pollen)}
+.stamp{display:block;margin-top:14px;font:400 12px/1.4 var(--f-data);color:var(--muted)}
+.db .stamp{margin-top:4px}
 .db{display:flex;align-items:center;gap:14px;margin-top:16px;padding:16px 20px;border:1px dashed var(--line);border-radius:16px;text-decoration:none;color:var(--ink);background:transparent}
 .db:hover,.db:focus-visible{border-color:var(--pollen);border-style:solid}
 .db b{font:700 20px/1 var(--f-display);white-space:nowrap}
@@ -57,23 +59,27 @@ footer a{color:var(--muted);text-underline-offset:3px}
       <span class="tag">in Arbeit</span>
       <h2>Dev</h2>
       <p>Die Entwicklungsfassung: Hier kommen alle Neuerungen zuerst hinein. Kann sich jederzeit ändern.</p>
+      <span class="stamp" data-path="dev">Zuletzt geändert: 25. Oktober 2026, 01:57 Uhr</span>
       <span class="go">Öffnen →</span>
     </a>
     <a class="v frozen" href="v1/">
       <span class="tag">Archiv · 25. Oktober 2026</span>
       <h2>V1</h2>
       <p>Die erste fertige Version: Ort suchen, Arten entdecken, bestimmen, Steckbrief mit Verbreitungskarte. Bleibt unverändert.</p>
+      <span class="stamp" data-path="v1">Zuletzt geändert: 25. Oktober 2026, 00:42 Uhr</span>
       <span class="go">Öffnen →</span>
     </a>
     <a class="v wip" href="v2/">
       <span class="tag">WIP</span>
       <h2>V2</h2>
       <p>Eine neue Fassung ist in Vorbereitung. Schon da: die Datenbank zum Recherchieren, noch in Arbeit.</p>
+      <span class="stamp" data-path="v2">Zuletzt geändert: 25. Oktober 2026, 02:46 Uhr</span>
       <span class="go">Ansehen (in Arbeit) →</span>
     </a>
   </div>
-  <a class="db" href="datenbasis.html"><b>Datenbasis</b><span>Alle freien Quellen mit Lizenz und Nachweis, der Bauplan zum Neuaufbau mit Claude – und die Datenbank zum Recherchieren (in Arbeit)</span><i>→</i></a>
+  <a class="db" href="datenbasis.html"><b>Datenbasis</b><span>Alle freien Quellen mit Lizenz und Nachweis, der Bauplan zum Neuaufbau mit Claude – und die Datenbank zum Recherchieren (in Arbeit)<small class="stamp" data-path="datenbasis.html">Zuletzt geändert: 25. Oktober 2026, 02:46 Uhr</small></span><i>→</i></a>
   <footer><a href="dev/quellen.html">Quellen &amp; Lizenzen</a> · <a href="alt/">Alte Version</a></footer>
 </main>
+<script src="stand.js" defer></script>
 </body>
 </html>

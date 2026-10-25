@@ -45,7 +45,6 @@ Eine Website, die zeigt, welche Tiere, Pflanzen und Pilze an einem Ort leben, un
 |---|---|---|
 | `GET https://api.inaturalist.org/v1/taxa/autocomplete` | q, per_page=12, is_active=true, locale, preferred_place_id | Vorschlagsliste der Artsuche |
 | `GET …/v1/observations/species_counts` | iconic_taxa | taxon_id, lat, lng, radius (km), quality_grade=research, per_page (≤500), page, month, term_id=12&term_value_id=13 (blüht) | Arten am Ort nach Zahl der Beobachtungen |
-| `GET …/v1/observations/taxonomy` | lat, lng, radius, quality_grade, locale | Bereich Liste: alle Taxa am Ort mit parent_id und Fundzahl (nur Datenbasis 2) |
 | `GET …/v1/observations/iconic_taxa_species_counts` | lat, lng, radius | Artenzahl je Großgruppe (Gruppen ohne Funde ausgrauen) |
 | `GET …/v1/observations` | taxon_id, lat, lng, radius, per_page=0 | Zahl der Funde einer Art am Ort |
 | `GET …/v1/observations/histogram` | taxon_id, date_field=observed, interval=month_of_year, verifiable=true (+ Ort) | Funde je Monat |

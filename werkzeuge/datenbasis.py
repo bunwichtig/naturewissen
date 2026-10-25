@@ -18,7 +18,6 @@ QUELLEN = [
     endpunkte=[
       ("GET https://api.inaturalist.org/v1/taxa/autocomplete", "q, per_page=12, is_active=true, locale, preferred_place_id", "Vorschlagsliste der Artsuche"),
       ("GET …/v1/observations/species_counts", "iconic_taxa | taxon_id, lat, lng, radius (km), quality_grade=research, per_page (≤500), page, month, term_id=12&term_value_id=13 (blüht)", "Arten am Ort nach Zahl der Beobachtungen"),
-      ("GET …/v1/observations/taxonomy", "lat, lng, radius, quality_grade, locale", "Bereich Liste: alle Taxa am Ort mit parent_id und Fundzahl (nur Datenbasis 2)"),
       ("GET …/v1/observations/iconic_taxa_species_counts", "lat, lng, radius", "Artenzahl je Großgruppe (Gruppen ohne Funde ausgrauen)"),
       ("GET …/v1/observations", "taxon_id, lat, lng, radius, per_page=0", "Zahl der Funde einer Art am Ort"),
       ("GET …/v1/observations/histogram", "taxon_id, date_field=observed, interval=month_of_year, verifiable=true (+ Ort)", "Funde je Monat"),
@@ -401,6 +400,7 @@ w["regeln"] = ["Anerkannte Arten mit Vorkommen in Europa (heimisch oder eingefü
   "Arten am Ort aus iNaturalist UND GBIF prüfen – häufige Bäume (Fichte, Kiefer) fehlen bei iNaturalist oft.",
   "Jede Wuchsform liegt in einer eigenen Datei (daten/wuchs/) und wird erst geladen, wenn jemand sie wählt."]
 inat = q("inat")
+inat["endpunkte"].insert(3, ("GET …/v1/observations/taxonomy", "lat, lng, radius | place_id, quality_grade", "Bereich Liste: alle Taxa am Ort mit parent_id und Fundzahl"))
 inat["liefert"] += " Moose (Laubmoose, Lebermoose, Hornmoose) als eigene Gruppe über die iNaturalist-Taxa Bryophyta, Marchantiophyta, Anthocerotophyta. Systematik jeder Art (alle Ebenen von Reich bis Art) im Steckbrief."
 i_fest = max(i for i, x in enumerate(Q2) if x["art"] == "live") + 1
 Q2.insert(i_fest, dict(id="backbone", name="GBIF Backbone Taxonomy", art="live", lizenz="CC BY 4.0",
@@ -466,6 +466,7 @@ def hub():
   <h2>Datenbasis {V['nr']}</h2>
   <p>{E(re.sub('<[^>]+>', '', V['intro']))}</p>
   <ul><li><b>{sum(1 for q in V['quellen'] if q['art']=='live')}</b> Live-Abfragen</li><li><b>{sum(1 for q in V['quellen'] if q['art']=='fest')}</b> Datensätze</li><li><b>{len(V.get('neu', []))}</b> Neuerungen</li></ul>
+  <span class="stamp" data-path="datenbasis/{V['nr']}.html">Zuletzt geändert: {STAND_DATUM.get(f"datenbasis/{V['nr']}.html", "")}</span>
   <span class="go">Öffnen →</span></a>''' for V in reversed(VERSIONS))
   return f'''<!doctype html>
 <html lang="de">
@@ -503,6 +504,7 @@ h1{{font:700 clamp(36px,7vw,56px)/1 "Bricolage Grotesque",system-ui,sans-serif;l
 .ver li{{font-size:13px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:5px 10px}}
 .ver li b{{color:var(--ink)}}
 .go{{font-weight:600;color:var(--pollen)}}
+.stamp{{display:block;font:400 12px/1.4 "JetBrains Mono",ui-monospace,monospace;color:var(--muted);margin:0 0 10px}}
 </style>
 </head>
 <body>
@@ -512,9 +514,21 @@ h1{{font:700 clamp(36px,7vw,56px)/1 "Bricolage Grotesque",system-ui,sans-serif;l
 <p class="lead">Jede Version der Datenbasis mit allen freien Quellen, Lizenzen, Nachweisen, Abfragen – und einem Bauplan zum Neuaufbau mit Claude. Die neueste steht oben.</p>
 <div class="list">{cards}</div>
 </div>
+<script src="stand.js" defer></script>
 </body>
 </html>
 '''
+
+import subprocess
+def git_datum(path):
+  try: iso = subprocess.run(["git", "log", "-1", "--format=%cI", "--", path], cwd=ROOT, capture_output=True, text=True).stdout.strip()
+  except Exception: iso = ""
+  if not iso: return "neu"
+  from datetime import datetime
+  d = datetime.fromisoformat(iso)
+  M = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"]
+  return f"{d.day}. {M[d.month-1]} {d.year}, {d:%H:%M} Uhr"
+STAND_DATUM = {f"datenbasis/{V['nr']}.html": git_datum(f"datenbasis/{V['nr']}.html") for V in VERSIONS}
 
 (ROOT / "datenbasis").mkdir(exist_ok=True)
 for V in VERSIONS:
@@ -522,5 +536,6 @@ for V in VERSIONS:
   (ROOT / f"bauplan-{V['nr']}.md").write_text(b, encoding="utf-8")
   (ROOT / "datenbasis" / f"{V['nr']}.html").write_text(page(V, b), encoding="utf-8")
 (ROOT / "bauplan.md").write_text(md(VERSIONS[-1]), encoding="utf-8")
-(ROOT / "datenbasis.html").write_text(hub(), encoding="utf-8")
-print("geschrieben:", [f"datenbasis/{V['nr']}.html" for V in VERSIONS], "datenbasis.html, bauplan*.md")
+# datenbasis.html (Übersicht mit Reitern „Versionen“ und „Datenbank“) wird inzwischen von Hand gepflegt und hier NICHT mehr überschrieben.
+# Neue Versionen dort als Karte eintragen; hub() bleibt als Vorlage für eine Karte.
+print("geschrieben:", [f"datenbasis/{V['nr']}.html" for V in VERSIONS], "bauplan*.md (datenbasis.html wird von Hand gepflegt)")
