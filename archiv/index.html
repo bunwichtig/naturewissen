@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Archiv – Pure Nature</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%2386b86f'/%3E%3Cpath d='M16 6c6 4 6 16 0 20c-6-4-6-16 0-20z' fill='%230a0f0e'/%3E%3C/svg%3E">
+<style>
+@font-face{font-family:"Figtree";font-weight:400;font-display:swap;src:url(../fonts/figtree-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Figtree";font-weight:600;font-display:swap;src:url(../fonts/figtree-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"Bricolage Grotesque";font-weight:700;font-display:swap;src:url(../fonts/bricolage-grotesque-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:"JetBrains Mono";font-weight:400;font-display:swap;src:url(../fonts/jetbrains-mono-latin-400-normal.woff2) format("woff2")}
+:root{--night:#0a0f0e;--panel:#101816;--line:#24332e;--ink:#e6ede4;--muted:#8b9d94;--pollen:#e7ad4f;color-scheme:dark}
+*{box-sizing:border-box}
+html{background:var(--night)}
+body{margin:0;min-height:100vh;background:var(--night);color:var(--ink);font:16px/1.5 "Figtree","Segoe UI",system-ui,sans-serif;padding:0 max(16px,env(safe-area-inset-left,0px)) 48px}
+.wrap{max-width:860px;margin:0 auto}
+.top{display:flex;align-items:center;padding:18px 0;border-bottom:1px solid var(--line)}
+.brand{font:700 22px/1 "Bricolage Grotesque",system-ui,sans-serif;text-decoration:none;color:var(--ink)}
+.brand span{color:var(--pollen)}
+.back{margin-left:auto;font-size:13px;color:var(--muted);text-underline-offset:3px}
+h1{font:700 clamp(36px,7vw,56px)/1 "Bricolage Grotesque",system-ui,sans-serif;letter-spacing:-.03em;margin:36px 0 10px}
+.lead{color:var(--muted);margin:0 0 28px;max-width:58ch}
+.list{display:grid;gap:14px}
+.a{display:block;text-decoration:none;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;transition:border-color .15s,transform .15s}
+.a:hover,.a:focus-visible{border-color:var(--pollen);transform:translateY(-2px)}
+.a:focus-visible{outline:2px solid var(--pollen);outline-offset:3px}
+.tag{font:400 12px/1 "JetBrains Mono",ui-monospace,monospace;color:var(--night);background:var(--muted);border-radius:999px;padding:5px 9px;display:inline-block}
+.a h2{font:700 24px/1.1 "Bricolage Grotesque",system-ui,sans-serif;margin:12px 0 6px}
+.a p{margin:0;color:var(--muted);font-size:15px}
+.stamp{display:block;margin-top:12px;font:400 12px/1.4 "JetBrains Mono",ui-monospace,monospace;color:var(--muted)}
+.go{display:inline-block;margin-top:10px;font-weight:600;color:var(--pollen)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top"><a class="brand" href="../">Pure <span>Nature</span></a><a class="back" href="../">← Fassungen</a></header>
+<h1>Archiv</h1>
+<p class="lead">Abgeschlossene Stände. Sie bleiben so, wie sie waren, und werden nicht mehr verändert.</p>
+<div class="list">
+  <a class="a" href="datenbank-2026-10-25.html">
+    <span class="tag">Entwurf · 25. Oktober 2026</span>
+    <h2>Datenbank zur Datenherkunft</h2>
+    <p>Die Recherche-Datenbank: alle Quellen, Abfragen, Datensätze, Funktionen, Regeln und Lücken als aufklappbare Einträge mit Suche, Filtern und Verknüpfungen.</p>
+    <span class="stamp" data-path="archiv/datenbank-2026-10-25.html">Archiviert am 30. Oktober 2026</span>
+    <span class="go">Öffnen →</span>
+  </a>
+  <a class="a" href="../v1/">
+    <span class="tag">Version · 25. Oktober 2026</span>
+    <h2>V1</h2>
+    <p>Die erste fertige Version: Ort suchen, Arten entdecken, bestimmen, Steckbrief mit Verbreitungskarte.</p>
+    <span class="stamp" data-path="v1">Zuletzt geändert: 25. Oktober 2026, 00:42 Uhr</span>
+    <span class="go">Öffnen →</span>
+  </a>
+  <a class="a" href="../datenbasis/1.html">
+    <span class="tag">Datenbasis · 25. Oktober 2026</span>
+    <h2>Datenbasis 1</h2>
+    <p>Die Quellen und Datensätze, mit denen V1 gebaut wurde, mit Bauplan.</p>
+    <span class="stamp" data-path="datenbasis/1.html">Zuletzt geändert: 25. Oktober 2026, 01:41 Uhr</span>
+    <span class="go">Öffnen →</span>
+  </a>
+  <a class="a" href="../alt/">
+    <span class="tag">Ursprung</span>
+    <h2>Alte Version</h2>
+    <p>Die allererste Fassung in einer einzigen Datei.</p>
+    <span class="go">Öffnen →</span>
+  </a>
+</div>
+</div>
+<script src="../stand.js" defer></script>
+</body>
+</html>

@@ -34,6 +34,9 @@ h1 span{color:var(--pollen)}
 .tag{font:400 12px/1 var(--f-data);color:var(--night);background:var(--plantae);border-radius:999px;padding:5px 9px;display:inline-block}
 .v.frozen .tag{background:var(--muted)}
 .v.dev .tag{background:var(--pollen)}
+.v.wip{cursor:default;opacity:.75}
+.v.wip:hover{border-color:var(--line);transform:none}
+.v.wip .go{color:var(--muted)}
 .v.wip .tag{background:repeating-linear-gradient(135deg,var(--pollen) 0 8px,#c98f34 8px 16px)}
 .v h2{font:700 30px/1.1 var(--f-display);margin:14px 0 6px}
 .v p{margin:0;color:var(--muted);font-size:15px}
@@ -69,16 +72,17 @@ footer a{color:var(--muted);text-underline-offset:3px}
       <span class="stamp" data-path="v1">Zuletzt geändert: 25. Oktober 2026, 00:42 Uhr</span>
       <span class="go">Öffnen →</span>
     </a>
-    <a class="v wip" href="v2/">
+    <div class="v wip" aria-disabled="true">
       <span class="tag">WIP</span>
       <h2>V2</h2>
-      <p>Eine neue Fassung ist in Vorbereitung. Schon da: die Datenbank zum Recherchieren, noch in Arbeit.</p>
+      <p>Eine neue Fassung ist in Vorbereitung. Noch gibt es nichts zu sehen.</p>
       <span class="stamp" data-path="v2">Zuletzt geändert: 25. Oktober 2026, 02:46 Uhr</span>
-      <span class="go">Ansehen (in Arbeit) →</span>
-    </a>
+      <span class="go">Bald verfügbar</span>
+    </div>
   </div>
-  <a class="db" href="datenbasis.html"><b>Datenbasis</b><span>Alle freien Quellen mit Lizenz und Nachweis, der Bauplan zum Neuaufbau mit Claude – und die Datenbank zum Recherchieren (in Arbeit)<small class="stamp" data-path="datenbasis.html">Zuletzt geändert: 25. Oktober 2026, 02:46 Uhr</small></span><i>→</i></a>
-  <footer><a href="dev/quellen.html">Quellen &amp; Lizenzen</a> · <a href="alt/">Alte Version</a></footer>
+  <a class="db" href="datenbasis.html"><b>Datenbasis</b><span>Alle freien Quellen mit Lizenz und Nachweis, und der Bauplan zum Neuaufbau mit Claude<small class="stamp" data-path="datenbasis.html">Zuletzt geändert: 25. Oktober 2026, 02:46 Uhr</small></span><i>→</i></a>
+  <a class="db" href="archiv/"><b>Archiv</b><span>Abgeschlossene Stände: V1, Datenbasis 1, der Datenbank-Entwurf vom 25. Oktober und die alte Version<small class="stamp" data-path="archiv">Zuletzt geändert: 30. Oktober 2026</small></span><i>→</i></a>
+  <footer><a href="dev/quellen.html">Quellen &amp; Lizenzen</a></footer>
 </main>
 <script src="stand.js" defer></script>
 </body>

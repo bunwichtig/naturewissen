@@ -7,6 +7,7 @@ Zeigt auf einem Globus, welche Tiere, Pflanzen und Pilze an einem Ort leben, und
 - **Dev** (`dev/`): die Entwicklungsfassung. Alle Änderungen kommen nur hier hinein.
 - **V1** (`v1/`): **Archiv** – die erste fertige Version vom 25. Oktober 2026. Wird nicht mehr verändert.
 - **V2** (`v2/`): in Vorbereitung – zeigt vorerst nur eine „Work in progress“-Seite.
+- **Archiv** (`archiv/`): abgeschlossene Stände – V1, Datenbasis 1, der Datenbank-Entwurf zur Datenherkunft vom 25. Oktober 2026 (`archiv/datenbank-2026-10-25.html`) und die alte Version.
 
 **Datenbasis:** [datenbasis.html](https://bunwichtig.github.io/naturewissen/datenbasis.html) – alle Versionen der Datenbasis (`datenbasis/1.html` = Stand V1, `datenbasis/2.html` = Erweiterung in Dev), jeweils mit allen freien Quellen, Lizenz, Nachweis, Abfragen, Abdeckung nach Gruppen und einem Bauplan (`bauplan-1.md`, `bauplan-2.md`; `bauplan.md` = neueste) zum Neuaufbau mit Claude. Erzeugt mit `python3 werkzeuge/datenbasis.py`.
 

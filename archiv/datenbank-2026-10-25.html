@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Datenbank-Entwurf (Archiv) – Pure Nature</title>
+<meta name="description" content="Alle Versionen der Datenbasis von Pure Nature – freie Quellen mit Lizenz, Nachweis und Bauplan.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%2386b86f'/%3E%3Cpath d='M16 6c6 4 6 16 0 20c-6-4-6-16 0-20z' fill='%230a0f0e'/%3E%3C/svg%3E">
+<style>
+@font-face{font-family:"Figtree";font-weight:400;font-display:swap;src:url(../fonts/figtree-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Figtree";font-weight:600;font-display:swap;src:url(../fonts/figtree-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"Bricolage Grotesque";font-weight:700;font-display:swap;src:url(../fonts/bricolage-grotesque-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:"JetBrains Mono";font-weight:400;font-display:swap;src:url(../fonts/jetbrains-mono-latin-400-normal.woff2) format("woff2")}
+:root{--night:#0a0f0e;--panel:#101816;--panel-2:#16211e;--line:#24332e;--ink:#e6ede4;--muted:#8b9d94;--pollen:#e7ad4f;--plantae:#86b86f;--sky:#7fb3d5;--berry:#d98aa8;--clay:#d9622b;--stone:#b6a98c;--f-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;--f-body:"Figtree","Segoe UI",system-ui,sans-serif;--f-data:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;color-scheme:dark}
+*{box-sizing:border-box}
+html{background:var(--night)}
+body{margin:0;min-height:100vh;background:var(--night);color:var(--ink);font:16px/1.5 "Figtree","Segoe UI",system-ui,sans-serif;padding:0 max(16px,env(safe-area-inset-left,0px)) 48px}
+.wrap{max-width:860px;margin:0 auto}
+.top{display:flex;align-items:center;padding:18px 0;border-bottom:1px solid var(--line)}
+.brand{font:700 22px/1 "Bricolage Grotesque",system-ui,sans-serif;text-decoration:none;color:var(--ink)}
+.brand span{color:var(--pollen)}
+.back{margin-left:auto;font-size:13px;color:var(--muted);text-underline-offset:3px}
+h1{font:700 clamp(36px,7vw,56px)/1 "Bricolage Grotesque",system-ui,sans-serif;letter-spacing:-.03em;margin:36px 0 10px}
+.lead{color:var(--muted);margin:0 0 28px;max-width:58ch}
+.list{display:grid;gap:16px}
+.ver{display:block;text-decoration:none;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px;transition:border-color .15s,transform .15s}
+.ver:hover,.ver:focus-visible{border-color:var(--pollen);transform:translateY(-2px)}
+.ver:focus-visible{outline:2px solid var(--pollen);outline-offset:3px}
+.tag{font:400 12px/1 "JetBrains Mono",ui-monospace,monospace;color:var(--night);background:var(--muted);border-radius:999px;padding:5px 9px;display:inline-block}
+.tag.new{background:var(--pollen)}
+.ver h2{font:700 28px/1.1 "Bricolage Grotesque",system-ui,sans-serif;margin:14px 0 6px}
+.ver p{margin:0 0 12px;color:var(--muted)}
+.ver ul{display:flex;flex-wrap:wrap;gap:8px;list-style:none;margin:0 0 12px;padding:0}
+.ver li{font-size:13px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:5px 10px}
+.ver li b{color:var(--ink)}
+.go{font-weight:600;color:var(--pollen)}
+
+a{color:var(--pollen);text-underline-offset:3px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:0 0 24px;overflow-x:auto}
+.tabs button{flex:none;display:flex;align-items:center;gap:8px;font:600 15px/1 var(--f-body);color:var(--muted);background:none;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;padding:12px 14px;cursor:pointer}
+.tabs button:hover{color:var(--ink)}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--pollen)}
+.tabs button:focus-visible{outline:2px solid var(--pollen);outline-offset:-2px;border-radius:6px}
+.wiptag{font:400 11px/1 var(--f-data);color:var(--night);padding:4px 7px;border-radius:4px;background:repeating-linear-gradient(135deg,var(--pollen) 0 8px,#c98f34 8px 16px)}
+.wipnote{display:flex;gap:12px;align-items:flex-start;border:1px dashed var(--pollen);border-radius:14px;padding:14px 16px;margin:0 0 18px;color:var(--ink);font-size:15px}
+.wipnote b{color:var(--pollen)}
+.stamp{display:block;font:400 12px/1.4 var(--f-data);color:var(--muted);margin:0 0 10px}
+.stand{font:400 12px/1.4 var(--f-data);color:var(--muted);margin:-16px 0 8px;letter-spacing:.02em}
+.bar{margin-inline:calc(-1 * max(16px,env(safe-area-inset-left,0px)));padding-inline:max(16px,env(safe-area-inset-left,0px));position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:color-mix(in srgb,var(--night) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.bar-in{padding-block:14px;display:grid;gap:12px}
+.searchrow{display:flex;gap:10px;flex-wrap:wrap}
+.search{flex:1 1 260px;min-width:0;position:relative}
+.search input{width:100%;font:16px/1.2 var(--f-body);color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 40px 12px 42px}
+.search input:focus{border-color:var(--pollen);outline:none}
+.search svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:18px;height:18px;fill:none;stroke:var(--muted);stroke-width:2}
+.search .clr{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:0;color:var(--muted);font-size:20px;cursor:pointer;padding:4px 8px}
+select,.btn{font:600 14px/1 var(--f-body);color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 12px;cursor:pointer}
+select:hover,.btn:hover{border-color:var(--pollen)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:thin}
+.chip{flex:none;display:inline-flex;align-items:center;gap:7px;font:600 13px/1 var(--f-body);color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:999px;padding:8px 12px;cursor:pointer}
+.chip i{width:9px;height:9px;border-radius:50%;background:var(--c,var(--muted))}
+.chip b{font:400 11px/1 var(--f-data);color:var(--muted)}
+.chip[aria-pressed="true"]{background:var(--panel-2);border-color:var(--c,var(--pollen))}
+.chip[aria-pressed="true"] b{color:var(--ink)}
+.meta{display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:13px;color:var(--muted);flex-wrap:wrap}
+.meta .tools{display:flex;gap:8px}
+.meta .tools button{font:600 13px/1 var(--f-body);background:none;border:0;color:var(--pollen);cursor:pointer;padding:4px}
+
+#list{padding-block:20px 16px;display:grid;gap:10px}
+.sec{font:400 12px/1 var(--f-data);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:18px 0 4px;display:flex;gap:10px;align-items:center}
+.sec::after{content:"";flex:1;height:1px;background:var(--line)}
+.sec:first-child{margin-top:0}
+
+details.e{scroll-margin-top:calc(var(--barh,200px) + 12px);background:var(--panel);border:1px solid var(--line);border-radius:14px;transition:border-color .15s}
+details.e[open]{border-color:color-mix(in srgb,var(--c) 55%,var(--line))}
+details.e:target{border-color:var(--pollen)}
+summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:14px 16px}
+summary::-webkit-details-marker{display:none}
+summary:hover .nm{color:var(--pollen)}
+.dot{width:12px;height:12px;border-radius:4px;background:var(--c);transform:rotate(45deg)}
+.hd{min-width:0}
+.nm{font:700 18px/1.2 var(--f-display);letter-spacing:-.01em;transition:color .15s;overflow-wrap:anywhere}
+.sub{font-size:14px;color:var(--muted);margin-top:3px;overflow-wrap:anywhere}
+.badges{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.bdg{font:400 11px/1 var(--f-data);padding:5px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.bdg.typ{color:var(--night);background:var(--c);border-color:var(--c)}
+.bdg.warn{color:var(--clay);border-color:color-mix(in srgb,var(--clay) 50%,var(--line))}
+.chev{display:none}
+@media (max-width:600px){
+  summary{grid-template-columns:auto 1fr}
+  .badges{grid-column:2;justify-content:flex-start}
+}
+.body{padding:0 16px 18px 40px;display:grid;gap:14px;min-width:0}
+@media (max-width:600px){.body{padding-left:16px}}
+.body p{margin:0;max-width:68ch}
+.kv{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:0;font-size:15px}
+.kv dt{color:var(--muted);font-size:13px;padding-top:2px}
+.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
+@media (max-width:480px){.kv{grid-template-columns:1fr}.kv dd{margin-bottom:6px}}
+ul.pts{margin:0;padding-left:18px;display:grid;gap:4px;max-width:68ch}
+ul.pts li::marker{color:var(--c)}
+.cite{font-size:14px;color:var(--muted);border-left:2px solid var(--c);padding-left:12px;font-style:italic}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:520px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:400 11px/1.2 var(--f-data);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--panel-2)}
+tr:last-child td{border-bottom:0}
+td code{font:400 12px/1.4 var(--f-data);color:var(--ink);overflow-wrap:anywhere}
+.cp{font:600 11px/1 var(--f-body);background:none;border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:4px 6px;cursor:pointer;margin-top:4px}
+.cp:hover{color:var(--pollen);border-color:var(--pollen)}
+.links{display:flex;flex-wrap:wrap;gap:8px 14px;font-size:14px}
+.foot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--muted);border-top:1px dashed var(--line);padding-top:10px}
+.foot button{background:none;border:0;color:var(--muted);font:600 12px/1 var(--f-body);cursor:pointer;padding:0}
+.foot button:hover{color:var(--pollen)}
+mark{background:color-mix(in srgb,var(--pollen) 35%,transparent);color:inherit;border-radius:3px;padding:0 1px}
+.empty{text-align:center;padding:48px 16px;color:var(--muted);border:1px dashed var(--line);border-radius:14px}
+.empty b{display:block;font:700 22px/1.2 var(--f-display);color:var(--ink);margin-bottom:6px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);opacity:0;background:var(--plantae);color:var(--night);font-weight:600;font-size:14px;padding:10px 16px;border-radius:999px;transition:.2s;pointer-events:none;z-index:20}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top"><a class="brand" href="../">Pure <span>Nature</span></a><a class="back" href="./">← Archiv</a></header>
+<h1>Datenbank <span style="font-size:.45em;color:var(--muted);letter-spacing:0">Entwurf · Archiv</span></h1>
+<div class="wipnote"><span class="wiptag" style="background:var(--muted)">ARCHIV</span><span><b>Archivierter Entwurf vom 25. Oktober 2026.</b> Die Recherche-Datenbank zur Datenherkunft, so wie sie in Arbeit war. Sie wird nicht mehr verändert; die aktuelle Datenbasis steht unter <a href="../datenbasis.html">Datenbasis</a>.</span></div>
+<div class="tabs" id="tabs" role="tablist" aria-label="Ansicht wählen">
+  <button type="button" role="tab" id="t-versionen" aria-controls="p-versionen" aria-selected="true">Versionen</button>
+  <button type="button" role="tab" id="t-datenbank" aria-controls="p-datenbank" aria-selected="false">Datenbank <span class="wiptag" style="background:var(--muted)">Archiv</span></button>
+</div>
+<section id="p-versionen" role="tabpanel" aria-labelledby="t-versionen">
+<p class="lead">Jede Version der Datenbasis mit allen freien Quellen, Lizenzen, Nachweisen, Abfragen – und einem Bauplan zum Neuaufbau mit Claude. Die neueste steht oben.</p>
+<div class="list"><a class="ver" href="../datenbasis/2.html">
+  <span class="tag new">aktuell · Dev</span>
+  <h2>Datenbasis 2</h2>
+  <p>Die erweiterte Datenbasis: alle Wuchsformen der Pflanzen, Moose, Systematik über alle Ebenen, mehr Merkmale für Insekten und Spinnen. Sie steckt in der Dev-Fassung.</p>
+  <ul><li><b>7</b> Live-Abfragen</li><li><b>11</b> Datensätze</li><li><b>6</b> Neuerungen</li></ul>
+  <span class="stamp" data-path="datenbasis/2.html">Zuletzt geändert: 25. Oktober 2026, 01:41 Uhr</span>
+  <span class="go">Öffnen →</span></a><a class="ver" href="../datenbasis/1.html">
+  <span class="tag">V1 · Archiv</span>
+  <h2>Datenbasis 1</h2>
+  <p>Die Datenbasis, mit der die erste Version gebaut wurde. Sie bleibt unverändert.</p>
+  <ul><li><b>6</b> Live-Abfragen</li><li><b>10</b> Datensätze</li><li><b>0</b> Neuerungen</li></ul>
+  <span class="stamp" data-path="datenbasis/1.html">Zuletzt geändert: 25. Oktober 2026, 01:41 Uhr</span>
+  <span class="go">Öffnen →</span></a></div>
+</section>
+<section id="p-datenbank" role="tabpanel" aria-labelledby="t-datenbank" hidden>
+<p class="lead">Alles, worauf die Seite aufbaut: freie Quellen und ihre Abfragen, Datensätze mit Zitat, Funktionen, Regeln und die Lücken, die noch offen sind. Zum Nachschlagen und Recherchieren. Jeder Eintrag lässt sich aufklappen.</p>
+<div class="stand">Stand 25.10.2026 · Datenbasis 2 · <span id="total"></span></div>
+<div class="bar"><div class="bar-in">
+  <div class="searchrow">
+    <label class="search" for="q">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+      <input id="q" type="search" placeholder="Suchen: z. B. Moose, CC0, histogram, Größe …" autocomplete="off" aria-label="Datenbank durchsuchen">
+      <button class="clr" type="button" id="qclr" aria-label="Suche leeren" hidden>×</button>
+    </label>
+    <select id="lic" aria-label="Nach Lizenz filtern"><option value="">Alle Lizenzen</option></select>
+  </div>
+  <div class="chips" id="chips" role="group" aria-label="Nach Art des Eintrags filtern"></div>
+  <div class="meta"><span id="count" aria-live="polite"></span><span class="tools"><button type="button" id="openall">Alle aufklappen</button><button type="button" id="closeall">Alle zuklappen</button></span></div>
+</div></div>
+<div id="list"></div>
+</section>
+<div class="toast" id="toast" role="status"></div>
+</div>
+<script>
+/* ---------- Datenbestand (aus bauplan-2.md) ---------- */
+const TYPEN = {
+  quelle:   {name:"Live-Quelle",   c:"var(--plantae)"},
+  datensatz:{name:"Datensatz",     c:"var(--sky)"},
+  funktion: {name:"Funktion",      c:"var(--pollen)"},
+  gruppe:   {name:"Abdeckung",     c:"var(--berry)"},
+  regel:    {name:"Regel",         c:"var(--stone)"},
+  technik:  {name:"Technik",       c:"var(--muted)"},
+  datei:    {name:"Datei im Repo", c:"var(--sky)"},
+  verworfen:{name:"Geprüft, nicht verwendet", c:"var(--clay)"},
+};
+const INAT = "https://api.inaturalist.org";
+const D = [
+/* ===== Live-Quellen ===== */
+{id:"inaturalist",typ:"quelle",name:"iNaturalist",sub:"Beobachtungen, Fotos, deutsche Namen, Fundzahlen, Karte",
+ lizenz:["CC0","CC BY","CC BY-NC"],
+ kv:{"Lizenz":"CC0 · CC BY · CC BY-NC (je Foto/Beobachtung)","Schlüssel":"keiner, kostenlos","Tempo":"höchstens ~1 Anfrage/s (1 gleichzeitig, mind. 0,6 s Abstand)","Deutsche Namen":"locale=de, preferred_place_id=7207 (Deutschland)"},
+ pts:["Vorschläge bei der Artsuche, Arten in der Umgebung nach Häufigkeit","Fotos, Fundzahlen, Jahreszeit, Verwechslungsarten, Blüte/Lebensstadium","Verbreitungskarte als Raster-Kacheln","Moose als eigene Gruppe über Bryophyta, Marchantiophyta, Anthocerotophyta","Systematik jeder Art von Reich bis Art","Nur Fotos mit license_code zeigen, immer mit Urheber und Lizenz"],
+ abfragen:[
+  ["GET",INAT+"/v1/taxa/autocomplete","q, per_page=12, is_active=true, locale, preferred_place_id","Vorschlagsliste der Artsuche"],
+  ["GET",INAT+"/v1/observations/species_counts","iconic_taxa | taxon_id, lat, lng, radius (km), quality_grade=research, per_page (≤500), page, month, term_id=12&term_value_id=13 (blüht)","Arten am Ort nach Zahl der Beobachtungen"],
+  ["GET",INAT+"/v1/observations/taxonomy","lat, lng, radius, quality_grade, locale","Bereich Liste: alle Taxa am Ort mit parent_id und Fundzahl"],
+  ["GET",INAT+"/v1/observations/iconic_taxa_species_counts","lat, lng, radius","Artenzahl je Großgruppe (leere Gruppen ausgrauen)"],
+  ["GET",INAT+"/v1/observations","taxon_id, lat, lng, radius, per_page=0","Zahl der Funde einer Art am Ort"],
+  ["GET",INAT+"/v1/observations/histogram","taxon_id, date_field=observed, interval=month_of_year, verifiable=true (+ Ort)","Funde je Monat"],
+  ["GET",INAT+"/v1/identifications/similar_species","taxon_id, locale","Verwechslungsarten"],
+  ["GET",INAT+"/v1/taxa/{id}","locale, preferred_place_id","Steckbrief: Fotos, Namen, Gefährdung, Systematik"],
+  ["GET",INAT+"/v1/taxa","q (wissenschaftlicher Name), is_active=true","Name → iNaturalist-Nummer"],
+  ["Kacheln",INAT+"/v1/grid/{z}/{x}/{y}.png","taxon_id, color=#d9622b, quality_grade","Verbreitungskarte"]],
+ links:[["Nutzungsbedingungen","https://www.inaturalist.org/pages/terms"],["API-Regeln","https://www.inaturalist.org/pages/api+recommended+practices"],["API-Dokumentation","https://api.inaturalist.org/v1/docs/"]]},
+
+{id:"gbif",typ:"quelle",name:"GBIF",sub:"Fundmeldungen aus Museen, Herbarien, Kartierungen",
+ lizenz:["CC0","CC BY","CC BY-NC"],
+ kv:{"Lizenz":"CC0 · CC BY · CC BY-NC (je Datensatz)","Schlüssel":"keiner","Pflicht":"Quelle GBIF mit Link nennen","Gruppen-Schlüssel":"Pflanzen 6 · Pilze 5 · Vögel 212 · Insekten 216 · Säugetiere 359 · Amphibien 131 · Spinnentiere 367 · Weichtiere 52"},
+ pts:["Für „genauer rechnen“, den Hinweis „GBIF kennt hier mehr Arten“, Bäume/Sträucher und die Fundzahl im Steckbrief","Fische sind keine eigene Klasse: über ihre Ordnungen 548, 1313, 1153, 587, 550, 590, 495, 588, 549, 708, 773, 538, 498, 547, 1103, 772, 1068, 537, 496, 1069, 1165, 1167, 1067, 499, 1162, 1311, 1305, 889","Reptilien über Squamata 11592253 + Testudines 11418114"],
+ abfragen:[
+  ["GET","https://api.gbif.org/v1/occurrence/search","geoDistance=lat,lng,KMkm, taxonKey (mehrfach), limit=0, facet=speciesKey|scientificName, facetLimit, occurrenceStatus=PRESENT, hasGeospatialIssue=false","Arten am Ort mit Fundzahl (Facetten)"],
+  ["GET","https://api.gbif.org/v1/species/{key}","–","Schlüssel → Name und Gruppe"],
+  ["GET","https://api.gbif.org/v1/species/match","name, strict=true, kingdom","Name → GBIF-Schlüssel"]],
+ links:[["Nutzungsbedingungen","https://www.gbif.org/terms"],["Vereinbarung für Datennutzer","https://www.gbif.org/terms/data-user"],["API-Dokumentation","https://www.gbif.org/developer/summary"]]},
+
+{id:"gbif-backbone",typ:"quelle",name:"GBIF Backbone Taxonomy",sub:"Einheitliche Systematik von Reich bis Art",
+ lizenz:["CC BY"],
+ kv:{"Lizenz":"CC BY 4.0","Herkunft":"Catalogue of Life und weitere Checklisten","Ränge":"Felder kingdom … species"},
+ pts:["Grundlage für Namensabgleich und die GBIF-Gruppen","Neu in Datenbasis 2"],
+ abfragen:[
+  ["GET","https://api.gbif.org/v1/species/match","name, strict=true, kingdom","Name → Schlüssel mit allen Rängen"],
+  ["GET","https://api.gbif.org/v1/species/{key}/parents","–","alle übergeordneten Ebenen"]],
+ links:[["Datensatz bei GBIF","https://www.gbif.org/dataset/d7dddbf4-2cf0-4f39-9b2a-bb099caae36c"],["Catalogue of Life","https://www.catalogueoflife.org"]]},
+
+{id:"wikipedia",typ:"quelle",name:"Wikipedia (deutsch)",sub:"Artikelanfang im Steckbrief, Belege für Merkmale",
+ lizenz:["CC BY-SA"],
+ kv:{"Lizenz":"CC BY-SA 4.0","Pflicht":"Unter dem Text: „Text: Wikipedia, Artikel …, CC BY-SA 4.0“ mit Link"},
+ pts:["Artikel über den wissenschaftlichen Namen suchen, Weiterleitungen folgen","Die ersten Sätze des Artikels im Steckbrief"],
+ abfragen:[["GET","https://de.wikipedia.org/w/api.php","action=query, format=json, origin=*, redirects=1, titles=NAME, prop=extracts|info|pageprops, exsentences=5, explaintext=1, inprop=url, ppprop=disambiguation","Artikelanfang"]],
+ links:[["Lizenzbestimmungen","https://de.wikipedia.org/wiki/Wikipedia:Lizenzbestimmungen"],["CC BY-SA 4.0","https://creativecommons.org/licenses/by-sa/4.0/deed.de"]]},
+
+{id:"nominatim",typ:"quelle",name:"Nominatim & OpenStreetMap",sub:"Ortssuche und Ortsname zum Standort",
+ lizenz:["ODbL"],
+ kv:{"Lizenz":"ODbL","Tempo":"höchstens 1 Anfrage/s"},
+ pts:["Keine Suche beim Tippen, erst nach dem Absenden","Ergebnisse merken, nicht doppelt fragen"],
+ abfragen:[
+  ["GET","https://nominatim.openstreetmap.org/search","format=jsonv2, limit=6, accept-language=de, q","Ortssuche"],
+  ["GET","https://nominatim.openstreetmap.org/reverse","format=jsonv2, lat, lon, zoom=12, accept-language=de","Name zum Standort"]],
+ links:[["Nutzungsregeln","https://operations.osmfoundation.org/policies/nominatim/"],["OSM-Urheberrecht","https://www.openstreetmap.org/copyright"]]},
+
+{id:"plantnet",typ:"quelle",name:"Pl@ntNet",sub:"Pflanzen per Foto bestimmen",
+ lizenz:["eigener Schlüssel"],
+ kv:{"Lizenz":"kostenlos mit eigenem Schlüssel","Kontingent":"500 Bestimmungen/Tag","Schlüssel":"jede Person trägt ihren eigenen ein, nur auf dem Gerät gespeichert"},
+ pts:["Auf my.plantnet.org „expose my API key“ und die Domain freigeben","Fotos gehen nur zur Bestimmung an Pl@ntNet","Bis 5 Fotos mit Organ (Blatt, Blüte, Frucht, Rinde …)"],
+ abfragen:[
+  ["POST","https://my-api.plantnet.org/v2/identify/all","api-key, lang=de, nb-results=5, include-related-images=true; Formular: images, organs","Bestimmung"],
+  ["GET","https://my-api.plantnet.org/v2/quota/daily","api-key","Schlüssel prüfen, Rest-Kontingent"]],
+ links:[["Nutzungsbedingungen","https://my.plantnet.org/terms_of_use"],["Schlüssel holen","https://my.plantnet.org/"]]},
+
+{id:"openfreemap",typ:"quelle",name:"OpenFreeMap",sub:"Kartenbild der Verbreitungskarte",
+ lizenz:["ODbL"],
+ kv:{"Lizenz":"kostenlos · Daten OpenStreetMap / OpenMapTiles","Schlüssel":"keiner, keine Aufruf-Grenze","Pflicht":"Namensnennung OpenMapTiles und OpenStreetMap bleibt in der Karte sichtbar"},
+ abfragen:[["Stil","https://tiles.openfreemap.org/styles/liberty","–","Kartenstil für MapLibre"]],
+ links:[["openfreemap.org","https://openfreemap.org"],["OSM-Urheberrecht","https://www.openstreetmap.org/copyright"]]},
+
+/* ===== Datensätze ===== */
+{id:"eive",typ:"datensatz",name:"EIVE 1.0",sub:"Zeigerwerte für Europa · 14.835 Pflanzenarten",lizenz:["CC BY"],
+ kv:{"Lizenz":"CC BY 4.0","Liefert":"Ort bei Pflanzen aus Feuchte, Licht und Nährstoffen","Gruppen":"alle Gefäßpflanzen"},
+ pts:["Feuchte ab 8,5 = im Wasser, ab 6,5 = Ufer","Licht bis 4,5 = Wald","Licht ab 6,5 bei mittlerer Feuchte = Wiese/Feld","Nährstoffe ab 7,5 bei Licht und mittlerer Feuchte = Garten/Siedlung"],
+ cite:"Dengler, J., Jansen, F. et al. (2023): Ecological Indicator Values for Europe (EIVE) 1.0. Vegetation Classification and Survey.",
+ links:[["Datensatz bei Zenodo","https://zenodo.org/records/7534792"]]},
+{id:"avonet",typ:"datensatz",name:"AVONET",sub:"Merkmale aller Vögel · 10.661 Arten",lizenz:["CC BY"],
+ kv:{"Lizenz":"CC BY 4.0","Liefert":"Größe und Ort bei Vögeln"},
+ pts:["Länge in cm ≈ 5,3 × Kubikwurzel(Gewicht in g)","Hauptlebensraum → Wald / Wiese / Ufer / Wasser / Siedlung"],
+ cite:"Tobias, J. A. et al. (2022): AVONET: morphological, ecological and geographical data for all birds. Ecology Letters 25: 581–597.",
+ links:[["Datensatz bei Figshare","https://figshare.com/s/b990722d72a26b5bfead"],["Artikel","https://doi.org/10.1111/ele.13898"]]},
+{id:"fishmorph",typ:"datensatz",name:"FISHMORPH",sub:"Süßwasserfische · 9.456 Arten",lizenz:["CC BY"],
+ kv:{"Lizenz":"CC BY 4.0","Liefert":"Größe bei Süßwasserfischen"},
+ pts:["Übliche Größe = 60 % der Höchstlänge","Meeresfische fehlen"],warn:"Meeresfische fehlen",
+ cite:"Brosse, S. et al. (2021): FISHMORPH: A global database on morphological traits of freshwater fishes. Global Ecology and Biogeography 30: 2330–2336.",
+ links:[["Datensatz bei RODARE","https://rodare.hzdr.de/record/1316"],["Artikel","https://doi.org/10.1111/geb.13395"]]},
+{id:"amniote",typ:"datensatz",name:"Amniote Life-History Database",sub:"Größe bei Säugetieren und Eidechsen",lizenz:["frei (Nennung erbeten)"],
+ kv:{"Lizenz":"ohne Urheberrechtsbeschränkung, Nennung erbeten","Liefert":"Kopf-Rumpf-Länge"},
+ cite:"Myhrvold, N. P. et al. (2015): An amniote life-history database to perform comparative analyses with birds, mammals, and reptiles. Ecology 96: 3109.",
+ links:[["Datenarchiv mit Nutzungsangabe","https://esapubs.org/archive/ecol/E096/269/metadata.php"]]},
+{id:"eltontraits",typ:"datensatz",name:"EltonTraits 1.0",sub:"Säugetiere: lebt im Meer / in Bäumen",lizenz:["frei (Nennung erbeten)"],
+ kv:{"Lizenz":"ohne Urheberrechtsbeschränkung, Nennung erbeten"},
+ cite:"Wilman, H. et al. (2014): EltonTraits 1.0: Species-level foraging attributes of the world's birds and mammals. Ecology 95: 2027.",
+ links:[["Datenarchiv mit Nutzungsangabe","https://esapubs.org/archive/ecol/E095/178/metadata.php"]]},
+{id:"amphibien",typ:"datensatz",name:"Europäische Amphibien",sub:"Größe und Lebensraum bei Fröschen, Kröten, Unken, Molchen",lizenz:["CC BY"],
+ kv:{"Lizenz":"CC BY 4.0"},
+ cite:"Trochet, A. et al. (2014): A database of life-history traits of European amphibians. Biodiversity Data Journal 2: e4123.",
+ links:[["Artikel mit Daten","https://doi.org/10.3897/BDJ.2.e4123"]]},
+{id:"tagfalter",typ:"datensatz",name:"Tagfalter Europas",sub:"Spannweite, Eiablage Licht/Schatten, Rast an Bauwerken",lizenz:["CC0"],
+ kv:{"Lizenz":"CC0"},warn:"Nachtfalter fehlen",
+ cite:"Middleton-Welling, J. et al. (2020): A new comprehensive trait database of European and Maghreb butterflies, Papilionoidea. Scientific Data 7: 351.",
+ links:[["Datensatz bei Dryad","https://datadryad.org/dataset/doi:10.5061/dryad.6m905qfx6"],["Artikel","https://doi.org/10.1038/s41597-020-00697-7"]]},
+{id:"combine",typ:"datensatz",name:"COMBINE",sub:"Säugetiere: lebt im Wasser / in Bäumen",lizenz:["CC0"],
+ kv:{"Lizenz":"CC0"},warn:"keine Längen verwenden",
+ pts:["In der Dryad-Kopie fehlen bei vielen Zahlen die Dezimaltrennzeichen","Nur die Lebensraum-Angaben verwenden, keine Längen"],
+ cite:"Soria, C. D. et al. (2021): COMBINE: a coalesced mammal database of intrinsic and extrinsic traits. Ecology 102: e03344.",
+ links:[["Datensatz bei Dryad","https://datadryad.org/dataset/doi:10.5061/dryad.05qfttfdq"]]},
+{id:"gossner",typ:"datensatz",name:"Insekten und Spinnen im Grünland",sub:"Gossner et al. 2015 · 1.230 Arten aus Deutschland",lizenz:["CC0"],
+ kv:{"Lizenz":"CC0 (Dryad)","Liefert":"Größe und Schicht bei Spinnen, Käfern, Wanzen, Heuschrecken","Eingeflossen":"Radnetz- und Krabbenspinnen, Weich- und Marienkäfer, Langfühlerschrecken"},
+ pts:["Größe aus der Körperlänge: unter 1 cm, 1–5 cm, über 5 cm","Krautschicht = Wiese und Feld, Bäume = Wald, Wasser = im Wasser","Nur Gruppen, bei denen mindestens die Hälfte der Beobachtungen in Deutschland abgedeckt ist","Neu in Datenbasis 2"],
+ cite:"Gossner, M. M. et al. (2015): A summary of eight traits of Coleoptera, Hemiptera, Orthoptera and Araneae, occurring in grasslands in Germany. Scientific Data 2: 150013.",
+ links:[["Datensatz bei Dryad","https://datadryad.org/dataset/doi:10.5061/dryad.53ds2"],["Artikel","https://doi.org/10.1038/sdata.2015.13"],["verwendete Kopie (traitdata)","https://github.com/RS-eco/traitdata"]]},
+{id:"fungaltraits",typ:"datensatz",name:"FungalTraits 1.2",sub:"Fruchtkörperform und Ort bei Pilzen · über 10.000 Gattungen",lizenz:["frei (Nennung erbeten)"],
+ kv:{"Lizenz":"zur öffentlichen Nutzung freigegeben (keine CC-Lizenz genannt)","Ebene":"Gattung"},
+ cite:"Põlme, S. et al. (2020): FungalTraits: a user-friendly traits database of fungi and fungus-like stramenopiles. Fungal Diversity 105: 1–16.",
+ links:[["Artikel","https://doi.org/10.1007/s13225-020-00466-2"],["verwendete Kopie","https://github.com/bokulich-lab/q2-fungal-traits"]]},
+{id:"wcvp",typ:"datensatz",name:"World Checklist of Vascular Plants (WCVP)",sub:"Wuchsform aller europäischen Gefäßpflanzen",lizenz:["CC BY"],
+ kv:{"Lizenz":"CC BY 4.0","Umfang":"Bäume 1.083 · Sträucher 5.529 · Kräuter & Blumen 18.102 · Gräser 2.213 · Kletterpflanzen 217 · Wasser & Sumpf 417 · Zwiebel & Knolle 2.860 · Farne 388","Auswahl":"anerkannte Arten mit Vorkommen in Europa (heimisch oder eingeführt, nicht ausgestorben)"},
+ pts:["lifeform_description: tree → Baum; shrub/subshrub → Strauch; climber/climbing/liana → Kletterpflanze; hydro…/helophyte → Wasser & Sumpf; geophyte → Zwiebel & Knolle; annual/biennial/perennial → Kraut","Gräser nach Familie (Poaceae, Cyperaceae, Juncaceae); Farne nach Farn-, Schachtelhalm- und Bärlappfamilien","Eine Art kann in mehreren Gruppen stehen","Arten am Ort aus iNaturalist UND GBIF prüfen: häufige Bäume (Fichte, Kiefer) fehlen bei iNaturalist oft","Jede Wuchsform liegt in einer eigenen Datei (daten/wuchs/) und lädt erst bei Bedarf"],
+ cite:"Govaerts, R., Nic Lughadha, E., Black, N., Turner, R. & Paton, A. (2021): The World Checklist of Vascular Plants, a continuously updated resource for exploring global plant diversity. Scientific Data 8: 215. Royal Botanic Gardens, Kew.",
+ links:[["Artikel","https://doi.org/10.1038/s41597-021-00997-6"],["Datensatz bei GBIF","https://www.gbif.org/dataset/f382f0ce-323a-4091-bb9f-add557f3a9a2"],["verwendete Kopie (rWCVPdata)","https://github.com/matildabrown/rWCVPdata"]]},
+
+/* ===== Funktionen ===== */
+{id:"f-start",typ:"funktion",name:"Startseite mit zwei Suchfeldern",sub:"Ort und Lebewesen",
+ pts:["Ort über Nominatim, Suche erst nach Absenden, „Meinen Standort verwenden“, die letzten 5 Orte merken","Lebewesen über iNaturalist-Autovervollständigung, 300 ms Pause beim Tippen, Arten vor höheren Gruppen, Treffer am Namensanfang zuerst","„Baum“, „Strauch“, „Kraut“, „Gras“, „Farn“, „Moos“, „Kletterpflanze“, „Wasserpflanze“ ergeben „Alle … um <Ort>“"],
+ rel:["nominatim","inaturalist"]},
+{id:"f-ort",typ:"funktion",name:"Ort gewählt: Umkreis",sub:"5 / 10 / 30 / 50 / 100 / 250 km",
+ pts:["Zwei Bereiche: Entdecken und Bestimmen (dazu Liste)"]},
+{id:"f-entdecken",typ:"funktion",name:"Entdecken: Was lebt hier?",sub:"Gruppen, Wuchsform, Häufigkeitsstufen",
+ pts:["Gruppen: Alle, Pflanzen, Pilze, Vögel, Insekten, Säugetiere, Amphibien, Reptilien, Fische, Spinnentiere, Weichtiere; leere Gruppen ausgegraut","Unter Pflanzen die Zeile Wuchsform: Bäume, Sträucher, Kräuter & Blumen, Gräser, Kletterpflanzen, Wasser & Sumpf, Zwiebel & Knolle, Farne, Moose","Liste nach Häufigkeit (species_counts) in fünf Stufen: oberste 5 % Häufig, bis 20 % Mittelhäufig, bis 45 % Weniger häufig, bis 75 % Selten, Rest Sehr selten","Je Stufe erst 2 Arten, dann „4 weitere“","Schalter „nur bestätigte Funde“ (quality_grade=research)"],
+ rel:["inaturalist"]},
+{id:"f-genauer",typ:"funktion",name:"Genauer rechnen",sub:"iNaturalist + GBIF kombiniert",
+ pts:["Je Quelle Anteil einer Art an ihrer Gruppe; kleine Gruppen zählen mindestens mit 5 % aller Funde der Quelle","Wert = Wurzel(Anteil iNat × Anteil GBIF)","Fehlt eine Quelle, zählt die Hälfte des kleinsten Anteils dieser Gruppe","Umkreis höchstens 250 km","Kennt GBIF mindestens 1,5-mal so viele Arten (und 5 mehr): Angebot „Alle zusammen zeigen“"],
+ rel:["inaturalist","gbif"]},
+{id:"f-wuchs",typ:"funktion",name:"Wuchsformen",sub:"außer Moose",
+ pts:["Pflanzenarten am Ort aus iNaturalist (bis 4 Seiten à 500) und GBIF (facet=scientificName)","Nur Namen aus der WCVP-Liste der gewählten Wuchsform behalten","Arten nur bei GBIF bekommen Foto und deutschen Namen aus iNaturalist im 250-km-Umkreis"],
+ rel:["wcvp","gbif","inaturalist"]},
+{id:"f-foto",typ:"funktion",name:"Bestimmen mit Foto",sub:"nur Pflanzen",
+ pts:["Pl@ntNet, bis 5 Fotos mit Organ (Blatt, Blüte, Frucht, Rinde …)"],rel:["plantnet"]},
+{id:"f-merkmale",typ:"funktion",name:"Bestimmen nach Merkmalen",sub:"Fragen aus MERKMALE, Gruppen aus GRUPPEN",
+ pts:["Bis 25 Gruppen direkt über taxon_id, sonst über iconic_taxa","Optional „jetzt im Monat“ (month) und „blüht gerade“ (term_id=12, term_value_id=13)","Ergebnis: Arten am Ort nach Häufigkeit"],
+ rel:["merkmale-js","inaturalist"]},
+{id:"f-steckbrief",typ:"funktion",name:"Steckbrief",sub:"Seitenleiste, am Handy ganze Fläche",
+ pts:["Freie Fotos mit Urheber/Lizenz, deutscher und wissenschaftlicher Name, Gefährdung","Funde hier / bei iNaturalist / bei GBIF","Jahreszeit: Funde je Monat, im Umkreis oder weltweit bei < 12 Funden","Wikipedia-Anfang, Verwechslungsarten, Systematik","„Verbreitungsgebiet zeigen“: MapLibre-Globus mit iNaturalist-Rasterkacheln, Ort markiert, zwei Finger zum Bewegen am Handy"],
+ rel:["inaturalist","gbif","wikipedia","maplibre","openfreemap"]},
+{id:"f-moose",typ:"funktion",name:"Moose",sub:"Laub-, Leber- und Hornmoose",
+ pts:["iNaturalist-Taxa Bryophyta, Marchantiophyta, Anthocerotophyta","Nummern über /taxa nachschlagen, dann species_counts mit taxon_id"],rel:["inaturalist"]},
+{id:"f-liste",typ:"funktion",name:"Liste: alle Arten als Baum",sub:"dritter Bereich neben Entdecken und Bestimmen · neu",
+ pts:["Eine Abfrage GET /v1/observations/taxonomy liefert alle Taxa am Ort mit parent_id und Fundzahl","Stufen Gruppe › Ordnung › Familie › Gattung › Art; Ketten mit nur einem Kind werden zusammengefasst","Deutsche Namen und Bilder beim Aufklappen über GET /v1/taxa/{bis zu 30 ids}","Mini-Bilder nur für die ersten drei Einträge jeder Stufe und je Gruppe drei häufigste Arten","Suche: wissenschaftlich sofort, deutsch über /taxa/autocomplete, nur Treffer am Ort; Tipp klappt den Pfad auf","Vorfilter nach Gruppe, Sortierung häufigste zuerst oder A–Z; je Stufe erst 60 Einträge"],
+ rel:["inaturalist"]},
+
+/* ===== Abdeckung ===== */
+{id:"g-baeume",typ:"gruppe",name:"Bäume, Sträucher",kv:{"Merkmale":"WCVP (Wuchsform), EIVE (Ort)","Ebene":"Art","Lücke":"–"},rel:["wcvp","eive"]},
+{id:"g-kraeuter",typ:"gruppe",name:"Kräuter & Blumen, Gräser, Kletter-, Wasserpflanzen, Zwiebel & Knolle",kv:{"Merkmale":"WCVP (Wuchsform), EIVE (Ort)","Ebene":"Art","Lücke":"–"},rel:["wcvp","eive"]},
+{id:"g-farne",typ:"gruppe",name:"Farne, Schachtelhalme, Bärlappe",kv:{"Merkmale":"WCVP (Wuchsform), EIVE (Ort)","Ebene":"Art","Lücke":"–"},rel:["wcvp","eive"]},
+{id:"g-moose",typ:"gruppe",name:"Moose",kv:{"Merkmale":"–","Ebene":"Gruppe (iNaturalist)","Lücke":"keine Merkmaldaten"},warn:"keine Merkmaldaten",rel:["inaturalist"]},
+{id:"g-pilze",typ:"gruppe",name:"Pilze, Flechten",kv:{"Merkmale":"FungalTraits (Form, Ort)","Ebene":"Gattung","Lücke":"–"},rel:["fungaltraits"]},
+{id:"g-saeuger",typ:"gruppe",name:"Säugetiere",kv:{"Merkmale":"Amniote, EltonTraits, COMBINE","Ebene":"Art","Lücke":"–"},rel:["amniote","eltontraits","combine"]},
+{id:"g-voegel",typ:"gruppe",name:"Vögel",kv:{"Merkmale":"AVONET","Ebene":"Art","Lücke":"–"},rel:["avonet"]},
+{id:"g-amphibien",typ:"gruppe",name:"Amphibien",kv:{"Merkmale":"Europäische Amphibien","Ebene":"Art","Lücke":"–"},rel:["amphibien"]},
+{id:"g-reptilien",typ:"gruppe",name:"Reptilien",kv:{"Merkmale":"Amniote (Eidechsen)","Ebene":"Art","Lücke":"Längen von Schlangen und Schildkröten"},warn:"Schlangen, Schildkröten",rel:["amniote","v-squambase","v-reptilien"]},
+{id:"g-fische",typ:"gruppe",name:"Süßwasserfische",kv:{"Merkmale":"FISHMORPH","Ebene":"Art","Lücke":"Meeresfische"},warn:"Meeresfische",rel:["fishmorph"]},
+{id:"g-tagfalter",typ:"gruppe",name:"Tagfalter",kv:{"Merkmale":"Tagfalter Europas","Ebene":"Art","Lücke":"Nachtfalter"},warn:"Nachtfalter",rel:["tagfalter"]},
+{id:"g-kaefer",typ:"gruppe",name:"Käfer, Wanzen, Heuschrecken",kv:{"Merkmale":"Gossner et al. 2015 (Größe, Schicht)","Ebene":"Art","Lücke":"Wasserkäfer, Laufkäfer nur teilweise"},warn:"teilweise",rel:["gossner"]},
+{id:"g-spinnen",typ:"gruppe",name:"Spinnen",kv:{"Merkmale":"Gossner et al. 2015 (Größe, Schicht)","Ebene":"Art","Lücke":"Spring- und Wolfspinnen nur teilweise"},warn:"teilweise",rel:["gossner"]},
+{id:"g-bienen",typ:"gruppe",name:"Bienen, Wespen, Fliegen, Libellen",kv:{"Merkmale":"–","Ebene":"–","Lücke":"nur Wikipedia-Belege"},warn:"nur Wikipedia",rel:["wikipedia","v-disperse"]},
+{id:"g-weichtiere",typ:"gruppe",name:"Weichtiere (Schnecken, Muscheln)",kv:{"Merkmale":"–","Ebene":"–","Lücke":"nur Wikipedia-Belege"},warn:"nur Wikipedia",rel:["wikipedia"]},
+
+/* ===== Regeln ===== */
+{id:"r-frei",typ:"regel",name:"Alles frei und legal",sub:"Nur Dienste ohne Kosten, Daten mit freier Lizenz",pts:["Lizenz und Herkunft stehen auf einer Quellen-Seite, die von überall verlinkt ist"]},
+{id:"r-speicher",typ:"regel",name:"Keine eigene Datenhaltung",sub:"Funde werden live abgefragt",pts:["Feste Datensätze nur als aufbereitete Tabellen im Repo, mit Quelle"]},
+{id:"r-fotos",typ:"regel",name:"Fotos nur mit Creative-Commons-Lizenz",sub:"license_code vorhanden",pts:["Immer mit Urheber und Lizenz"]},
+{id:"r-abfrage",typ:"regel",name:"Abfrage-Regeln einhalten",sub:"iNaturalist ~1/s, Nominatim 1/s",pts:["Keine Ortssuche beim Tippen","Gleiche Anfragen merken","Wichtiges vor Unwichtigem"]},
+{id:"r-google",typ:"regel",name:"Nichts von Google oder CDNs",sub:"Schriften und MapLibre liegen im Repo"},
+{id:"r-statisch",typ:"regel",name:"Statische Seite ohne Build-Schritt",sub:"ES-Module, läuft auf GitHub Pages"},
+{id:"r-handy",typ:"regel",name:"Handy zuerst",sub:"Deutsch, einfache Sprache"},
+{id:"r-privat",typ:"regel",name:"Privat, nicht-kommerziell",sub:"Manche Fotos sind nur nicht-kommerziell frei"},
+
+/* ===== Technik ===== */
+{id:"maplibre",typ:"technik",name:"MapLibre GL JS 5.6.0",sub:"Globus-Karte für die Verbreitung",lizenz:["BSD-3-Clause"],kv:{"Lizenz":"BSD-3-Clause","Ablage":"vendor/ im Repo, kein CDN"},
+ links:[["Lizenz","https://github.com/maplibre/maplibre-gl-js/blob/main/LICENSE.txt"],["maplibre.org","https://maplibre.org"]]},
+{id:"schriften",typ:"technik",name:"Schriften",sub:"Bricolage Grotesque, Figtree, Newsreader, JetBrains Mono",lizenz:["OFL"],kv:{"Lizenz":"SIL Open Font License","Ablage":"fonts/ im Repo, nichts von Google"},
+ links:[["Open Font License","https://openfontlicense.org"]]},
+
+/* ===== Dateien ===== */
+{id:"merkmale-js",typ:"datei",name:"dev/daten/merkmale.js",sub:"Merkmalstabelle",pts:["MERKMALE: Fragen und Antworten","GRUPPEN: 263 Gruppen mit Merkmalen","BELEG: Wikipedia-Artikel je Gruppe","DATEN: aus Datensätzen berechnete Werte, neu mit Gossner et al. 2015"],
+ links:[["auf GitHub","https://github.com/bunwichtig/naturewissen/blob/main/dev/daten/merkmale.js"]]},
+{id:"wuchs-js",typ:"datei",name:"dev/daten/wuchs/index.js",sub:"Wuchsformen laden",pts:["wuchsSet(code) lädt die Liste einer Wuchsform","B Baum · S Strauch · H Kraut · G Gras · K Kletterpflanze · W Wasser & Sumpf · Z Zwiebel & Knolle · F Farn"],
+ links:[["auf GitHub","https://github.com/bunwichtig/naturewissen/blob/main/dev/daten/wuchs/index.js"]],rel:["wcvp"]},
+{id:"gossner-json",typ:"datei",name:"werkzeuge/daten/gossner_arthropoden.json",sub:"Körperlänge und Schicht von 1.230 Arten",
+ links:[["auf GitHub","https://github.com/bunwichtig/naturewissen/blob/main/werkzeuge/daten/gossner_arthropoden.json"]],rel:["gossner"]},
+{id:"api-js",typ:"datei",name:"dev/js/api.js",sub:"Warteschlangen je Dienst, Zwischenspeicher, Abbruch, Name → Nummer",
+ links:[["auf GitHub","https://github.com/bunwichtig/naturewissen/blob/main/dev/js/api.js"]]},
+{id:"state-js",typ:"datei",name:"dev/js/state.js",sub:"Gruppen mit iNaturalist- und GBIF-Schlüsseln, Umkreise, Zustand",
+ links:[["auf GitHub","https://github.com/bunwichtig/naturewissen/blob/main/dev/js/state.js"]]},
+
+/* ===== Verworfen ===== */
+{id:"v-try",typ:"verworfen",name:"TRY Plant Trait Database",sub:"Wuchsformen und weitere Pflanzenmerkmale",kv:{"Grund":"Download nur nach Registrierung, die gerade in Wartung war","Ersatz":"WCVP"},links:[["try-db.org","https://www.try-db.org"]],rel:["wcvp"]},
+{id:"v-squambase",typ:"verworfen",name:"SquamBase",sub:"Schlangen-Längen",kv:{"Grund":"Es lag nur Tabelle S2 (Literaturliste) vor, gebraucht wird S1"},warn:"offen"},
+{id:"v-gbifmap",typ:"verworfen",name:"GBIF-Wabenkarte (v2/map)",sub:"Kartendienst von GBIF",kv:{"Grund":"Nimmt nur einen Gruppen-Schlüssel, für Fische/Reptilien ungeeignet; die große Karte ist im neuen Konzept entfallen"},links:[["GBIF Maps API","https://www.gbif.org/developer/maps"]]},
+{id:"v-disperse",typ:"verworfen",name:"DISPERSE",sub:"Wasserinsekten, Libellen: Größe und Flugfähigkeit",kv:{"Grund":"Lizenz der Tabelle im Artikel nicht genannt, erst nach Klärung verwenden"},warn:"Lizenz klären",links:[["Figshare","https://doi.org/10.6084/m9.figshare.c.5000633"]]},
+{id:"v-reptilien",typ:"verworfen",name:"Europäische Reptilien (Grimm et al. 2014)",sub:"bei Dryad unter CC0",lizenz:["CC0"],kv:{"Grund":"Merkmale liegen als Zahlencodes vor, deren Schlüssel noch fehlt"},warn:"Schlüssel fehlt",links:[["Dryad","https://datadryad.org/dataset/doi:10.5061/dryad.hb4ht"]]},
+];
+
+/* ---------- Hilfen ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const norm = s => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/ß/g,"ss");
+const byId = Object.fromEntries(D.map(e => [e.id, e]));
+D.forEach(e => {
+  e.text = norm([e.name,e.sub,TYPEN[e.typ].name,(e.lizenz||[]).join(" "),Object.entries(e.kv||{}).flat().join(" "),(e.pts||[]).join(" "),e.cite||"",(e.abfragen||[]).flat().join(" "),e.warn||""].join(" "));
+});
+// Rückverweise: wer verweist auf mich?
+D.forEach(e => (e.rel||[]).forEach(r => { if (byId[r]) (byId[r].back ||= []).push(e.id); }));
+
+const store = {get(k){try{return localStorage.getItem(k)}catch{return null}},set(k,v){try{localStorage.setItem(k,v)}catch{}}};
+const state = {q:"", typ:new Set(), lic:""};
+
+function hl(text){
+  const t = esc(text);
+  if (!state.q) return t;
+  const words = state.q.split(/\s+/).filter(w => w.length > 1).map(w => w.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"));
+  if (!words.length) return t;
+  return t.replace(new RegExp("(" + words.join("|") + ")","gi"),"<mark>$1</mark>");
+}
+
+function card(e){
+  const T = TYPEN[e.typ];
+  const lic = (e.lizenz||[]).map(l => `<span class="bdg">${esc(l)}</span>`).join("");
+  const warn = e.warn ? `<span class="bdg warn">Lücke: ${esc(e.warn)}</span>` : "";
+  const nAbf = e.abfragen ? `<span class="bdg">${e.abfragen.length} Abfrage${e.abfragen.length>1?"n":""}</span>` : "";
+  let body = "";
+  if (e.kv) body += `<dl class="kv">${Object.entries(e.kv).map(([k,v]) => `<dt>${esc(k)}</dt><dd>${hl(v)}</dd>`).join("")}</dl>`;
+  if (e.pts) body += `<ul class="pts">${e.pts.map(p => `<li>${hl(p)}</li>`).join("")}</ul>`;
+  if (e.abfragen) body += `<div class="tbl"><table><thead><tr><th>Art</th><th>Adresse</th><th>Parameter</th><th>Wofür</th></tr></thead><tbody>${
+    e.abfragen.map(([m,u,p,w]) => `<tr><td><code>${esc(m)}</code></td><td><code>${hl(u)}</code><br><button class="cp" type="button" data-copy="${esc(u)}">Adresse kopieren</button></td><td><code>${hl(p)}</code></td><td>${hl(w)}</td></tr>`).join("")
+  }</tbody></table></div>`;
+  if (e.cite) body += `<div class="cite">${hl(e.cite)}</div>`;
+  if (e.links) body += `<div class="links">${e.links.map(([t,u]) => `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(t)} ↗</a>`).join("")}</div>`;
+  const rel = [...new Set([...(e.rel||[]),...(e.back||[])])].filter(r => byId[r]);
+  if (rel.length) body += `<div class="links"><span style="color:var(--muted)">Verknüpft:</span>${rel.map(r => `<a href="#${r}" data-jump="${r}">${esc(byId[r].name)}</a>`).join("")}</div>`;
+  body += `<div class="foot"><span>${esc(T.name)} · #${esc(e.id)}</span><button type="button" data-link="${esc(e.id)}">Link zu diesem Eintrag kopieren</button></div>`;
+  return `<details class="e" id="${esc(e.id)}" style="--c:${T.c}"><summary><span class="dot" aria-hidden="true"></span><span class="hd"><div class="nm">${hl(e.name)}</div>${e.sub?`<div class="sub">${hl(e.sub)}</div>`:""}</span><span class="badges"><span class="bdg typ">${esc(T.name)}</span>${warn}${nAbf}${lic}</span></summary><div class="body">${body}</div></details>`;
+}
+
+function matches(e){
+  if (state.typ.size && !state.typ.has(e.typ)) return false;
+  if (state.lic && !(e.lizenz||[]).includes(state.lic)) return false;
+  if (state.q) return norm(state.q).split(/\s+/).filter(Boolean).every(w => e.text.includes(w));
+  return true;
+}
+
+function render(){
+  const hits = D.filter(matches);
+  const groups = Object.keys(TYPEN).map(t => [t, hits.filter(e => e.typ === t)]).filter(([,a]) => a.length);
+  $("#list").innerHTML = hits.length
+    ? groups.map(([t,a]) => `<div class="sec">${esc(TYPEN[t].name)} · ${a.length}</div>${a.map(card).join("")}`).join("")
+    : `<div class="empty"><b>Nichts gefunden</b>Andere Wörter versuchen oder Filter zurücksetzen.<br><br><button class="btn" type="button" id="reset">Filter zurücksetzen</button></div>`;
+  $("#count").textContent = hits.length === D.length ? `${D.length} Einträge` : `${hits.length} von ${D.length} Einträgen`;
+  if (state.q && hits.length <= 6) document.querySelectorAll("details.e").forEach(d => d.open = true);
+  const r = $("#reset"); if (r) r.onclick = resetAll;
+}
+
+function chips(){
+  $("#chips").innerHTML = `<button class="chip" type="button" data-t="" aria-pressed="${state.typ.size===0}">Alle <b>${D.length}</b></button>` +
+    Object.entries(TYPEN).map(([k,T]) => `<button class="chip" type="button" data-t="${k}" style="--c:${T.c}" aria-pressed="${state.typ.has(k)}"><i></i>${esc(T.name)} <b>${D.filter(e=>e.typ===k).length}</b></button>`).join("");
+}
+
+function resetAll(){ state.q=""; state.typ.clear(); state.lic=""; $("#q").value=""; $("#lic").value=""; $("#qclr").hidden=true; save(); chips(); render(); }
+function save(){ store.set("pn-db", JSON.stringify({typ:[...state.typ], lic:state.lic})); }
+
+let toastT;
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("on"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("on"),1800); }
+async function copy(text, msg){
+  try { await navigator.clipboard.writeText(text); toast(msg); }
+  catch { toast("Kopieren nicht möglich – bitte von Hand markieren"); }
+}
+function jump(id){
+  const el = document.getElementById(id);
+  if (!el) { resetAll(); return jump2(id); }
+  el.open = true; el.scrollIntoView({behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto":"smooth", block:"start"});
+}
+function jump2(id){ const el=document.getElementById(id); if(el){ el.open=true; el.scrollIntoView({block:"start"}); } }
+
+/* ---------- Start ---------- */
+const lics = [...new Set(D.flatMap(e => e.lizenz||[]))].sort();
+$("#lic").insertAdjacentHTML("beforeend", lics.map(l => `<option value="${esc(l)}">${esc(l)}</option>`).join(""));
+$("#total").textContent = `${D.filter(e=>e.typ==="quelle").length} Live-Quellen · ${D.reduce((n,e)=>n+(e.abfragen?.length||0),0)} Abfragen · ${D.filter(e=>e.typ==="datensatz").length} Datensätze`;
+try { const s = JSON.parse(store.get("pn-db")||"{}"); (s.typ||[]).forEach(t => TYPEN[t] && state.typ.add(t)); if (lics.includes(s.lic)) state.lic = s.lic; } catch {}
+$("#lic").value = state.lic;
+chips(); render();
+const setBar = () => document.documentElement.style.setProperty("--barh", $(".bar").offsetHeight + "px"); setBar(); addEventListener("resize", setBar);
+/* ---------- Reiter ---------- */
+function show(view, push){
+  const isDb = view === "datenbank";
+  $("#p-versionen").hidden = isDb; $("#p-datenbank").hidden = !isDb;
+  $("#t-versionen").setAttribute("aria-selected", !isDb); $("#t-datenbank").setAttribute("aria-selected", isDb);
+  if (push) history.replaceState(null, "", isDb ? "#datenbank" : location.pathname);
+  if (isDb) setBar();
+}
+$("#t-versionen").onclick = () => show("versionen", true);
+$("#t-datenbank").onclick = () => show("datenbank", true);
+$("#tabs").addEventListener("keydown", e => { if (e.key === "ArrowRight" || e.key === "ArrowLeft") { const n = $("#t-versionen").getAttribute("aria-selected") === "true" ? "t-datenbank" : "t-versionen"; $("#"+n).click(); $("#"+n).focus(); } });
+{
+  const id = decodeURIComponent(location.hash.slice(1));
+  if (id === "datenbank") show("datenbank");
+  else if (byId[id]) { show("datenbank"); if (!matches(byId[id])) resetAll(); jump2(id); }
+  else show("datenbank");
+}
+
+let qT;
+$("#q").addEventListener("input", e => { clearTimeout(qT); $("#qclr").hidden = !e.target.value; qT = setTimeout(() => { state.q = e.target.value.trim(); render(); }, 150); });
+$("#qclr").onclick = () => { $("#q").value=""; state.q=""; $("#qclr").hidden=true; render(); $("#q").focus(); };
+$("#lic").onchange = e => { state.lic = e.target.value; save(); render(); };
+$("#chips").onclick = e => {
+  const b = e.target.closest(".chip"); if (!b) return;
+  const t = b.dataset.t;
+  if (!t) state.typ.clear(); else state.typ.has(t) ? state.typ.delete(t) : state.typ.add(t);
+  save(); chips(); render();
+};
+$("#openall").onclick = () => document.querySelectorAll("details.e").forEach(d => d.open = true);
+$("#closeall").onclick = () => document.querySelectorAll("details.e").forEach(d => d.open = false);
+$("#list").addEventListener("click", e => {
+  const c = e.target.closest("[data-copy]"); if (c) return copy(c.dataset.copy, "Adresse kopiert");
+  const l = e.target.closest("[data-link]"); if (l) return copy(location.href.split("#")[0] + "#" + l.dataset.link, "Link kopiert");
+  const j = e.target.closest("[data-jump]"); if (j) { e.preventDefault(); history.replaceState(null,"","#"+j.dataset.jump); jump(j.dataset.jump); }
+});
+</script>
+<script src="../stand.js" defer></script>
+</body>
+</html>
