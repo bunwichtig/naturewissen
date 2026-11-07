@@ -252,14 +252,14 @@ Eine Website, die zeigt, welche Tiere, Pflanzen und Pilze an einem Ort leben, un
 ### MapLibre GL JS 5.6.0
 
 - **Lizenz:** BSD-3-Clause
-- **Liefert:** Globus-Karte für die Verbreitung. Liegt als Datei im Repo (vendor/), kein CDN.
+- **Liefert:** Globus-Karte für die Verbreitung. Liegt als Datei im Repo (gemeinsam/vendor/), kein CDN.
 
 [Lizenz](https://github.com/maplibre/maplibre-gl-js/blob/main/LICENSE.txt) · [maplibre.org](https://maplibre.org)
 
 ### Schriften
 
 - **Lizenz:** SIL Open Font License
-- **Liefert:** Bricolage Grotesque, Figtree, Newsreader, JetBrains Mono – als Dateien im Repo (fonts/), nichts von Google.
+- **Liefert:** Bricolage Grotesque, Figtree, Newsreader, JetBrains Mono – als Dateien im Repo (gemeinsam/fonts/), nichts von Google.
 
 [Open Font License](https://openfontlicense.org)
 
@@ -317,7 +317,7 @@ Die Quellen-Seite mit allen Belegen und der Merkmalstabelle: https://bunwichtig.
 ## Fassungen
 
 - `dev/` – Entwicklung, hier wird weitergearbeitet
-- `v1/` – Archiv, erste fertige Version
-- `v2/` – in Vorbereitung (WIP-Seite)
-- `alt/` – ursprüngliche Ein-Datei-Version
+- `gemeinsam/` – Schriften, MapLibre und stand.js für Startseite, Dev und Datenbasis
+- `archiv/2026-10-25-v1/` – Archiv, erste fertige Version
+- `archiv/2026-10-24-ursprung/` – ursprüngliche Ein-Datei-Version
 

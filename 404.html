@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Nicht gefunden – Pure Nature</title>
+<script>
+// Alte Adressen nach dem Aufräumen vom 7. November 2026 auf die neuen Orte umleiten.
+// GitHub Pages zeigt diese Seite für jede Adresse, die es nicht (mehr) gibt.
+(() => {
+  const base = location.pathname.startsWith("/naturewissen/") ? "/naturewissen/" : "/";
+  const rest = location.pathname.slice(base.length);
+  const ALT = [
+    ["v1/", "archiv/2026-10-25-v1/"],
+    ["v2/datenbank.html", "archiv/2026-10-25-datenbank-entwurf/"],
+    ["v2/", ""],
+    ["alt/", "archiv/2026-10-24-ursprung/"],
+    ["quellen.html", "dev/quellen.html"],
+    ["datenbasis.html", "datenbasis/"],
+    ["datenbasis/1.html", "archiv/2026-10-25-datenbasis-1/"],
+    ["archiv/datenbank-2026-10-25.html", "archiv/2026-10-25-datenbank-entwurf/"],
+    ["bauplan.md", "datenbasis/bauplan-2.md"],
+    ["bauplan-2.md", "datenbasis/bauplan-2.md"],
+    ["bauplan-1.md", "archiv/2026-10-25-datenbasis-1/bauplan-1.md"],
+    ["fonts/", "gemeinsam/fonts/"],
+    ["stand.js", "gemeinsam/stand.js"],
+  ];
+  for (const [von, nach] of ALT){
+    const ordner = von.endsWith("/");
+    if (ordner ? (rest + "/").startsWith(von) : rest === von){
+      const ziel = ordner ? nach + rest.slice(von.length) : nach;
+      location.replace(base + ziel + location.search + location.hash);
+      return;
+    }
+  }
+})();
+</script>
+<style>
+:root{--night:#0a0f0e;--ink:#e6ede4;--muted:#8b9d94;--pollen:#e7ad4f;color-scheme:dark}
+html,body{background:var(--night)}
+body{margin:0;min-height:100vh;display:grid;place-items:center;color:var(--ink);font:16px/1.5 system-ui,sans-serif;padding:24px 16px;box-sizing:border-box;text-align:center}
+h1{font-size:32px;margin:0 0 8px}
+p{color:var(--muted);margin:0 0 16px}
+a{color:var(--pollen);font-weight:600}
+</style>
+</head>
+<body>
+<main>
+  <h1>Seite nicht gefunden</h1>
+  <p>Diese Adresse gibt es bei Pure Nature nicht (mehr).</p>
+  <a href="/naturewissen/">Zur Startseite →</a>
+</main>
+</body>
+</html>

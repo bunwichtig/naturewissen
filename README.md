@@ -2,16 +2,31 @@
 
 Zeigt auf einem Globus, welche Tiere, Pflanzen und Pilze an einem Ort leben, und hilft beim Bestimmen. Die Seite speichert selbst **keine Funddaten**: Alles kommt live aus freien, legalen Quellen.
 
-**Seite:** <https://bunwichtig.github.io/naturewissen/> – eine Startseite zur Wahl der Version:
+**Seite:** <https://bunwichtig.github.io/naturewissen/> – die Startseite trennt **Aktiv** und **Archiv**.
 
-- **Dev** (`dev/`): die Entwicklungsfassung. Alle Änderungen kommen nur hier hinein.
-- **V1** (`v1/`): **Archiv** – die erste fertige Version vom 25. Oktober 2026. Wird nicht mehr verändert.
-- **V2** (`v2/`): in Vorbereitung – zeigt vorerst nur eine „Work in progress“-Seite.
-- **Archiv** (`archiv/`): abgeschlossene Stände – V1, Datenbasis 1, der Datenbank-Entwurf zur Datenherkunft vom 25. Oktober 2026 (`archiv/datenbank-2026-10-25.html`) und die alte Version.
+### Aktiv
 
-**Datenbasis:** [datenbasis.html](https://bunwichtig.github.io/naturewissen/datenbasis.html) – alle Versionen der Datenbasis (`datenbasis/1.html` = Stand V1, `datenbasis/2.html` = Erweiterung in Dev), jeweils mit allen freien Quellen, Lizenz, Nachweis, Abfragen, Abdeckung nach Gruppen und einem Bauplan (`bauplan-1.md`, `bauplan-2.md`; `bauplan.md` = neueste) zum Neuaufbau mit Claude. Erzeugt mit `python3 werkzeuge/datenbasis.py`.
+- **Dev** (`dev/`): die Seite in Arbeit. Alle Änderungen kommen nur hier hinein.
+- **Datenbasis** (`datenbasis/`): die aktuelle Datenbasis 2 (`datenbasis/2.html`) mit allen freien Quellen, Lizenz, Nachweis, Abfragen, Abdeckung nach Gruppen und dem Bauplan zum Neuaufbau mit Claude (`datenbasis/bauplan-2.md`). Erzeugt mit `python3 werkzeuge/datenbasis.py`; die Übersicht `datenbasis/index.html` wird von Hand gepflegt.
+- **Gemeinsam** (`gemeinsam/`): Schriften (`fonts/`), MapLibre (`vendor/`) und `stand.js` („Zuletzt geändert“ live aus GitHub) für Startseite, Dev, Datenbasis und Archivübersicht – jede Datei nur einmal im Repo.
+- **Quellen & Lizenzen:** [dev/quellen.html](https://bunwichtig.github.io/naturewissen/dev/quellen.html)
 
-**Quellen & Lizenzen:** [dev/quellen.html](https://bunwichtig.github.io/naturewissen/dev/quellen.html) · Alte Version (bis Oktober 2026): [alt/](https://bunwichtig.github.io/naturewissen/alt/)
+### Archiv
+
+`archiv/` enthält abgeschlossene Stände. Jeder Ordner heißt `JJJJ-MM-TT-inhalt`, ist in sich vollständig und wird nicht mehr verändert. Die Übersicht ist `archiv/index.html`, der neueste Stand steht oben.
+
+| Ordner | Inhalt |
+|---|---|
+| `archiv/2026-10-25-datenbank-entwurf/` | Recherche-Datenbank zur Datenherkunft (archiviert am 30. Oktober 2026) |
+| `archiv/2026-10-25-v1/` | V1, die erste fertige Version, mit eigenen Schriften und MapLibre |
+| `archiv/2026-10-25-datenbasis-1/` | Datenbasis 1 mit `bauplan-1.md` (nutzt die Schriften aus V1) |
+| `archiv/2026-10-24-ursprung/` | die allererste Fassung in einer einzigen Datei |
+
+Neuen Stand archivieren: Ordner nach `archiv/JJJJ-MM-TT-name/` kopieren, alle Pfade darin auf Dateien im Archiv umstellen (nicht auf `gemeinsam/`), Karte oben in `archiv/index.html` eintragen.
+
+### Alte Adressen
+
+`404.html` leitet die Adressen von vor dem Aufräumen (7. November 2026) weiter, z. B. `v1/` → `archiv/2026-10-25-v1/`, `alt/` → `archiv/2026-10-24-ursprung/`, `quellen.html` → `dev/quellen.html`, `datenbasis.html` → `datenbasis/`. Die Liste steht oben in `404.html`.
 
 ## Aufbau
 
@@ -34,7 +49,7 @@ Eine Karte erscheint nur im Steckbrief. Die zuletzt gesuchten Orte merkt sich di
 
 ## Dateien
 
-Die Dateien unten liegen je Fassung in `dev/` und `v1/`. Im Hauptordner liegen nur die Startseite (`index.html`), die Schriften für die Startseite und `alt/`.
+Die Dateien unten liegen in `dev/` (und gleich aufgebaut im Archiv unter `archiv/2026-10-25-v1/`). Im Hauptordner liegen nur Startseite (`index.html`), `404.html` und README.
 
 | Datei | Inhalt |
 |---|---|
@@ -54,8 +69,7 @@ Die Dateien unten liegen je Fassung in `dev/` und `v1/`. Im Hauptordner liegen n
 | `js/steckbrief.js` | Steckbrief einer Art |
 | `daten/merkmale.js` | Merkmalstabelle mit Belegen |
 | `daten/wuchsform.js` | Baum- und Straucharten Europas (WCVP, CC BY 4.0) |
-| `vendor/`, `fonts/` | MapLibre GL 5.6.0 und Schriften mit Lizenztexten |
-| `alt/index.html` | die alte Version in einer Datei |
+| `../gemeinsam/vendor/`, `../gemeinsam/fonts/` | MapLibre GL 5.6.0 und Schriften mit Lizenztexten |
 
 Es gibt keinen Build-Schritt. Die Seite braucht eine `https://`-Adresse (GitHub Pages); als lokal geöffnete Datei laden die Module nicht.
 

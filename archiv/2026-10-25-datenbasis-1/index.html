@@ -7,11 +7,11 @@
 <meta name="description" content="Alle freien Datenquellen von Pure Nature mit Lizenz, Nachweis und Abfragen – und der Bauplan zum Neuaufbau.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%2386b86f'/%3E%3Cpath d='M16 6c6 4 6 16 0 20c-6-4-6-16 0-20z' fill='%230a0f0e'/%3E%3C/svg%3E">
 <style>
-@font-face{font-family:"Figtree";font-weight:400;font-display:swap;src:url(../fonts/figtree-latin-400-normal.woff2) format("woff2")}
-@font-face{font-family:"Figtree";font-weight:600;font-display:swap;src:url(../fonts/figtree-latin-600-normal.woff2) format("woff2")}
-@font-face{font-family:"Bricolage Grotesque";font-weight:700;font-display:swap;src:url(../fonts/bricolage-grotesque-latin-700-normal.woff2) format("woff2")}
-@font-face{font-family:"Newsreader";font-style:italic;font-weight:400;font-display:swap;src:url(../fonts/newsreader-latin-400-italic.woff2) format("woff2")}
-@font-face{font-family:"JetBrains Mono";font-weight:400;font-display:swap;src:url(../fonts/jetbrains-mono-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Figtree";font-weight:400;font-display:swap;src:url(../2026-10-25-v1/fonts/figtree-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Figtree";font-weight:600;font-display:swap;src:url(../2026-10-25-v1/fonts/figtree-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"Bricolage Grotesque";font-weight:700;font-display:swap;src:url(../2026-10-25-v1/fonts/bricolage-grotesque-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:"Newsreader";font-style:italic;font-weight:400;font-display:swap;src:url(../2026-10-25-v1/fonts/newsreader-latin-400-italic.woff2) format("woff2")}
+@font-face{font-family:"JetBrains Mono";font-weight:400;font-display:swap;src:url(../2026-10-25-v1/fonts/jetbrains-mono-latin-400-normal.woff2) format("woff2")}
 :root{--night:#0a0f0e;--panel:#101816;--panel-2:#16211e;--line:#24332e;--ink:#e6ede4;--muted:#8b9d94;--pollen:#e7ad4f;--plantae:#86b86f;--fungi:#c79ad0;
   --f-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;--f-body:"Figtree","Segoe UI",system-ui,sans-serif;--f-sci:"Newsreader",Georgia,serif;--f-data:"JetBrains Mono",ui-monospace,Menlo,monospace;color-scheme:dark}
 *{box-sizing:border-box}
@@ -79,7 +79,7 @@ code{font-family:var(--f-data);font-size:.92em}
 </head>
 <body>
 <div class="wrap">
-<header class="top"><a class="brand" href="../datenbasis.html">Pure <span>Nature</span></a><a class="back" href="../datenbasis.html">← Alle Datenbasen</a></header>
+<header class="top"><a class="brand" href="../../">Pure <span>Nature</span></a><a class="back" href="../">← Archiv</a></header>
 <h1>Datenbasis 1</h1>
 <p class="lead">Woher Pure Nature seine Daten hat: jede Quelle mit Lizenz, Nachweis, den genauen Abfragen und Regeln. Stand 25. Oktober 2026 – Stand von V1 (Archiv).</p>
 <p class="lead">Die Datenbasis, mit der die erste Version gebaut wurde. Sie bleibt unverändert.</p>
@@ -94,7 +94,7 @@ code{font-family:var(--f-data);font-size:.92em}
   <h2 id="bauH">Neu aufbauen mit Claude</h2>
   <p>Der Bauplan enthält alles, was zum Nachbauen nötig ist: Ziel, Regeln, Ablauf von Suche, Listen, Bestimmen und Steckbrief, alle Quellen mit Abfragen und Lizenzen, dazu die fertig aufbereiteten Tabellen. Datei herunterladen, in einen neuen Chat legen und dazuschreiben, wie das neue Design aussehen soll.</p>
   <div class="btns">
-    <a class="btn primary" href="../bauplan-1.md" download="pure-nature-bauplan-1.md">Bauplan herunterladen (.md)</a>
+    <a class="btn primary" href="bauplan-1.md" download="pure-nature-bauplan-1.md">Bauplan herunterladen (.md)</a>
     <button class="btn" type="button" id="copy">Bauplan kopieren</button>
     <span id="copied" role="status"></span>
   </div>
@@ -561,7 +561,7 @@ Die Quellen-Seite mit allen Belegen und der Merkmalstabelle: https://bunwichtig.
 
 <h2 class="sec">Dateien zum Weiterverwenden</h2>
 <ul class="plain"><li><a href="https://github.com/bunwichtig/naturewissen/blob/main/v1/daten/merkmale.js" target="_blank" rel="noopener"><code>v1/daten/merkmale.js</code></a> – Merkmalstabelle: MERKMALE (Fragen und Antworten), GRUPPEN (263 Gruppen mit Merkmalen), BELEG (Wikipedia-Artikel je Gruppe), DATEN (aus Datensätzen berechnete Werte).</li><li><a href="https://github.com/bunwichtig/naturewissen/blob/main/v1/daten/wuchsform.js" target="_blank" rel="noopener"><code>v1/daten/wuchsform.js</code></a> – BAEUME und STRAEUCHER als Mengen wissenschaftlicher Namen (WCVP).</li><li><a href="https://github.com/bunwichtig/naturewissen/blob/main/v1/js/api.js" target="_blank" rel="noopener"><code>v1/js/api.js</code></a> – Warteschlangen je Dienst, Zwischenspeicher, Abbruch, Name → Nummer.</li><li><a href="https://github.com/bunwichtig/naturewissen/blob/main/v1/js/state.js" target="_blank" rel="noopener"><code>v1/js/state.js</code></a> – Gruppen mit iNaturalist- und GBIF-Schlüsseln, Umkreise, gemeinsamer Zustand.</li></ul>
-<p class="sec-lead">Alle Belege und die Merkmalstabelle: <a href="../v1/quellen.html">Quellen &amp; Lizenzen</a>.</p>
+<p class="sec-lead">Alle Belege und die Merkmalstabelle: <a href="../2026-10-25-v1/quellen.html">Quellen &amp; Lizenzen</a>.</p>
 
 <h2 class="sec">Geprüft, aber nicht verwendet</h2>
 <ul class="plain"><li><b>TRY Plant Trait Database</b> – Wuchsformen und weitere Pflanzenmerkmale; Download nur nach Registrierung, die gerade in Wartung war. Ersetzt durch WCVP. <a href="https://www.try-db.org" target="_blank" rel="noopener">Link</a></li><li><b>SquamBase</b> – Schlangen-Längen; es lag nur Tabelle S2 (Literaturliste) vor, gebraucht wird S1.</li><li><b>GBIF-Wabenkarte (v2/map)</b> – Nimmt nur einen Gruppen-Schlüssel – für Fische/Reptilien ungeeignet. Die große Karte ist im neuen Konzept ohnehin entfallen. <a href="https://www.gbif.org/developer/maps" target="_blank" rel="noopener">Link</a></li></ul>

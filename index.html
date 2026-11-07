@@ -4,13 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Pure Nature</title>
-<meta name="description" content="Was lebt an diesem Ort? Tiere, Pflanzen und Pilze aus freien Quellen – zwei Versionen.">
+<meta name="description" content="Was lebt an diesem Ort? Tiere, Pflanzen und Pilze aus freien Quellen.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%2386b86f'/%3E%3Cpath d='M16 6c6 4 6 16 0 20c-6-4-6-16 0-20z' fill='%230a0f0e'/%3E%3C/svg%3E">
 <style>
-@font-face{font-family:"Figtree";font-weight:400;font-display:swap;src:url(fonts/figtree-latin-400-normal.woff2) format("woff2")}
-@font-face{font-family:"Figtree";font-weight:600;font-display:swap;src:url(fonts/figtree-latin-600-normal.woff2) format("woff2")}
-@font-face{font-family:"Bricolage Grotesque";font-weight:700;font-display:swap;src:url(fonts/bricolage-grotesque-latin-700-normal.woff2) format("woff2")}
-@font-face{font-family:"JetBrains Mono";font-weight:400;font-display:swap;src:url(fonts/jetbrains-mono-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Figtree";font-weight:400;font-display:swap;src:url(gemeinsam/fonts/figtree-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Figtree";font-weight:600;font-display:swap;src:url(gemeinsam/fonts/figtree-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"Bricolage Grotesque";font-weight:700;font-display:swap;src:url(gemeinsam/fonts/bricolage-grotesque-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:"JetBrains Mono";font-weight:400;font-display:swap;src:url(gemeinsam/fonts/jetbrains-mono-latin-400-normal.woff2) format("woff2")}
 :root{
   --night:#0a0f0e; --panel:#101816; --panel-2:#16211e; --line:#24332e;
   --ink:#e6ede4; --muted:#8b9d94; --pollen:#e7ad4f; --plantae:#86b86f;
@@ -49,6 +49,8 @@ h1 span{color:var(--pollen)}
 .db span{color:var(--muted);font-size:14px;flex:1}
 .db i{font-style:normal;color:var(--pollen);font-weight:600}
 @media (max-width:560px){.db{flex-wrap:wrap}.db span{flex-basis:100%;order:3}}
+h3{font:400 12px/1 var(--f-data);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:32px 0 12px}
+h3:first-of-type{margin-top:0}
 footer{margin-top:28px;font-size:13px;color:var(--muted)}
 footer a{color:var(--muted);text-underline-offset:3px}
 </style>
@@ -56,34 +58,28 @@ footer a{color:var(--muted);text-underline-offset:3px}
 <body>
 <main>
   <h1>Pure <span>Nature</span></h1>
-  <p class="lead">Was lebt an diesem Ort? Tiere, Pflanzen und Pilze aus freien Quellen, mit Hilfe beim Bestimmen. Wähle eine Fassung.</p>
+  <p class="lead">Was lebt an diesem Ort? Tiere, Pflanzen und Pilze aus freien Quellen, mit Hilfe beim Bestimmen.</p>
+  <h3>Aktiv</h3>
   <div class="choice">
     <a class="v dev" href="dev/">
       <span class="tag">in Arbeit</span>
       <h2>Dev</h2>
-      <p>Die Entwicklungsfassung: Hier kommen alle Neuerungen zuerst hinein. Kann sich jederzeit ändern.</p>
+      <p>Die aktuelle Fassung: Ort suchen, Arten entdecken, als Liste ansehen, bestimmen, Steckbrief mit Verbreitungskarte.</p>
       <span class="stamp" data-path="dev">Zuletzt geändert: 25. Oktober 2026, 01:57 Uhr</span>
       <span class="go">Öffnen →</span>
     </a>
-    <a class="v frozen" href="v1/">
-      <span class="tag">Archiv · 25. Oktober 2026</span>
-      <h2>V1</h2>
-      <p>Die erste fertige Version: Ort suchen, Arten entdecken, bestimmen, Steckbrief mit Verbreitungskarte. Bleibt unverändert.</p>
-      <span class="stamp" data-path="v1">Zuletzt geändert: 25. Oktober 2026, 00:42 Uhr</span>
+    <a class="v" href="datenbasis/">
+      <span class="tag">Datenbasis 2</span>
+      <h2>Datenbasis</h2>
+      <p>Alle freien Quellen mit Lizenz und Nachweis, und der Bauplan zum Neuaufbau mit Claude.</p>
+      <span class="stamp" data-path="datenbasis">Zuletzt geändert: 25. Oktober 2026, 02:46 Uhr</span>
       <span class="go">Öffnen →</span>
     </a>
-    <div class="v wip" aria-disabled="true">
-      <span class="tag">WIP</span>
-      <h2>V2</h2>
-      <p>Eine neue Fassung ist in Vorbereitung. Noch gibt es nichts zu sehen.</p>
-      <span class="stamp" data-path="v2">Zuletzt geändert: 25. Oktober 2026, 02:46 Uhr</span>
-      <span class="go">Bald verfügbar</span>
-    </div>
   </div>
-  <a class="db" href="datenbasis.html"><b>Datenbasis</b><span>Alle freien Quellen mit Lizenz und Nachweis, und der Bauplan zum Neuaufbau mit Claude<small class="stamp" data-path="datenbasis.html">Zuletzt geändert: 25. Oktober 2026, 02:46 Uhr</small></span><i>→</i></a>
-  <a class="db" href="archiv/"><b>Archiv</b><span>Abgeschlossene Stände: V1, Datenbasis 1, der Datenbank-Entwurf vom 25. Oktober und die alte Version<small class="stamp" data-path="archiv">Zuletzt geändert: 30. Oktober 2026</small></span><i>→</i></a>
+  <h3>Archiv</h3>
+  <a class="db" href="archiv/"><b>Archiv</b><span>Abgeschlossene Stände, nach Datum sortiert: V1, Datenbasis 1, der Datenbank-Entwurf vom 25. Oktober und die alte Version</span><i>→</i></a>
   <footer><a href="dev/quellen.html">Quellen &amp; Lizenzen</a></footer>
 </main>
-<script src="stand.js" defer></script>
+<script src="gemeinsam/stand.js" defer></script>
 </body>
 </html>
