@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Erzeugt datenbasis.html (Seite) und bauplan.md (Datei für einen neuen Claude-Chat) aus EINER Quellenliste.
+"""Erzeugt datenbasis/N.html (Seite) und datenbasis/bauplan-N.md (Datei für einen neuen Claude-Chat) aus EINER Quellenliste.
+Nur die aktuelle Datenbasis wird geschrieben; archivierte (archiv=True) bleiben unter archiv/ unverändert.
 Aufruf im Repo-Hauptordner:  python3 werkzeuge/datenbasis.py
 Änderungen an Quellen also nur hier eintragen, dann neu erzeugen."""
 import html, json, pathlib, re
@@ -109,10 +110,10 @@ QUELLEN = [
     links=[("Artikel", "https://doi.org/10.1038/s41597-021-00997-6"), ("Datensatz bei GBIF", "https://www.gbif.org/dataset/f382f0ce-323a-4091-bb9f-add557f3a9a2"), ("verwendete Kopie (rWCVPdata)", "https://github.com/matildabrown/rWCVPdata")]),
 
   dict(id="maplibre", name="MapLibre GL JS 5.6.0", art="technik", lizenz="BSD-3-Clause",
-    liefert="Globus-Karte für die Verbreitung. Liegt als Datei im Repo (vendor/), kein CDN.",
+    liefert="Globus-Karte für die Verbreitung. Liegt als Datei im Repo (gemeinsam/vendor/), kein CDN.",
     links=[("Lizenz", "https://github.com/maplibre/maplibre-gl-js/blob/main/LICENSE.txt"), ("maplibre.org", "https://maplibre.org")]),
   dict(id="fonts", name="Schriften", art="technik", lizenz="SIL Open Font License",
-    liefert="Bricolage Grotesque, Figtree, Newsreader, JetBrains Mono – als Dateien im Repo (fonts/), nichts von Google.",
+    liefert="Bricolage Grotesque, Figtree, Newsreader, JetBrains Mono – als Dateien im Repo (gemeinsam/fonts/), nichts von Google.",
     links=[("Open Font License", "https://openfontlicense.org")]),
 ]
 
@@ -183,7 +184,7 @@ def md(V):
   o.append(f"\nDie Quellen-Seite mit allen Belegen und der Merkmalstabelle: {SITE}/{V['app']}/quellen.html\n")
   o.append("## Geprüft, aber nicht verwendet\n")
   for n, d, u in V['geprueft']: o.append(f"- **{n}:** {d}" + (f" ({u})" if u else ""))
-  o.append("\n## Fassungen\n\n- `dev/` – Entwicklung, hier wird weitergearbeitet\n- `v1/` – Archiv, erste fertige Version\n- `v2/` – in Vorbereitung (WIP-Seite)\n- `alt/` – ursprüngliche Ein-Datei-Version\n")
+  o.append("\n## Fassungen\n\n- `dev/` – Entwicklung, hier wird weitergearbeitet\n- `gemeinsam/` – Schriften, MapLibre und stand.js für Startseite, Dev und Datenbasis\n- `archiv/2026-10-25-v1/` – Archiv, erste fertige Version\n- `archiv/2026-10-24-ursprung/` – ursprüngliche Ein-Datei-Version\n")
   return "\n".join(o) + "\n"
 
 E = html.escape
@@ -213,11 +214,11 @@ def page(V, bauplan):
 <meta name="description" content="Alle freien Datenquellen von Pure Nature mit Lizenz, Nachweis und Abfragen – und der Bauplan zum Neuaufbau.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%2386b86f'/%3E%3Cpath d='M16 6c6 4 6 16 0 20c-6-4-6-16 0-20z' fill='%230a0f0e'/%3E%3C/svg%3E">
 <style>
-@font-face{{font-family:"Figtree";font-weight:400;font-display:swap;src:url(../fonts/figtree-latin-400-normal.woff2) format("woff2")}}
-@font-face{{font-family:"Figtree";font-weight:600;font-display:swap;src:url(../fonts/figtree-latin-600-normal.woff2) format("woff2")}}
-@font-face{{font-family:"Bricolage Grotesque";font-weight:700;font-display:swap;src:url(../fonts/bricolage-grotesque-latin-700-normal.woff2) format("woff2")}}
-@font-face{{font-family:"Newsreader";font-style:italic;font-weight:400;font-display:swap;src:url(../fonts/newsreader-latin-400-italic.woff2) format("woff2")}}
-@font-face{{font-family:"JetBrains Mono";font-weight:400;font-display:swap;src:url(../fonts/jetbrains-mono-latin-400-normal.woff2) format("woff2")}}
+@font-face{{font-family:"Figtree";font-weight:400;font-display:swap;src:url(../gemeinsam/fonts/figtree-latin-400-normal.woff2) format("woff2")}}
+@font-face{{font-family:"Figtree";font-weight:600;font-display:swap;src:url(../gemeinsam/fonts/figtree-latin-600-normal.woff2) format("woff2")}}
+@font-face{{font-family:"Bricolage Grotesque";font-weight:700;font-display:swap;src:url(../gemeinsam/fonts/bricolage-grotesque-latin-700-normal.woff2) format("woff2")}}
+@font-face{{font-family:"Newsreader";font-style:italic;font-weight:400;font-display:swap;src:url(../gemeinsam/fonts/newsreader-latin-400-italic.woff2) format("woff2")}}
+@font-face{{font-family:"JetBrains Mono";font-weight:400;font-display:swap;src:url(../gemeinsam/fonts/jetbrains-mono-latin-400-normal.woff2) format("woff2")}}
 :root{{--night:#0a0f0e;--panel:#101816;--panel-2:#16211e;--line:#24332e;--ink:#e6ede4;--muted:#8b9d94;--pollen:#e7ad4f;--plantae:#86b86f;--fungi:#c79ad0;
   --f-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;--f-body:"Figtree","Segoe UI",system-ui,sans-serif;--f-sci:"Newsreader",Georgia,serif;--f-data:"JetBrains Mono",ui-monospace,Menlo,monospace;color-scheme:dark}}
 *{{box-sizing:border-box}}
@@ -285,7 +286,7 @@ code{{font-family:var(--f-data);font-size:.92em}}
 </head>
 <body>
 <div class="wrap">
-<header class="top"><a class="brand" href="../datenbasis.html">Pure <span>Nature</span></a><a class="back" href="../datenbasis.html">← Alle Datenbasen</a></header>
+<header class="top"><a class="brand" href="../">Pure <span>Nature</span></a><a class="back" href="./">← Datenbasis</a></header>
 <h1>Datenbasis {V["nr"]}</h1>
 <p class="lead">Woher Pure Nature seine Daten hat: jede Quelle mit Lizenz, Nachweis, den genauen Abfragen und Regeln. Stand {V["stand"]}.</p>
 {V["intro"]}
@@ -300,7 +301,7 @@ code{{font-family:var(--f-data);font-size:.92em}}
   <h2 id="bauH">Neu aufbauen mit Claude</h2>
   <p>Der Bauplan enthält alles, was zum Nachbauen nötig ist: Ziel, Regeln, Ablauf von Suche, Listen, Bestimmen und Steckbrief, alle Quellen mit Abfragen und Lizenzen, dazu die fertig aufbereiteten Tabellen. Datei herunterladen, in einen neuen Chat legen und dazuschreiben, wie das neue Design aussehen soll.</p>
   <div class="btns">
-    <a class="btn primary" href="../bauplan-{V["nr"]}.md" download="pure-nature-bauplan-{V["nr"]}.md">Bauplan herunterladen (.md)</a>
+    <a class="btn primary" href="bauplan-{V["nr"]}.md" download="pure-nature-bauplan-{V["nr"]}.md">Bauplan herunterladen (.md)</a>
     <button class="btn" type="button" id="copy">Bauplan kopieren</button>
     <span id="copied" role="status"></span>
   </div>
@@ -383,10 +384,10 @@ ABD_BASIS = [
   ["Weichtiere (Schnecken, Muscheln)", "", "–", "nur Wikipedia-Belege"],
 ]
 
-V1 = dict(nr=1, app="v1", stand="25. Oktober 2026 – Stand von V1 (Archiv)",
+V1 = dict(nr=1, app="archiv/2026-10-25-v1", archiv=True, stand="25. Oktober 2026 – Stand von V1 (Archiv)",
   intro='<p class="lead">Die Datenbasis, mit der die erste Version gebaut wurde. Sie bleibt unverändert.</p>',
   quellen=QUELLEN, funktionen=FUNKTIONEN, geprueft=GEPRUEFT,
-  dateien=[(p.replace("dev/", "v1/").replace("daten/wuchs/index.js", "daten/wuchsform.js"), d) for p, d in DATEIEN],
+  dateien=[(p.replace("dev/", "archiv/2026-10-25-v1/").replace("daten/wuchs/index.js", "daten/wuchsform.js"), d) for p, d in DATEIEN],
   abdeckung=ABD_BASIS)
 
 # Datenbasis 2: Erweiterung
@@ -461,7 +462,7 @@ V2 = dict(nr=2, app="dev", stand="25. Oktober 2026 – Erweiterung, in der Dev-F
 VERSIONS = [V1, V2]
 
 def hub():
-  cards = "".join(f'''<a class="ver" href="datenbasis/{V['nr']}.html">
+  cards = "".join(f'''<a class="ver" href="{V['nr']}.html">
   <span class="tag{' new' if V is VERSIONS[-1] else ''}">{'aktuell · Dev' if V is VERSIONS[-1] else 'V1 · Archiv'}</span>
   <h2>Datenbasis {V['nr']}</h2>
   <p>{E(re.sub('<[^>]+>', '', V['intro']))}</p>
@@ -477,10 +478,10 @@ def hub():
 <meta name="description" content="Alle Versionen der Datenbasis von Pure Nature – freie Quellen mit Lizenz, Nachweis und Bauplan.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%2386b86f'/%3E%3Cpath d='M16 6c6 4 6 16 0 20c-6-4-6-16 0-20z' fill='%230a0f0e'/%3E%3C/svg%3E">
 <style>
-@font-face{{font-family:"Figtree";font-weight:400;font-display:swap;src:url(fonts/figtree-latin-400-normal.woff2) format("woff2")}}
-@font-face{{font-family:"Figtree";font-weight:600;font-display:swap;src:url(fonts/figtree-latin-600-normal.woff2) format("woff2")}}
-@font-face{{font-family:"Bricolage Grotesque";font-weight:700;font-display:swap;src:url(fonts/bricolage-grotesque-latin-700-normal.woff2) format("woff2")}}
-@font-face{{font-family:"JetBrains Mono";font-weight:400;font-display:swap;src:url(fonts/jetbrains-mono-latin-400-normal.woff2) format("woff2")}}
+@font-face{{font-family:"Figtree";font-weight:400;font-display:swap;src:url(../gemeinsam/fonts/figtree-latin-400-normal.woff2) format("woff2")}}
+@font-face{{font-family:"Figtree";font-weight:600;font-display:swap;src:url(../gemeinsam/fonts/figtree-latin-600-normal.woff2) format("woff2")}}
+@font-face{{font-family:"Bricolage Grotesque";font-weight:700;font-display:swap;src:url(../gemeinsam/fonts/bricolage-grotesque-latin-700-normal.woff2) format("woff2")}}
+@font-face{{font-family:"JetBrains Mono";font-weight:400;font-display:swap;src:url(../gemeinsam/fonts/jetbrains-mono-latin-400-normal.woff2) format("woff2")}}
 :root{{--night:#0a0f0e;--panel:#101816;--panel-2:#16211e;--line:#24332e;--ink:#e6ede4;--muted:#8b9d94;--pollen:#e7ad4f;--plantae:#86b86f;color-scheme:dark}}
 *{{box-sizing:border-box}}
 html{{background:var(--night)}}
@@ -509,12 +510,12 @@ h1{{font:700 clamp(36px,7vw,56px)/1 "Bricolage Grotesque",system-ui,sans-serif;l
 </head>
 <body>
 <div class="wrap">
-<header class="top"><a class="brand" href="./">Pure <span>Nature</span></a><a class="back" href="./">← Fassungen</a></header>
+<header class="top"><a class="brand" href="../">Pure <span>Nature</span></a><a class="back" href="../">← Startseite</a></header>
 <h1>Datenbasis</h1>
 <p class="lead">Jede Version der Datenbasis mit allen freien Quellen, Lizenzen, Nachweisen, Abfragen – und einem Bauplan zum Neuaufbau mit Claude. Die neueste steht oben.</p>
 <div class="list">{cards}</div>
 </div>
-<script src="stand.js" defer></script>
+<script src="../gemeinsam/stand.js" defer></script>
 </body>
 </html>
 '''
@@ -531,11 +532,11 @@ def git_datum(path):
 STAND_DATUM = {f"datenbasis/{V['nr']}.html": git_datum(f"datenbasis/{V['nr']}.html") for V in VERSIONS}
 
 (ROOT / "datenbasis").mkdir(exist_ok=True)
-for V in VERSIONS:
+AKTIV = [V for V in VERSIONS if not V.get("archiv")]
+for V in AKTIV:
   b = md(V)
-  (ROOT / f"bauplan-{V['nr']}.md").write_text(b, encoding="utf-8")
+  (ROOT / "datenbasis" / f"bauplan-{V['nr']}.md").write_text(b, encoding="utf-8")
   (ROOT / "datenbasis" / f"{V['nr']}.html").write_text(page(V, b), encoding="utf-8")
-(ROOT / "bauplan.md").write_text(md(VERSIONS[-1]), encoding="utf-8")
-# datenbasis.html (Übersicht mit Reitern „Versionen“ und „Datenbank“) wird inzwischen von Hand gepflegt und hier NICHT mehr überschrieben.
-# Neue Versionen dort als Karte eintragen; hub() bleibt als Vorlage für eine Karte.
-print("geschrieben:", [f"datenbasis/{V['nr']}.html" for V in VERSIONS], "bauplan*.md (datenbasis.html wird von Hand gepflegt)")
+# Archivierte Datenbasen (V1) liegen fertig unter archiv/ und werden hier NICHT mehr geschrieben.
+# datenbasis/index.html (Übersicht) wird von Hand gepflegt; hub() bleibt als Vorlage für eine Karte.
+print("geschrieben:", [f"datenbasis/{V['nr']}.html" for V in AKTIV], [f"datenbasis/bauplan-{V['nr']}.md" for V in AKTIV])
